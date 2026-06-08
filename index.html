@@ -1135,7 +1135,7 @@ async function enviarPedido() {
         if (!dealId) throw new Error('Deal nao criado — resposta inesperada do Bitrix24.');
 
         // ---- 3b. Gravar link de aprovação no Deal ----
-        var linkAprovacao = 'https://fiorella-ind.github.io/wendell-aprovacao-pedido/?dealId=' + dealId;
+        var linkAprovacao = 'https://textilegroup.github.io/wendell-aprovacao-pedido/?dealId=' + dealId;
         await bxCall('crm.item.update', {
             entityTypeId: BX_TYPE_ID,
             id: dealId,
