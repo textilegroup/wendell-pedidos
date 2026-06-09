@@ -459,8 +459,13 @@
     <div class="modal-content">
         <h2 style="color:#a01228">✅ Pedido Enviado ao Bitrix!</h2>
         <p>O pedido <strong><span id="pedidoSalvo"></span></strong> foi enviado ao Bitrix com sucesso.</p>
-        <p style="margin-top:10px" id="linkPDFModal"></p>
-        <button class="btn btn-enviar" onclick="fecharModal('modalConfirmacao')" style="margin-top:12px">OK</button>
+        <div style="margin-top:14px">
+            <a id="btnDownloadPDFModal" href="#" download="pedido.pdf"
+               style="display:inline-block;padding:10px 20px;background:#a01228;color:white;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer">
+                📄 Clique aqui para obter uma cópia do PDF
+            </a>
+        </div>
+        <button class="btn btn-enviar" onclick="fecharModal('modalConfirmacao')" style="margin-top:14px">OK</button>
     </div>
 </div>
 
@@ -524,6 +529,7 @@ function gerarIdPedido() {
 }
 
 var numeroPedidoAtual = parseInt(localStorage.getItem('ultimoPedido') || '0') + 1;
+var ultimoPdfDataUri  = null;  // guarda o PDF do último pedido enviado para download no modal
 var documentosCarregados = [];
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1156,10 +1162,16 @@ async function enviarPedido() {
         document.getElementById('loadingText').textContent = 'Enviando pedido...';
         document.getElementById('loadingOverlay').classList.add('active');
 
+        // ---- 0. Gerar PDF ANTES de limpar o formulário ----
+        document.getElementById('loadingText').textContent = 'Gerando PDF do pedido...';
+        var dadosPDF   = coletarDados();
+        var pdfDataUri = gerarPDFDados(dadosPDF, '__RETURN_DATA_URI__');
+        var pdfBase64  = extrairBase64(pdfDataUri);
+        ultimoPdfDataUri = pdfDataUri;  // guardar para o modal
+        var nomePDF    = 'pre_pedido_' + dadosPDF.numero.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
+
         // ---- 1. Montar campos do Deal ----
         document.getElementById('loadingText').textContent = 'Criando Deal no Bitrix24...';
-        var pdfDataUri = null; // PDF gerado apenas sob demanda (botão GERAR PDF)
-        var pdfBase64  = null;
 
         // Montar descricao com itens
         var descLines = ['Pedido #' + numeroPedido + ' - ' + dataPedido, ''];
@@ -1227,7 +1239,31 @@ async function enviarPedido() {
             fields: { 'ufCrm29_1780925422': linkAprovacao }      // Link de Aprovação Pedido Wendell
         });
 
-        // ---- 4. PDF não enviado no lançamento — gerado sob demanda ----
+        // ---- 4. Upload PDF no campo PRÉ-PEDIDO ----
+        document.getElementById('loadingText').textContent = 'Enviando PDF para Bitrix24...';
+        await uploadArquivosCampo(dealId, CAMPO_PRE_PEDIDO, [
+            { nome: nomePDF, base64: pdfBase64 }
+        ]);
+
+        // ---- 4b. Capturar urlMachine e gravar no campo link PDF ----
+        try {
+            var itemBx = await bxCall('crm.item.get', { entityTypeId: BX_TYPE_ID, id: dealId });
+            var arrPDF = itemBx && itemBx.item && itemBx.item[CAMPO_PRE_PEDIDO];
+            if (Array.isArray(arrPDF) && arrPDF.length > 0) {
+                var arqObj = arrPDF[arrPDF.length - 1];
+                var urlPDF = arqObj.urlMachine || arqObj.url || arqObj.urlPreview || '';
+                if (urlPDF) {
+                    await bxCall('crm.item.update', {
+                        entityTypeId: BX_TYPE_ID,
+                        id: dealId,
+                        fields: { 'ufCrm29_1780885857294': urlPDF }
+                    });
+                }
+            }
+        } catch(ePDF) {
+            console.warn('Aviso: não foi possível gravar link do PDF:', ePDF.message);
+        }
+
 
         // ---- 5. Upload documentos - TODOS de uma vez no campo (campo multiplo) ----
         if (documentosCarregados.length > 0) {
@@ -1265,6 +1301,12 @@ async function enviarPedido() {
 
         // ---- 7. Confirmar e limpar ----
         document.getElementById('pedidoSalvo').textContent = pedido.numero;
+        // Atualizar link do botão PDF no modal
+        var btnDL = document.getElementById('btnDownloadPDFModal');
+        if (btnDL && ultimoPdfDataUri) {
+            btnDL.href = ultimoPdfDataUri;
+            btnDL.download = 'pedido_' + pedido.numero.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
+        }
         document.getElementById('modalConfirmacao').classList.add('active');
         dispararFogos();
         // Mostrar botão GERAR PDF
