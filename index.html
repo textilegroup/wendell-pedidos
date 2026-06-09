@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Formulario de Pedido - Wendell Global Interlining</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; padding: 10px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #a01228; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .logo { width: 72px; height: 72px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 4px; flex-shrink: 0; }
+        .logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+        .header-title { display: flex; flex-direction: column; }
+        .header h1 { font-size: 20px; margin-bottom: 2px; }
+        .header-subtitle { font-size: 15px; opacity: 0.95; font-weight: 500; letter-spacing: 0.5px; }
+        .pedido-numero { background: white; color: #a01228; padding: 8px 15px; border-radius: 5px; font-weight: bold; font-size: 16px; white-space: nowrap; }
+        .form-section { padding: 15px 20px; border-bottom: 1px solid #eee; }
+        .section-title { color: #a01228; font-size: 14px; font-weight: bold; margin-bottom: 12px; padding-bottom: 5px; border-bottom: 2px solid #a01228; text-transform: uppercase; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 100%; }
+        .form-group.half { min-width: calc(50% - 10px); }
+        .form-group label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; transition: border-color 0.3s; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #a01228; box-shadow: 0 0 0 2px rgba(160,18,40,0.1); }
+        .form-group input[readonly] { background-color: #f9f9f9; color: #555; cursor: default; }
+        .hint { font-size: 10px; color: #999; margin-top: 3px; }
+        .status-ok { color: #2e7d32; font-size: 11px; font-weight: 600; }
+        .status-error { color: #a01228; font-size: 11px; font-weight: 600; }
+        .itens-container { background: #fafafa; border-radius: 5px; padding: 10px; }
+        .item-pedido { background: white; border: 1px solid #ddd; border-radius: 5px; padding: 12px; margin-bottom: 12px; }
+        .item-pedido.hidden { display: none; }
+        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .item-numero { background: #a01228; color: white; padding: 4px 10px; border-radius: 3px; font-weight: bold; font-size: 11px; }
+        .btn-remove { background: #ff6b6b; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; }
+        .item-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .item-field { display: flex; flex-direction: column; }
+        .item-field.full-width { grid-column: 1 / -1; }
+        .item-field label { font-size: 10px; color: #666; margin-bottom: 3px; font-weight: 600; text-transform: uppercase; }
+        .item-field input, .item-field select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; width: 100%; font-family: inherit; }
+        .item-field input:focus, .item-field select:focus { outline: none; border-color: #a01228; }
+        .item-total { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #ddd; text-align: right; font-weight: bold; color: #a01228; font-size: 13px; }
+        .total-geral { background: #a01228; color: white; padding: 12px 15px; border-radius: 5px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: bold; }
+        .btn-add-item { background: #a01228; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 600; width: 100%; margin-top: 10px; transition: background 0.2s; }
+        .btn-add-item:hover { background: #a01830; }
+        .documentos-lista { margin-top: 10px; }
+        .documento-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 5px; font-size: 12px; }
+        .documento-item .nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
+        .documento-item .btn-remove-doc { background: #ff6b6b; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 10px; }
+        .contador-docs { font-size: 11px; color: #666; margin-top: 5px; }
+        .aviso-pdf { background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 10px 15px; border-radius: 5px; margin: 15px 20px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+        .aviso-pdf strong { color: #664d03; }
+        .actions { padding: 15px 20px; background: #f9f9f9; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; border-top: 1px solid #eee; }
+        .btn { padding: 12px 20px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; font-weight: bold; transition: all 0.2s; flex: 1; min-width: 120px; max-width: 200px; font-family: inherit; }
+        .btn:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+        .btn:active { transform: translateY(0); }
+        .btn-limpar { background: #ddd; color: #333; }
+        .btn-enviar { background: #a01228; color: white; }
+        .btn-admin { background: #333; color: white; }
+        .btn-pdf { background: #2e7d32; color: white; }
+        .btn-secondary { background: #1565c0; color: white; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .modal-content h2 { color: #a01228; margin-bottom: 15px; font-size: 18px; }
+        .modal-content > p { margin-bottom: 15px; color: #666; font-size: 14px; }
+        .admin-panel { text-align: left; }
+        .admin-panel h3 { color: #a01228; margin: 15px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 14px; }
+        .pedido-card { background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 12px; margin-bottom: 10px; }
+        .pedido-card-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; color: #a01228; font-size: 13px; flex-wrap: wrap; gap: 5px; }
+        .pedido-card-body { font-size: 12px; color: #555; }
+        .pedido-card-body p { margin: 4px 0; }
+        .pedido-card-actions { margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
+        .pedido-card-actions .btn { padding: 7px 12px; font-size: 11px; min-width: auto; flex: none; }
+        .password-input { margin: 15px 0; text-align: left; }
+        .password-input label { font-size: 13px; color: #555; font-weight: 600; }
+        .password-input input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%; margin-top: 6px; font-size: 14px; font-family: inherit; }
+        .error-msg { color: #a01228; font-size: 12px; margin-top: 5px; font-weight: 600; }
+        .doc-preview { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .doc-preview-item { background: #e3f2fd; border: 1px solid #1565c0; border-radius: 4px; padding: 4px 10px; font-size: 11px; color: #1565c0; cursor: pointer; transition: all 0.2s; }
+        .doc-preview-item:hover { background: #1565c0; color: white; }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; gap: 16px; }
+        .loading-overlay.active { display: flex; }
+        .loading-spinner { width: 52px; height: 52px; border: 5px solid rgba(255,255,255,0.25); border-top: 5px solid white; border-radius: 50%; animation: spin 0.85s linear infinite; }
+        .loading-text { color: white; font-size: 16px; font-weight: bold; letter-spacing: 0.5px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (min-width: 600px) {
+            body { padding: 20px; }
+            .header { padding: 20px 30px; }
+            .header h1 { font-size: 24px; }
+            .header-subtitle { font-size: 16px; }
+            .form-section { padding: 20px 30px; }
+            .section-title { font-size: 15px; }
+            .form-group { min-width: 200px; }
+            .form-group.half { min-width: calc(50% - 10px); }
+            .item-fields { grid-template-columns: repeat(3, 1fr); }
+            .item-field.full-width { grid-column: span 2; }
+            .actions { padding: 20px 30px; justify-content: flex-end; }
+            .btn { flex: none; }
+        }
+        @media (min-width: 800px) {
+            .item-fields { grid-template-columns: repeat(6, 1fr); }
+            .item-field.full-width { grid-column: span 2; }
+        }
+    </style>
+</head>
+<body>
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Gerando PDF...</div>
+</div>
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="data:image/png;base64,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
