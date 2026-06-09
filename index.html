@@ -533,6 +533,20 @@ var ultimoPdfDataUri  = null;  // guarda o PDF do último pedido enviado para do
 var documentosCarregados = [];
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Limpar base64 de pedidos antigos no localStorage (liberar espaço)
+    try {
+        var peds = JSON.parse(localStorage.getItem('pedidos') || '[]');
+        var alterado = false;
+        peds.forEach(function(p) {
+            if (p.documentos) {
+                p.documentos = p.documentos.map(function(d) {
+                    if (d.dados) { delete d.dados; alterado = true; }
+                    return d;
+                });
+            }
+        });
+        if (alterado) localStorage.setItem('pedidos', JSON.stringify(peds));
+    } catch(e) { /* ignora */ }
     carregarSelectsProdutos();
     // Definir data mínima (amanhã) nos campos de data
     definirDatasMinimas();
@@ -1278,14 +1292,15 @@ async function enviarPedido() {
             await uploadArquivosCampo(dealId, CAMPO_DOC_COMPRA, arquivosDoc);
         }
 
-        // ---- 6. Salvar no localStorage ----
+        // ---- 6. Salvar no localStorage (apenas metadados, sem base64) ----
         var pedido = {
             numero: numeroPedido,
             data:   dataPedido,
             totalGeral: totalGeral,
             bitrixDealId: dealId,
+            // Documentos: apenas nome e tamanho, sem base64 (evita quota do localStorage)
             documentos: documentosCarregados.map(function(d) {
-                return { nome: d.nome, tipo: d.tipo, tamanho: d.tamanho, dados: d.dados };
+                return { nome: d.nome, tipo: d.tipo, tamanho: d.tamanho };
             }),
             dados: {}
         };
@@ -1294,10 +1309,22 @@ async function enviarPedido() {
         if (document.getElementById('faturamento').value)
             pedido.dados.faturamento = document.getElementById('faturamento').value;
 
-        var pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-        pedidos.push(pedido);
-        localStorage.setItem('pedidos', JSON.stringify(pedidos));
-        localStorage.setItem('ultimoPedido', numeroPedidoAtual.toString());
+        // Limpar pedidos antigos se localStorage estiver cheio
+        try {
+            var pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+            // Manter apenas os últimos 50 pedidos
+            if (pedidos.length >= 50) pedidos = pedidos.slice(-49);
+            pedidos.push(pedido);
+            localStorage.setItem('pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('ultimoPedido', numeroPedidoAtual.toString());
+        } catch(eStorage) {
+            // Se ainda estourar, limpar tudo e salvar só o atual
+            try {
+                localStorage.removeItem('pedidos');
+                localStorage.setItem('pedidos', JSON.stringify([pedido]));
+                localStorage.setItem('ultimoPedido', numeroPedidoAtual.toString());
+            } catch(e2) { console.warn('localStorage indisponível:', e2.message); }
+        }
 
         // ---- 7. Confirmar e limpar ----
         document.getElementById('pedidoSalvo').textContent = pedido.numero;
