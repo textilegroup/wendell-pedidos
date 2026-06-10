@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Formulario de Pedido - Wendell Global Interlining</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23a01228'/><text x='32' y='30' font-size='24' text-anchor='middle' fill='white'>🛒</text><text x='32' y='52' font-size='14' font-weight='bold' font-family='Arial' fill='white' text-anchor='middle'>WGI</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -124,7 +125,7 @@
 <div class="container">
     <div class="header">
         <div class="header-left">
-            <div class="logo">
+            <div class="logo" style="display:flex;align-items:center;justify-content:center;overflow:hidden;background:white;border-radius:8px;padding:3px">
                 <img src="data:image/png;base64,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" alt="WGI">
             </div>
             <div class="header-title">
@@ -421,6 +422,217 @@
                     </div>
                 </div>
                 <button type="button" class="btn-add-item" onclick="adicionarItem()">+ Adicionar Produto</button>
+                <div class="item-pedido hidden" id="item6">
+                    <div class="item-header">
+                        <span class="item-numero">PRODUTO #6</span>
+                        <button type="button" class="btn-remove" onclick="removerItem(6)">&#10005; Remover</button>
+                    </div>
+                    <div class="item-fields">
+                        <div class="item-field">
+                            <label>C&oacute;digo</label>
+                            <select name="produto6_cod" onchange="buscarDescricaoProduto(6)">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="item-field full-width">
+                            <label>Descri&ccedil;&atilde;o</label>
+                            <input type="text" name="produto6_desc" readonly>
+                        </div>
+                        <div class="item-field">
+                            <label>Qtd (M/L)</label>
+                            <input type="number" name="produto6_qtd" min="0" step="any" oninput="calcularTotalItem(6)">
+                        </div>
+                        <div class="item-field">
+                            <label>Pre&ccedil;o (R$)</label>
+                            <input type="text" name="produto6_preco" oninput="calcularTotalItem(6)">
+                        </div>
+                        <div class="item-field">
+                            <label>Comiss&atilde;o (%)</label>
+                            <input type="text" name="produto6_comissao">
+                        </div>
+                        <div class="item-field">
+                            <label>Data Entrega</label>
+                            <div class="date-picker-wrap">
+                            <input type="text" id="dataItem6Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
+                            <span class="cal-icon" style="font-size:13px">📅</span>
+                            <input type="date" name="produto6_data" id="dataItem6" onchange="dateSelecionada('dataItem6','dataItem6Text')">
+                        </div>
+                        </div>
+                    </div>
+                    <div class="item-total">Total Item: R$ <span id="totalItem6">0,00</span></div>
+                    <div class="item-ipi" id="ipiItem6" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
+                        IPI: <span id="ipiPct6">0%</span>
+                    </div>
+                </div>
+                <div class="item-pedido hidden" id="item7">
+                    <div class="item-header">
+                        <span class="item-numero">PRODUTO #7</span>
+                        <button type="button" class="btn-remove" onclick="removerItem(7)">&#10005; Remover</button>
+                    </div>
+                    <div class="item-fields">
+                        <div class="item-field">
+                            <label>C&oacute;digo</label>
+                            <select name="produto7_cod" onchange="buscarDescricaoProduto(7)">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="item-field full-width">
+                            <label>Descri&ccedil;&atilde;o</label>
+                            <input type="text" name="produto7_desc" readonly>
+                        </div>
+                        <div class="item-field">
+                            <label>Qtd (M/L)</label>
+                            <input type="number" name="produto7_qtd" min="0" step="any" oninput="calcularTotalItem(7)">
+                        </div>
+                        <div class="item-field">
+                            <label>Pre&ccedil;o (R$)</label>
+                            <input type="text" name="produto7_preco" oninput="calcularTotalItem(7)">
+                        </div>
+                        <div class="item-field">
+                            <label>Comiss&atilde;o (%)</label>
+                            <input type="text" name="produto7_comissao">
+                        </div>
+                        <div class="item-field">
+                            <label>Data Entrega</label>
+                            <div class="date-picker-wrap">
+                            <input type="text" id="dataItem7Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
+                            <span class="cal-icon" style="font-size:13px">📅</span>
+                            <input type="date" name="produto7_data" id="dataItem7" onchange="dateSelecionada('dataItem7','dataItem7Text')">
+                        </div>
+                        </div>
+                    </div>
+                    <div class="item-total">Total Item: R$ <span id="totalItem7">0,00</span></div>
+                    <div class="item-ipi" id="ipiItem7" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
+                        IPI: <span id="ipiPct7">0%</span>
+                    </div>
+                </div>
+                <div class="item-pedido hidden" id="item8">
+                    <div class="item-header">
+                        <span class="item-numero">PRODUTO #8</span>
+                        <button type="button" class="btn-remove" onclick="removerItem(8)">&#10005; Remover</button>
+                    </div>
+                    <div class="item-fields">
+                        <div class="item-field">
+                            <label>C&oacute;digo</label>
+                            <select name="produto8_cod" onchange="buscarDescricaoProduto(8)">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="item-field full-width">
+                            <label>Descri&ccedil;&atilde;o</label>
+                            <input type="text" name="produto8_desc" readonly>
+                        </div>
+                        <div class="item-field">
+                            <label>Qtd (M/L)</label>
+                            <input type="number" name="produto8_qtd" min="0" step="any" oninput="calcularTotalItem(8)">
+                        </div>
+                        <div class="item-field">
+                            <label>Pre&ccedil;o (R$)</label>
+                            <input type="text" name="produto8_preco" oninput="calcularTotalItem(8)">
+                        </div>
+                        <div class="item-field">
+                            <label>Comiss&atilde;o (%)</label>
+                            <input type="text" name="produto8_comissao">
+                        </div>
+                        <div class="item-field">
+                            <label>Data Entrega</label>
+                            <div class="date-picker-wrap">
+                            <input type="text" id="dataItem8Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
+                            <span class="cal-icon" style="font-size:13px">📅</span>
+                            <input type="date" name="produto8_data" id="dataItem8" onchange="dateSelecionada('dataItem8','dataItem8Text')">
+                        </div>
+                        </div>
+                    </div>
+                    <div class="item-total">Total Item: R$ <span id="totalItem8">0,00</span></div>
+                    <div class="item-ipi" id="ipiItem8" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
+                        IPI: <span id="ipiPct8">0%</span>
+                    </div>
+                </div>
+                <div class="item-pedido hidden" id="item9">
+                    <div class="item-header">
+                        <span class="item-numero">PRODUTO #9</span>
+                        <button type="button" class="btn-remove" onclick="removerItem(9)">&#10005; Remover</button>
+                    </div>
+                    <div class="item-fields">
+                        <div class="item-field">
+                            <label>C&oacute;digo</label>
+                            <select name="produto9_cod" onchange="buscarDescricaoProduto(9)">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="item-field full-width">
+                            <label>Descri&ccedil;&atilde;o</label>
+                            <input type="text" name="produto9_desc" readonly>
+                        </div>
+                        <div class="item-field">
+                            <label>Qtd (M/L)</label>
+                            <input type="number" name="produto9_qtd" min="0" step="any" oninput="calcularTotalItem(9)">
+                        </div>
+                        <div class="item-field">
+                            <label>Pre&ccedil;o (R$)</label>
+                            <input type="text" name="produto9_preco" oninput="calcularTotalItem(9)">
+                        </div>
+                        <div class="item-field">
+                            <label>Comiss&atilde;o (%)</label>
+                            <input type="text" name="produto9_comissao">
+                        </div>
+                        <div class="item-field">
+                            <label>Data Entrega</label>
+                            <div class="date-picker-wrap">
+                            <input type="text" id="dataItem9Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
+                            <span class="cal-icon" style="font-size:13px">📅</span>
+                            <input type="date" name="produto9_data" id="dataItem9" onchange="dateSelecionada('dataItem9','dataItem9Text')">
+                        </div>
+                        </div>
+                    </div>
+                    <div class="item-total">Total Item: R$ <span id="totalItem9">0,00</span></div>
+                    <div class="item-ipi" id="ipiItem9" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
+                        IPI: <span id="ipiPct9">0%</span>
+                    </div>
+                </div>
+                <div class="item-pedido hidden" id="item10">
+                    <div class="item-header">
+                        <span class="item-numero">PRODUTO #10</span>
+                        <button type="button" class="btn-remove" onclick="removerItem(10)">&#10005; Remover</button>
+                    </div>
+                    <div class="item-fields">
+                        <div class="item-field">
+                            <label>C&oacute;digo</label>
+                            <select name="produto10_cod" onchange="buscarDescricaoProduto(10)">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="item-field full-width">
+                            <label>Descri&ccedil;&atilde;o</label>
+                            <input type="text" name="produto10_desc" readonly>
+                        </div>
+                        <div class="item-field">
+                            <label>Qtd (M/L)</label>
+                            <input type="number" name="produto10_qtd" min="0" step="any" oninput="calcularTotalItem(10)">
+                        </div>
+                        <div class="item-field">
+                            <label>Pre&ccedil;o (R$)</label>
+                            <input type="text" name="produto10_preco" oninput="calcularTotalItem(10)">
+                        </div>
+                        <div class="item-field">
+                            <label>Comiss&atilde;o (%)</label>
+                            <input type="text" name="produto10_comissao">
+                        </div>
+                        <div class="item-field">
+                            <label>Data Entrega</label>
+                            <div class="date-picker-wrap">
+                            <input type="text" id="dataItem10Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
+                            <span class="cal-icon" style="font-size:13px">📅</span>
+                            <input type="date" name="produto10_data" id="dataItem10" onchange="dateSelecionada('dataItem10','dataItem10Text')">
+                        </div>
+                        </div>
+                    </div>
+                    <div class="item-total">Total Item: R$ <span id="totalItem10">0,00</span></div>
+                    <div class="item-ipi" id="ipiItem10" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
+                        IPI: <span id="ipiPct10">0%</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-add-item" onclick="adicionarItem()">+ Adicionar Produto</button>
                 <div class="total-geral">
                     <span>TOTAL GERAL:</span>
                     <span>R$ <span id="totalGeral">0,00</span></span>
@@ -578,7 +790,7 @@ function definirDatasMinimas() {
     // Preencher campos de texto com formato BR
     var deText = document.getElementById('dataEntregaText');
     if (deText && !deText.value) deText.value = brStr;
-    for (var i = 1; i <= 5; i++) {
+    for (var i = 1; i <= 10; i++) {
         var el = document.getElementById('dataItem' + i + 'Text');
         if (el && !el.value) el.value = brStr;
     }
@@ -588,7 +800,7 @@ function sincronizarDatasItens() {
     var valText = document.getElementById('dataEntregaText').value;
     var valDate = document.getElementById('dataEntrega').value;
     if (!valText) return;
-    for (var i = 1; i <= 5; i++) {
+    for (var i = 1; i <= 10; i++) {
         var elText = document.getElementById('dataItem' + i + 'Text');
         var elDate = document.getElementById('dataItem' + i);
         if (elText && !elText.value) { elText.value = valText; }
@@ -667,7 +879,7 @@ function calcularTotalItem(num) {
 
 function calcularTotalGeral() {
     var total = 0;
-    for (var i = 1; i <= 5; i++) {
+    for (var i = 1; i <= 10; i++) {
         if (!document.getElementById('item' + i).classList.contains('hidden')) {
             var t = document.getElementById('totalItem' + i).textContent.replace(/\./g,'').replace(',','.');
             var itemTotal = parseFloat(t) || 0;
@@ -682,13 +894,13 @@ function fmt(v) {
 }
 
 function adicionarItem() {
-    if (itemAtual < 5) {
+    if (itemAtual < 10) {
         itemAtual++;
         document.getElementById('item' + itemAtual).classList.remove('hidden');
         var d1 = document.querySelector('[name="produto1_data"]').value;
         if (d1) document.querySelector('[name="produto' + itemAtual + '_data"]').value = d1;
     }
-    if (itemAtual >= 5) document.querySelector('.btn-add-item').style.display = 'none';
+    if (itemAtual >= 10) document.querySelector('.btn-add-item').style.display = 'none';
 }
 
 function removerItem(num) {
@@ -743,7 +955,7 @@ function limparFormulario() {
     document.getElementById('formPedido').reset();
     document.getElementById('nomeVendedor').value = '';
     document.getElementById('statusVendedor').innerHTML = '';
-    for (var i = 1; i <= 5; i++) {
+    for (var i = 1; i <= 10; i++) {
         document.getElementById('totalItem' + i).textContent = '0,00';
         if (i > 1) document.getElementById('item' + i).classList.add('hidden');
     }
@@ -983,7 +1195,7 @@ function gerarPDFDados(dados, filename) {
     y += 9;
 
     if (dados.itens.length > 0) {
-        var tableHead = [['#', 'Codigo', 'Descricao', 'Qtd (m/l)', 'Preco', 'Com.%', 'IPI', 'Data Ent.', 'Total (R$)']];
+        var tableHead = [['#', 'Codigo', 'Cor', 'Qtd (m/l)', 'Preco (R$)', 'Com.%', 'IPI', 'Data Ent.', 'Total (R$)']];
         var tableBody = [];
         dados.itens.forEach(function(it) {
             var cod = it.codigo || '';
@@ -1205,7 +1417,7 @@ async function enviarPedido() {
         if (end) descLines.push('  Endereco entrega: ' + end);
         descLines.push('');
         descLines.push('ITENS:');
-        for (var ii = 1; ii <= 5; ii++) {
+        for (var ii = 1; ii <= 10; ii++) {
             var el = document.getElementById('item' + ii);
             if (el && !el.classList.contains('hidden')) {
                 var cod = document.querySelector('[name="produto' + ii + '_cod"]').value;
@@ -1343,7 +1555,7 @@ async function enviarPedido() {
         numeroPedidoAtual++;
         document.getElementById('formPedido').reset();
         document.getElementById('nomeVendedor').value = '';
-        for (var i = 1; i <= 5; i++) {
+        for (var i = 1; i <= 10; i++) {
             document.getElementById('totalItem' + i).textContent = '0,00';
             var ipiEl = document.getElementById('ipiPct' + i);
             if (ipiEl) { ipiEl.textContent = '0%'; ipiEl.style.color = '#999'; }
