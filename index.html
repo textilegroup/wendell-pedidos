@@ -76,6 +76,25 @@
         .pedido-card-body p { margin: 4px 0; }
         .pedido-card-actions { margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
         .pedido-card-actions .btn { padding: 7px 12px; font-size: 11px; min-width: auto; flex: none; }
+        .admin-tab-btn { padding:7px 14px;border:1px solid #a01228;border-radius:5px;background:white;color:#a01228;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s }
+        .admin-tab-btn:hover,.admin-tab-btn.active { background:#a01228;color:white }
+        .sb-card { border:1px solid #e0e0e0;border-radius:7px;padding:12px;margin-bottom:10px;background:#fafafa;position:relative }
+        .sb-card-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px }
+        .sb-card-title { font-weight:700;color:#a01228;font-size:14px }
+        .sb-status { padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase }
+        .sb-status-pendente { background:#fff3cd;color:#856404 }
+        .sb-status-aprovado { background:#d4edda;color:#155724 }
+        .sb-status-reprovado { background:#f8d7da;color:#721c24 }
+        .sb-status-editado { background:#d1ecf1;color:#0c5460 }
+        .sb-field { margin-bottom:3px;font-size:12px;color:#555 }
+        .sb-field b { color:#333 }
+        .sb-itens-table { width:100%;border-collapse:collapse;margin-top:8px;font-size:12px }
+        .sb-itens-table th { background:#a01228;color:white;padding:4px 7px;text-align:left }
+        .sb-itens-table td { padding:4px 7px;border-bottom:1px solid #eee }
+        .sb-edit-label { font-size:11px;font-weight:700;color:#555;text-transform:uppercase;display:block;margin-bottom:2px }
+        .sb-edit-inp { padding:7px 9px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit;outline:none;width:100% }
+        .sb-edit-inp:focus { border-color:#a01228 }
+        #adminPanel { position:relative }
         .password-input { margin: 15px 0; text-align: left; }
         .password-input label { font-size: 13px; color: #555; font-weight: 600; }
         .password-input input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%; margin-top: 6px; font-size: 14px; font-family: inherit; }
@@ -681,9 +700,9 @@
 </div>
 
 <div class="modal" id="modalAdmin">
-    <div class="modal-content">
-        <h2>Area do Administrador</h2>
-        <div id="adminLogin">
+    <div class="modal-content" style="max-width:760px;width:95vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column">
+        <h2 style="flex-shrink:0">Area do Administrador</h2>
+        <div id="adminLogin" style="flex-shrink:0">
             <div class="password-input">
                 <label>Senha de Acesso:</label>
                 <input type="password" id="senhaAdmin" placeholder="Digite a senha" onkeypress="if(event.key==='Enter')verificarSenha()">
@@ -692,11 +711,37 @@
             <button class="btn btn-enviar" onclick="verificarSenha()" style="margin:5px">Entrar</button>
             <button class="btn btn-limpar" onclick="fecharModal('modalAdmin')" style="margin:5px">Cancelar</button>
         </div>
-        <div id="adminPanel" class="admin-panel" style="display:none;">
-            <h3>Historico de Pedidos</h3>
-            <div id="listaPedidosAdmin"></div>
-            <br>
-            <button class="btn btn-limpar" onclick="fecharAdminPanel()">Fechar</button>
+        <div id="adminPanel" style="display:none;flex:1;overflow:hidden;display:none;flex-direction:column">
+            <!-- PEDIDOS SUPABASE -->
+            <div id="tabSupabase" style="flex:1;overflow-y:auto">
+                <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+                    <input type="text" id="sbBuscaCliente" placeholder="Buscar por cliente..." style="flex:1;min-width:150px;padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:13px">
+                    <select id="sbFiltroStatus" style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:13px">
+                        <option value="">Todos os status</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="aprovado">Aprovado</option>
+                        <option value="reprovado">Reprovado</option>
+                        <option value="editado">Editado</option>
+                    </select>
+                    <button class="btn btn-enviar" style="padding:7px 14px;font-size:13px" onclick="buscarPedidosSb()">🔍 Buscar</button>
+                </div>
+                <div id="listaSbPedidos"><p style="color:#999;text-align:center">Clique em Buscar para carregar</p></div>
+            </div>
+            <!-- MODAL EDIÇÃO -->
+            <div id="sbEditPanel" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:white;overflow-y:auto;padding:16px;z-index:10">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <h3 id="sbEditTitulo">Editar Pedido</h3>
+                    <button onclick="fecharEditSb()" style="background:#666;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer">✕ Fechar</button>
+                </div>
+                <div id="sbEditBody"></div>
+                <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+                    <button class="btn btn-enviar" onclick="salvarEdicaoSb()">💾 Salvar e reenviar para aprovação</button>
+                    <button class="btn btn-pdf" onclick="gerarPDFSb()">📄 Gerar PDF</button>
+                </div>
+            </div>
+            <div style="margin-top:10px;flex-shrink:0">
+                <button class="btn btn-limpar" onclick="fecharAdminPanel()">Fechar</button>
+            </div>
         </div>
     </div>
 </div>
@@ -728,6 +773,67 @@ var produtos = {
 };
 
 var SENHA_ADMIN = 'admin123';
+
+// ── SUPABASE ──
+var SB_URL = 'https://eepmlsdbtcvsjxdcvimi.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlcG1sc2RidGN2c2p4ZGN2aW1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NTMyOTUsImV4cCI6MjA5NzEyOTI5NX0.Le484IS150WX8dzagH7nu3d6fyK9OAjGrBX49SrJawQ';
+
+async function sbFetch(path, method, body) {
+    var opts = {
+        method: method || 'GET',
+        headers: {
+            'apikey': SB_KEY,
+            'Authorization': 'Bearer ' + SB_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': method === 'POST' ? 'return=representation' : ''
+        }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    var r = await fetch(SB_URL + '/rest/v1/' + path, opts);
+    if (!r.ok) { var e = await r.text(); throw new Error('Supabase: ' + e); }
+    return r.status === 204 ? null : r.json();
+}
+
+async function gravarPedidoSupabase(dados, dealId, totalGeral) {
+    try {
+        var itens = [];
+        for (var i = 1; i <= 10; i++) {
+            var cod = dados['produto' + i + '_cod'];
+            if (cod) {
+                itens.push({
+                    numero: i,
+                    codigo: cod,
+                    cor: dados['produto' + i + '_desc'] || '',
+                    quantidade: dados['produto' + i + '_qtd'] || '0',
+                    preco: dados['produto' + i + '_preco'] || '0',
+                    comissao: dados['produto' + i + '_comissao'] || '0',
+                    data_entrega: dados['produto' + i + '_data'] || ''
+                });
+            }
+        }
+        var rec = {
+            bitrix_deal_id: String(dealId),
+            status: 'pendente',
+            numero_pedido: dados.numeroPedido || '',
+            data_pedido: new Date().toISOString(),
+            vendedor_nome: dados.nomeVendedor || '',
+            vendedor_codigo: dados.codigoVendedor || '',
+            cliente_nome: dados.nomeCliente || '',
+            cliente_cnpj: dados.cnpjCliente || '',
+            faturamento: dados.faturamento || '',
+            condicao_pagamento: dados.prazoPagamento || '',
+            local_entrega: dados.enderecoEntrega || '',
+            observacoes: dados.observacoes || '',
+            total_geral: parseFloat((totalGeral || '0').toString().replace('.','').replace(',','.')) || 0,
+            itens: itens,
+            historico: [{ data: new Date().toISOString(), acao: 'criado', deal: dealId }]
+        };
+        await sbFetch('pedidos', 'POST', rec);
+        console.log('Pedido gravado no Supabase');
+    } catch(e) {
+        console.warn('Supabase (nao critico):', e.message);
+    }
+}
 var itemAtual = 1;
 function gerarIdPedido() {
     var n = new Date();
@@ -744,20 +850,7 @@ var ultimoPdfDataUri  = null;  // guarda o PDF do último pedido enviado para do
 var documentosCarregados = [];
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Limpar base64 de pedidos antigos no localStorage (liberar espaço)
-    try {
-        var peds = JSON.parse(localStorage.getItem('pedidos') || '[]');
-        var alterado = false;
-        peds.forEach(function(p) {
-            if (p.documentos) {
-                p.documentos = p.documentos.map(function(d) {
-                    if (d.dados) { delete d.dados; alterado = true; }
-                    return d;
-                });
-            }
-        });
-        if (alterado) localStorage.setItem('pedidos', JSON.stringify(peds));
-    } catch(e) { /* ignora */ }
+    // localStorage não utilizado
     carregarSelectsProdutos();
     // Definir data mínima (amanhã) nos campos de data
     definirDatasMinimas();
@@ -1465,6 +1558,18 @@ async function enviarPedido() {
         });
 
         // ---- 4. Upload PDF no campo PRÉ-PEDIDO ----
+        // Gravar no Supabase (em paralelo, não bloqueia)
+        var formDados = {};
+        var fd2 = new FormData(document.getElementById('formPedido'));
+        fd2.forEach(function(v, k){ formDados[k] = v; });
+        formDados.nomeCliente = document.getElementById('nomeCliente') ? document.getElementById('nomeCliente').value : '';
+        formDados.cnpjCliente = document.getElementById('cnpjCliente') ? document.getElementById('cnpjCliente').value : '';
+        formDados.faturamento = document.getElementById('faturamento') ? document.getElementById('faturamento').value : '';
+        formDados.enderecoEntrega = document.getElementById('enderecoEntrega') ? document.getElementById('enderecoEntrega').value : '';
+        formDados.observacoes = document.getElementById('observacoes') ? document.getElementById('observacoes').value : '';
+        formDados.numeroPedido = numeroPedido;
+        gravarPedidoSupabase(formDados, dealId, document.getElementById('totalGeral').textContent);
+
         document.getElementById('loadingText').textContent = 'Enviando PDF para Bitrix24...';
         await uploadArquivosCampo(dealId, CAMPO_PRE_PEDIDO, [
             { nome: nomePDF, base64: pdfBase64 }
@@ -1504,38 +1609,7 @@ async function enviarPedido() {
         }
 
         // ---- 6. Salvar no localStorage (apenas metadados, sem base64) ----
-        var pedido = {
-            numero: numeroPedido,
-            data:   dataPedido,
-            totalGeral: totalGeral,
-            bitrixDealId: dealId,
-            // Documentos: apenas nome e tamanho, sem base64 (evita quota do localStorage)
-            documentos: documentosCarregados.map(function(d) {
-                return { nome: d.nome, tipo: d.tipo, tamanho: d.tamanho };
-            }),
-            dados: {}
-        };
-        var fd = new FormData(document.getElementById('formPedido'));
-        fd.forEach(function(val, key) { if (val) pedido.dados[key] = val; });
-        if (document.getElementById('faturamento').value)
-            pedido.dados.faturamento = document.getElementById('faturamento').value;
-
-        // Limpar pedidos antigos se localStorage estiver cheio
-        try {
-            var pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-            // Manter apenas os últimos 50 pedidos
-            if (pedidos.length >= 50) pedidos = pedidos.slice(-49);
-            pedidos.push(pedido);
-            localStorage.setItem('pedidos', JSON.stringify(pedidos));
-            localStorage.setItem('ultimoPedido', numeroPedidoAtual.toString());
-        } catch(eStorage) {
-            // Se ainda estourar, limpar tudo e salvar só o atual
-            try {
-                localStorage.removeItem('pedidos');
-                localStorage.setItem('pedidos', JSON.stringify([pedido]));
-                localStorage.setItem('ultimoPedido', numeroPedidoAtual.toString());
-            } catch(e2) { console.warn('localStorage indisponível:', e2.message); }
-        }
+        // Dados já gravados no Supabase (gravarPedidoSupabase chamado acima)
 
         // ---- 7. Confirmar e limpar ----
         document.getElementById('pedidoSalvo').textContent = pedido.numero;
@@ -1643,10 +1717,205 @@ function dispararFogos() {
 
 function fecharModal(id) { document.getElementById(id).classList.remove('active'); }
 
+// ────────────────────────────────────────────
+// ADMIN SUPABASE
+// ────────────────────────────────────────────
+var sbPedidoAtual = null;
+var sbPedidosCache = [];
+
+async function buscarPedidosSb() {
+    var lista = document.getElementById('listaSbPedidos');
+    lista.innerHTML = '<p style="color:#999;text-align:center">Carregando...</p>';
+    try {
+        var cliente = document.getElementById('sbBuscaCliente').value.trim();
+        var status  = document.getElementById('sbFiltroStatus').value;
+        var qs = 'order=created_at.desc&limit=50';
+        if (cliente) qs += '&cliente_nome=ilike.*' + encodeURIComponent(cliente) + '*';
+        if (status)  qs += '&status=eq.' + status;
+        var data = await sbFetch('pedidos?' + qs);
+        if (!data || !data.length) {
+            lista.innerHTML = '<p style="color:#999;text-align:center">Nenhum pedido encontrado.</p>'; return;
+        }
+        sbPedidosCache = data;
+        lista.innerHTML = data.map(function(p, idx) {
+            var statusClass = 'sb-status-' + (p.status || 'pendente');
+            var dataFmt = p.data_pedido ? new Date(p.data_pedido).toLocaleString('pt-BR') : '-';
+            var itensHTML = '';
+            if (p.itens && p.itens.length) {
+                itensHTML = '<table class="sb-itens-table"><tr><th>Código</th><th>Cor</th><th>Qtd</th><th>Preço</th><th>Data Ent.</th></tr>' +
+                    p.itens.map(function(it) {
+                        return '<tr><td>' + it.codigo + '</td><td>' + it.cor + '</td><td>' + it.quantidade +
+                               '</td><td>R$ ' + it.preco + '</td><td>' + (it.data_entrega||'-') + '</td></tr>';
+                    }).join('') + '</table>';
+            }
+            return '<div class="sb-card">' +
+                '<div class="sb-card-header">' +
+                '<span class="sb-card-title">Pedido ' + (p.numero_pedido || p.id.slice(0,8)) + '</span>' +
+                '<span class="sb-status ' + statusClass + '">' + (p.status || 'pendente') + '</span>' +
+                '</div>' +
+                '<div class="sb-field"><b>Data:</b> ' + dataFmt + '</div>' +
+                '<div class="sb-field"><b>Cliente:</b> ' + (p.cliente_nome||'-') + ' &nbsp;|&nbsp; <b>CNPJ:</b> ' + (p.cliente_cnpj||'-') + '</div>' +
+                '<div class="sb-field"><b>Vendedor:</b> ' + (p.vendedor_nome||'-') + ' (' + (p.vendedor_codigo||'-') + ')</div>' +
+                '<div class="sb-field"><b>Total:</b> R$ ' + (p.total_geral||'0').toLocaleString('pt-BR', {minimumFractionDigits:2}) +
+                (p.bitrix_deal_id ? ' &nbsp;|&nbsp; <b>Deal Bitrix:</b> <a href="https://fiorella.bitrix24.com.br/crm/type/1070/details/' + p.bitrix_deal_id + '/" target="_blank" style="color:#a01228">#' + p.bitrix_deal_id + ' ↗</a>' : '') + '</div>' +
+                itensHTML +
+                '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
+                '<button class="btn btn-enviar" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="abrirEditSbIdx(this.dataset.sbidx)">&#9998; Editar</button>' +
+                '<button class="btn btn-pdf" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="gerarPDFSbIdx(this.dataset.sbidx)">&#128196; PDF</button>' +
+                '</div>' +
+                '</div>';
+        }).join('');
+    } catch(e) {
+        lista.innerHTML = '<p style="color:red">Erro: ' + e.message + '</p>';
+    }
+}
+
+function abrirEditSbIdx(idx) {
+    var p = sbPedidosCache[parseInt(idx)];
+    if (p) abrirEditSb(p);
+}
+function gerarPDFSbIdx(idx) {
+    var p = sbPedidosCache[parseInt(idx)];
+    if (p) gerarPDFSbDireto(p);
+}
+function abrirEditSb(p) {
+    sbPedidoAtual = p;
+    document.getElementById('sbEditTitulo').textContent = 'Editar Pedido ' + (p.numero_pedido || p.id.slice(0,8));
+    var itens = p.itens || [];
+    // Garantir 10 linhas de item
+    while (itens.length < 10) itens.push({codigo:'',cor:'',quantidade:'',preco:'',comissao:'',data_entrega:''});
+
+    // Opções de produtos para selects
+    var optsSelect = '<option value="">Selecione...</option>' +
+        Object.keys(produtos).map(function(cod){ return '<option value="' + cod + '">' + cod + '</option>'; }).join('');
+
+    var body = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
+        '<div><label class="sb-edit-label">Vendedor (nome)</label><input class="sb-edit-inp" id="seNomeVend" value="' + (p.vendedor_nome||'') + '"></div>' +
+        '<div><label class="sb-edit-label">Código vendedor</label><input class="sb-edit-inp" id="seCodVend" value="' + (p.vendedor_codigo||'') + '"></div>' +
+        '<div><label class="sb-edit-label">Cond. pagamento</label><input class="sb-edit-inp" id="seCondPag" value="' + (p.condicao_pagamento||'') + '"></div>' +
+        '<div><label class="sb-edit-label">Local faturamento</label><input class="sb-edit-inp" id="seFatur" value="' + (p.faturamento||'') + '"></div>' +
+        '<div style="grid-column:1/-1"><label class="sb-edit-label">Endereço entrega</label><input class="sb-edit-inp" id="seEndereco" value="' + (p.local_entrega||'') + '"></div>' +
+        '<div style="grid-column:1/-1"><label class="sb-edit-label">Observações</label><textarea class="sb-edit-inp" id="seObs" rows="2">' + (p.observacoes||'') + '</textarea></div>' +
+        '</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#a01228;margin-bottom:6px;border-bottom:2px solid #a01228;padding-bottom:4px">ITENS</div>' +
+        '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+        '<thead><tr style="background:#a01228;color:white">' +
+        '<th style="padding:5px 7px">#</th><th style="padding:5px 7px">Código</th><th style="padding:5px 7px">Qtd</th>' +
+        '<th style="padding:5px 7px">Preço R$</th><th style="padding:5px 7px">Com.%</th><th style="padding:5px 7px">Data Ent.</th>' +
+        '</tr></thead><tbody>' +
+        itens.map(function(it, i) {
+            return '<tr>' +
+                '<td style="padding:4px 6px;color:#999;font-weight:700">' + (i+1) + '</td>' +
+                '<td style="padding:3px 4px"><select class="sb-edit-inp" id="seItemCod' + i + '" style="min-width:130px" onchange="atualizarCorSbItem(' + i + ')">' +
+                optsSelect.replace('value="' + it.codigo + '"', 'value="' + it.codigo + '" selected') + '</select></td>' +
+                '<td style="padding:3px 4px"><input class="sb-edit-inp" id="seItemQtd' + i + '" value="' + (it.quantidade||'') + '" style="width:70px"></td>' +
+                '<td style="padding:3px 4px"><input class="sb-edit-inp" id="seItemPrc' + i + '" value="' + (it.preco||'') + '" style="width:80px"></td>' +
+                '<td style="padding:3px 4px"><input class="sb-edit-inp" id="seItemCom' + i + '" value="' + (it.comissao||'') + '" style="width:60px"></td>' +
+                '<td style="padding:3px 4px"><input class="sb-edit-inp" id="seItemDt' + i + '" value="' + (it.data_entrega||'') + '" placeholder="dd/mm/aa" style="width:90px"></td>' +
+                '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+
+    document.getElementById('sbEditBody').innerHTML = body;
+    document.getElementById('sbEditPanel').style.display = 'block';
+}
+
+function atualizarCorSbItem(i) {
+    var cod = document.getElementById('seItemCod' + i).value;
+    // a cor é derivada do select — guardada em produtos
+}
+
+function fecharEditSb() {
+    document.getElementById('sbEditPanel').style.display = 'none';
+    sbPedidoAtual = null;
+}
+
+async function salvarEdicaoSb() {
+    if (!sbPedidoAtual) return;
+    var itens = [];
+    for (var i = 0; i < 10; i++) {
+        var cod = document.getElementById('seItemCod' + i) ? document.getElementById('seItemCod' + i).value : '';
+        if (cod) {
+            itens.push({
+                numero: i + 1,
+                codigo: cod,
+                cor: produtos[cod] || '',
+                quantidade: (document.getElementById('seItemQtd' + i)||{value:''}).value,
+                preco: (document.getElementById('seItemPrc' + i)||{value:''}).value,
+                comissao: (document.getElementById('seItemCom' + i)||{value:''}).value,
+                data_entrega: (document.getElementById('seItemDt' + i)||{value:''}).value
+            });
+        }
+    }
+    var upd = {
+        vendedor_nome:      (document.getElementById('seNomeVend')||{value:''}).value,
+        vendedor_codigo:    (document.getElementById('seCodVend')||{value:''}).value,
+        condicao_pagamento: (document.getElementById('seCondPag')||{value:''}).value,
+        faturamento:        (document.getElementById('seFatur')||{value:''}).value,
+        local_entrega:      (document.getElementById('seEndereco')||{value:''}).value,
+        observacoes:        (document.getElementById('seObs')||{value:''}).value,
+        itens: itens,
+        status: 'editado',
+        updated_at: new Date().toISOString(),
+        versao: (sbPedidoAtual.versao || 1) + 1,
+        historico: (sbPedidoAtual.historico || []).concat([{
+            data: new Date().toISOString(), acao: 'editado', versao: (sbPedidoAtual.versao || 1) + 1
+        }])
+    };
+    try {
+        await sbFetch('pedidos?id=eq.' + sbPedidoAtual.id, 'PATCH', upd);
+        alert('Pedido salvo! Status atualizado para "editado" — pronto para nova aprovação.');
+        fecharEditSb();
+        buscarPedidosSb();
+    } catch(e) {
+        alert('Erro ao salvar: ' + e.message);
+    }
+}
+
+function gerarPDFSbDireto(p) {
+    sbPedidoAtual = p;
+    gerarPDFSb();
+}
+
+function gerarPDFSb() {
+    if (!sbPedidoAtual) return;
+    var p = sbPedidoAtual;
+    var dados = {
+        numero: p.numero_pedido || p.id.slice(0,8),
+        dataHora: p.data_pedido ? new Date(p.data_pedido).toLocaleString('pt-BR') : '-',
+        vendedor: { codigo: p.vendedor_codigo||'-', nome: p.vendedor_nome||'-' },
+        cliente:  { nome: p.cliente_nome||'-', cnpj: p.cliente_cnpj||'-' },
+        pedido: {
+            dataEntrega: '-',
+            prazoPagamento: p.condicao_pagamento||'-',
+            tipoFrete: '-',
+            faturamento: p.faturamento||'-',
+            enderecoEntrega: p.local_entrega||'-'
+        },
+        itens: (p.itens||[]).map(function(it, i) {
+            var qtd = parseFloat(it.quantidade)||0;
+            var pr  = parseFloat((it.preco||'').replace(',','.').replace('.','').replace(',','.'))||0;
+            return { numero:i+1, codigo:it.codigo, descricao:it.cor, quantidade:it.quantidade,
+                     preco:it.preco, comissao:it.comissao, dataEntrega:it.data_entrega||'-',
+                     total: (qtd * pr).toFixed(2).replace('.',',') };
+        }),
+        totalGeral: (p.total_geral||0).toLocaleString('pt-BR',{minimumFractionDigits:2}),
+        observacoes: p.observacoes||''
+    };
+    document.getElementById('loadingText').textContent = 'Gerando PDF...';
+    document.getElementById('loadingOverlay').classList.add('active');
+    setTimeout(function() {
+        try { gerarPDFDados(dados, 'pedido_edit_' + dados.numero + '.pdf'); }
+        catch(e) { alert('Erro PDF: ' + e.message); }
+        document.getElementById('loadingOverlay').classList.remove('active');
+    }, 100);
+}
+
 function fecharAdminPanel() {
     document.getElementById('adminLogin').style.display = 'block';
     document.getElementById('adminPanel').style.display = 'none';
     document.getElementById('senhaAdmin').value = '';
+    document.getElementById('erroSenha').style.display = 'none';
     fecharModal('modalAdmin');
 }
 
@@ -1661,124 +1930,12 @@ function abrirModalAdmin() {
 function verificarSenha() {
     if (document.getElementById('senhaAdmin').value === SENHA_ADMIN) {
         document.getElementById('adminLogin').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        carregarPedidosAdmin();
+        document.getElementById('adminPanel').style.display = 'flex';
+        document.getElementById('adminPanel').style.flexDirection = 'column';
+        buscarPedidosSb();
     } else {
         document.getElementById('erroSenha').style.display = 'block';
     }
-}
-
-function carregarPedidosAdmin() {
-    var pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-    var lista = document.getElementById('listaPedidosAdmin');
-    if (!pedidos.length) { lista.innerHTML = '<p style="color:#999;text-align:center">Nenhum pedido salvo.</p>'; return; }
-    lista.innerHTML = pedidos.slice().reverse().map(function(p, idx) {
-        var ri = pedidos.length - 1 - idx;
-        var docs = p.documentos || [];
-        var docsComDados = docs.filter(function(d) { return d.dados; });
-        var docsHTML = docs.length > 0
-            ? '<div class="doc-preview">' + docs.map(function(d, di) {
-                return d.dados
-                    ? '<span class="doc-preview-item" onclick="visualizarDoc(' + ri + ',' + di + ')" title="' + d.nome + '">' + (d.nome.length > 22 ? d.nome.substring(0,20)+'..' : d.nome) + '</span>'
-                    : '<span style="background:#eee;border:1px solid #ccc;border-radius:4px;padding:4px 8px;font-size:11px;color:#777">' + (d.nome.length > 22 ? d.nome.substring(0,20)+'..' : d.nome) + '</span>';
-              }).join('') + '</div>'
-            : '<span style="font-size:11px;color:#999">Nenhum documento</span>';
-        return '<div class="pedido-card">' +
-            '<div class="pedido-card-header"><span>Pedido #' + p.numero + '</span><span>' + p.data + '</span></div>' +
-            '<div class="pedido-card-body">' +
-            '<p><b>Cliente:</b> ' + (p.dados.nomeCliente||'-') + '</p>' +
-            '<p><b>CNPJ:</b> ' + (p.dados.cnpjCliente||'-') + '</p>' +
-            '<p><b>Vendedor:</b> ' + (p.dados.nomeVendedor||'-') + ' (' + (p.dados.codigoVendedor||'-') + ')</p>' +
-            '<p><b>Faturamento:</b> ' + (p.dados.faturamento||'-') + '</p>' +
-            '<p><b>Total:</b> R$ ' + (p.totalGeral||'0,00') + '</p>' +
-            (p.bitrixDealId ? '<p><b>Deal Bitrix24:</b> <a href="https://fiorella.bitrix24.com.br/crm/type/1070/details/' + p.bitrixDealId + '/" target="_blank" style="color:#a01228">#' + p.bitrixDealId + ' Abrir &rarr;</a></p>' : '') +
-            '<p><b>Documentos (' + docs.length + '):</b></p>' + docsHTML +
-            '</div>' +
-            '<div class="pedido-card-actions">' +
-            '<button class="btn btn-pdf" onclick="gerarPDFAdmin(' + ri + ')">Gerar PDF</button>' +
-            (docsComDados.length > 0 ? '<button class="btn btn-secondary" onclick="baixarDocumentos(' + ri + ')">Baixar Docs</button>' : '') +
-            '</div></div>';
-    }).join('');
-}
-
-function visualizarDoc(pedidoIdx, docIdx) {
-    var pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-    var doc = pedidos[pedidoIdx] && pedidos[pedidoIdx].documentos && pedidos[pedidoIdx].documentos[docIdx];
-    if (!doc || !doc.dados) { alert('Documento nao disponivel.'); return; }
-    if (doc.tipo && doc.tipo.startsWith('image/')) {
-        var w = window.open('');
-        w.document.write('<html><body style="margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh"><img src="' + doc.dados + '" style="max-width:100%;max-height:100vh"></body></html>');
-    } else if (doc.tipo === 'application/pdf') {
-        var w = window.open('');
-        w.document.write('<html><body style="margin:0;height:100vh"><embed src="' + doc.dados + '" type="application/pdf" width="100%" height="100%"></body></html>');
-    } else {
-        var a = document.createElement('a'); a.href = doc.dados; a.download = doc.nome;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    }
-}
-
-function gerarPDFAdmin(idx) {
-    var pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-    var p = pedidos[idx];
-    if (!p) { alert('Pedido nao encontrado.'); return; }
-    var dados = {
-        numero: p.numero,
-        dataHora: p.data,
-        vendedor: {codigo: p.dados.codigoVendedor||'-', nome: p.dados.nomeVendedor||'-'},
-        cliente: {nome: p.dados.nomeCliente||'-', cnpj: p.dados.cnpjCliente||'-'},
-        pedido: {
-            dataEntrega: p.dados.dataEntrega||'-',
-            prazoPagamento: p.dados.prazoPagamento||'-',
-            tipoFrete: p.dados.tipoFrete||'-',
-            faturamento: p.dados.faturamento||'-',
-            enderecoEntrega: p.dados.enderecoEntrega||'-'
-        },
-        itens: [],
-        totalGeral: p.totalGeral||'0,00',
-        observacoes: p.dados.observacoes||''
-    };
-    for (var i = 1; i <= 10; i++) {
-        var cod = p.dados['produto' + i + '_cod'];
-        if (cod) {
-            var qtd = parseFloat(p.dados['produto' + i + '_qtd'])||0;
-            var pr = parseFloat((p.dados['produto' + i + '_preco']||'').replace(',','.'))||0;
-            dados.itens.push({
-                numero: i,
-                codigo: cod,
-                descricao: p.dados['produto' + i + '_desc']||'',
-                quantidade: p.dados['produto' + i + '_qtd']||'0',
-                preco: p.dados['produto' + i + '_preco']||'0',
-                comissao: p.dados['produto' + i + '_comissao']||'0',
-                dataEntrega: p.dados['produto' + i + '_data']||'-',
-                total: fmt(qtd * pr)
-            });
-        }
-    }
-    document.getElementById('loadingText').textContent = 'Gerando PDF...';
-    document.getElementById('loadingOverlay').classList.add('active');
-    setTimeout(function() {
-        try {
-            gerarPDFDados(dados, 'pedido_' + dados.numero + '.pdf');
-        } catch(e) {
-            console.error(e);
-            alert('Erro ao gerar PDF: ' + e.message);
-        }
-        document.getElementById('loadingOverlay').classList.remove('active');
-    }, 100);
-}
-
-function baixarDocumentos(idx) {
-    var pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-    var p = pedidos[idx];
-    if (!p || !p.documentos) { alert('Nenhum documento.'); return; }
-    var docs = p.documentos.filter(function(d) { return d.dados; });
-    if (!docs.length) { alert('Documentos nao disponiveis para download.'); return; }
-    docs.forEach(function(doc, i) {
-        setTimeout(function() {
-            var a = document.createElement('a'); a.href = doc.dados; a.download = doc.nome;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        }, i * 600);
-    });
 }
 </script>
 
