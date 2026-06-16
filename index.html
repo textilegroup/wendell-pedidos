@@ -1534,7 +1534,7 @@ async function enviarPedido() {
             fields: {
                 title:      'Pedido ' + numeroPedido + ' - ' + nomeCliente,
                 categoryId: BX_CATEGORY,
-                'ufCrm29_1781572074906': 1,
+                'ufCrm29_1781572074906': '1',
                 comments:   descLines.join('\n'),
                 // Valor e moeda nativos do Bitrix
                 opportunity:          parseFloat(totalGeral.replace(/\./g,'').replace(',','.')) || 0,
@@ -1546,7 +1546,9 @@ async function enviarPedido() {
         };
 
         // ---- 3. Criar Deal ----
+        console.log('[CRIAR] dealFields enviados:', JSON.stringify(dealFields.fields));
         var dealId = await bxCall('crm.item.add', dealFields);
+        console.log('[CRIAR] resposta Bitrix:', JSON.stringify(dealId));
         // crm.item.add retorna { item: { id: ... } }
         if (dealId && dealId.item) dealId = dealId.item.id;
         if (!dealId) throw new Error('Deal nao criado — resposta inesperada do Bitrix24.');
@@ -1980,7 +1982,7 @@ async function salvarEdicaoSb() {
                 fields: {
                     title: novoTitulo,
                     comments: linhas.join('\n'),
-                    'ufCrm29_1781572074906': novaVersao,
+                    'ufCrm29_1781572074906': String(novaVersao),
                     opportunity: dadosEdit.itens.reduce(function(s,it){
                         return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
                     }, 0)
