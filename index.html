@@ -1832,42 +1832,167 @@ function fecharEditSb() {
 
 async function salvarEdicaoSb() {
     if (!sbPedidoAtual) return;
+
+    var BX_WEBHOOK   = 'https://fiorella.bitrix24.com.br/rest/1/1kalsjfoz13rhglc/';
+    var BX_TYPE_ID   = 1070;
+    var CAMPO_PRE_PEDIDO = 'ufCrm29_1780621188016';
+
+    async function bxCallEdit(method, params) {
+        var resp = await fetch(BX_WEBHOOK + method, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(params)
+        });
+        if (!resp.ok) throw new Error('Bitrix HTTP ' + resp.status);
+        var json = await resp.json();
+        if (json.error) throw new Error(json.error_description || json.error);
+        return json.result;
+    }
+
+    // Coletar itens do formulário de edição
     var itens = [];
     for (var i = 0; i < 10; i++) {
-        var cod = document.getElementById('seItemCod' + i) ? document.getElementById('seItemCod' + i).value : '';
+        var elCod = document.getElementById('seItemCod' + i);
+        var cod = elCod ? elCod.value : '';
         if (cod) {
             itens.push({
                 numero: i + 1,
                 codigo: cod,
                 cor: produtos[cod] || '',
                 quantidade: (document.getElementById('seItemQtd' + i)||{value:''}).value,
-                preco: (document.getElementById('seItemPrc' + i)||{value:''}).value,
-                comissao: (document.getElementById('seItemCom' + i)||{value:''}).value,
+                preco:     (document.getElementById('seItemPrc' + i)||{value:''}).value,
+                comissao:  (document.getElementById('seItemCom' + i)||{value:''}).value,
                 data_entrega: (document.getElementById('seItemDt' + i)||{value:''}).value
             });
         }
     }
-    var upd = {
-        vendedor_nome:      (document.getElementById('seNomeVend')||{value:''}).value,
-        vendedor_codigo:    (document.getElementById('seCodVend')||{value:''}).value,
-        condicao_pagamento: (document.getElementById('seCondPag')||{value:''}).value,
-        faturamento:        (document.getElementById('seFatur')||{value:''}).value,
-        local_entrega:      (document.getElementById('seEndereco')||{value:''}).value,
-        observacoes:        (document.getElementById('seObs')||{value:''}).value,
-        itens: itens,
-        status: 'editado',
-        updated_at: new Date().toISOString(),
-        versao: (sbPedidoAtual.versao || 1) + 1,
-        historico: (sbPedidoAtual.historico || []).concat([{
-            data: new Date().toISOString(), acao: 'editado', versao: (sbPedidoAtual.versao || 1) + 1
-        }])
-    };
+
+    var nomeVend   = (document.getElementById('seNomeVend')||{value:''}).value;
+    var codVend    = (document.getElementById('seCodVend')||{value:''}).value;
+    var condPag    = (document.getElementById('seCondPag')||{value:''}).value;
+    var fatur      = (document.getElementById('seFatur')||{value:''}).value;
+    var endereco   = (document.getElementById('seEndereco')||{value:''}).value;
+    var obs        = (document.getElementById('seObs')||{value:''}).value;
+
+    // Mostrar loading
+    document.getElementById('loadingText').textContent = 'Salvando edição...';
+    document.getElementById('loadingOverlay').classList.add('active');
+
     try {
+        // ── 1. Salvar no Supabase ──
+        var upd = {
+            vendedor_nome: nomeVend, vendedor_codigo: codVend,
+            condicao_pagamento: condPag, faturamento: fatur,
+            local_entrega: endereco, observacoes: obs,
+            itens: itens, status: 'editado',
+            updated_at: new Date().toISOString(),
+            versao: (sbPedidoAtual.versao || 1) + 1,
+            historico: (sbPedidoAtual.historico || []).concat([{
+                data: new Date().toISOString(), acao: 'editado',
+                versao: (sbPedidoAtual.versao || 1) + 1
+            }])
+        };
         await sbFetch('pedidos?id=eq.' + sbPedidoAtual.id, 'PATCH', upd);
-        alert('Pedido salvo! Status atualizado para "editado" — pronto para nova aprovação.');
+
+        // ── 2. Gerar novo PDF com dados editados ──
+        document.getElementById('loadingText').textContent = 'Gerando novo PDF...';
+        var dadosEdit = {
+            numero:   sbPedidoAtual.numero_pedido || sbPedidoAtual.id.slice(0,8),
+            dataHora: new Date().toLocaleString('pt-BR'),
+            vendedor: { codigo: codVend, nome: nomeVend },
+            cliente:  { nome: sbPedidoAtual.cliente_nome || '-', cnpj: sbPedidoAtual.cliente_cnpj || '-' },
+            pedido: {
+                dataEntrega: '-', prazoPagamento: condPag,
+                tipoFrete: '-', faturamento: fatur, enderecoEntrega: endereco
+            },
+            itens: itens.map(function(it) {
+                var qtd = parseFloat(it.quantidade) || 0;
+                var pr  = parseFloat((it.preco || '').replace(',', '.')) || 0;
+                return {
+                    numero: it.numero, codigo: it.codigo, descricao: it.cor,
+                    quantidade: it.quantidade, preco: it.preco,
+                    comissao: it.comissao, dataEntrega: it.data_entrega || '-',
+                    total: (qtd * pr).toFixed(2).replace('.', ',')
+                };
+            }),
+            totalGeral: itens.reduce(function(s, it) {
+                var qtd = parseFloat(it.quantidade) || 0;
+                var pr  = parseFloat((it.preco || '').replace(',', '.')) || 0;
+                return s + qtd * pr;
+            }, 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+            observacoes: obs
+        };
+        var pdfUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__');
+        var pdfBase64 = extrairBase64(pdfUri);
+        var nomePDF   = 'pre_pedido_edit_' + dadosEdit.numero.replace(/[^0-9a-zA-Z]/g, '_') + '.pdf';
+
+        // ── 3. Atualizar Deal no Bitrix ──
+        if (sbPedidoAtual.bitrix_deal_id) {
+            document.getElementById('loadingText').textContent = 'Atualizando Bitrix24...';
+            var dealId = parseInt(sbPedidoAtual.bitrix_deal_id);
+
+            // Montar novo comments
+            var linhas = ['Pedido (EDITADO v' + ((sbPedidoAtual.versao||1)+1) + ') - ' + new Date().toLocaleString('pt-BR'), ''];
+            linhas.push('CLIENTE: ' + (sbPedidoAtual.cliente_nome || '-'));
+            if (sbPedidoAtual.cliente_cnpj) linhas.push('CNPJ: ' + sbPedidoAtual.cliente_cnpj);
+            linhas.push('VENDEDOR: ' + nomeVend + ' (cod: ' + codVend + ')');
+            linhas.push('TOTAL GERAL: R$ ' + dadosEdit.totalGeral);
+            if (obs) linhas.push('OBSERVACOES: ' + obs);
+            linhas.push('');
+            itens.forEach(function(it) {
+                linhas.push('- ' + it.codigo + ' | Qtd: ' + it.quantidade + ' | R$ ' + it.preco);
+            });
+
+            // Atualizar campos texto do Deal
+            await bxCallEdit('crm.item.update', {
+                entityTypeId: BX_TYPE_ID,
+                id: dealId,
+                fields: {
+                    comments: linhas.join('\n'),
+                    opportunity: dadosEdit.itens.reduce(function(s,it){
+                        return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
+                    }, 0)
+                }
+            });
+
+            // Upload novo PDF sobrepondo o anterior
+            document.getElementById('loadingText').textContent = 'Enviando novo PDF...';
+            var fieldsUpd = {};
+            fieldsUpd[CAMPO_PRE_PEDIDO] = [[nomePDF, pdfBase64]];
+            await bxCallEdit('crm.item.update', {
+                entityTypeId: BX_TYPE_ID, id: dealId, fields: fieldsUpd
+            });
+
+            // Capturar urlMachine e gravar no campo link
+            try {
+                var itemAtualizado = await bxCallEdit('crm.item.get', { entityTypeId: BX_TYPE_ID, id: dealId });
+                var arrPDF = itemAtualizado && itemAtualizado.item && itemAtualizado.item[CAMPO_PRE_PEDIDO];
+                if (Array.isArray(arrPDF) && arrPDF.length > 0) {
+                    var arqObj = arrPDF[arrPDF.length - 1];
+                    var urlPDF = arqObj.urlMachine || arqObj.url || '';
+                    if (urlPDF) {
+                        await bxCallEdit('crm.item.update', {
+                            entityTypeId: BX_TYPE_ID, id: dealId,
+                            fields: { 'ufCrm29_1780885857294': urlPDF }
+                        });
+                    }
+                }
+            } catch(eLinkPDF) { console.warn('urlMachine:', eLinkPDF.message); }
+
+            // Resetar status de aprovação para pendente
+            await bxCallEdit('crm.item.update', {
+                entityTypeId: BX_TYPE_ID, id: dealId,
+                fields: { 'ufCrm29_1773692249': '' }
+            });
+        }
+
+        document.getElementById('loadingOverlay').classList.remove('active');
+        alert('Pedido salvo e atualizado no Bitrix! O Deal foi atualizado com novo PDF e voltou para aprovação.');
         fecharEditSb();
         buscarPedidosSb();
+
     } catch(e) {
+        document.getElementById('loadingOverlay').classList.remove('active');
         alert('Erro ao salvar: ' + e.message);
     }
 }
