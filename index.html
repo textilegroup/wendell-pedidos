@@ -1780,7 +1780,11 @@ function gerarPDFSbIdx(idx) {
 }
 function abrirEditSb(p) {
     sbPedidoAtual = p;
-    document.getElementById('sbEditTitulo').textContent = 'Editar Pedido ' + (p.numero_pedido || p.id.slice(0,8));
+    var dealInfo = p.bitrix_deal_id ? ' — Deal Bitrix #' + p.bitrix_deal_id : ' — SEM DEAL BITRIX';
+    document.getElementById('sbEditTitulo').textContent = 'Editar Pedido ' + (p.numero_pedido || p.id.slice(0,8)) + dealInfo;
+    if (!p.bitrix_deal_id) {
+        alert('ATENÇÃO: Este pedido não tem Deal Bitrix vinculado.\nSomente o Supabase será atualizado.');
+    }
     var itens = p.itens || [];
     // Garantir 10 linhas de item
     while (itens.length < 10) itens.push({codigo:'',cor:'',quantidade:'',preco:'',comissao:'',data_entrega:''});
@@ -1930,6 +1934,7 @@ async function salvarEdicaoSb() {
         if (sbPedidoAtual.bitrix_deal_id) {
             document.getElementById('loadingText').textContent = 'Atualizando Bitrix24...';
             var dealId = parseInt(sbPedidoAtual.bitrix_deal_id);
+            console.log('[EDIT] Atualizando Deal Bitrix ID:', dealId, 'tipo:', typeof dealId);
 
             // Montar novo comments
             var linhas = ['Pedido (EDITADO v' + ((sbPedidoAtual.versao||1)+1) + ') - ' + new Date().toLocaleString('pt-BR'), ''];
@@ -1944,7 +1949,7 @@ async function salvarEdicaoSb() {
             });
 
             // Atualizar campos texto do Deal
-            await bxCallEdit('crm.item.update', {
+            var resUpd = await bxCallEdit('crm.item.update', {
                 entityTypeId: BX_TYPE_ID,
                 id: dealId,
                 fields: {
@@ -1954,14 +1959,17 @@ async function salvarEdicaoSb() {
                     }, 0)
                 }
             });
+            console.log('[EDIT] crm.item.update comments result:', JSON.stringify(resUpd));
 
             // Upload novo PDF sobrepondo o anterior
             document.getElementById('loadingText').textContent = 'Enviando novo PDF...';
+            console.log('[EDIT] Enviando PDF:', nomePDF, 'para dealId:', dealId, 'campo:', CAMPO_PRE_PEDIDO);
             var fieldsUpd = {};
             fieldsUpd[CAMPO_PRE_PEDIDO] = [[nomePDF, pdfBase64]];
-            await bxCallEdit('crm.item.update', {
+            var resPDF = await bxCallEdit('crm.item.update', {
                 entityTypeId: BX_TYPE_ID, id: dealId, fields: fieldsUpd
             });
+            console.log('[EDIT] Upload PDF result:', JSON.stringify(resPDF));
 
             // Capturar urlMachine e gravar no campo link
             try {
@@ -1993,7 +2001,8 @@ async function salvarEdicaoSb() {
 
     } catch(e) {
         document.getElementById('loadingOverlay').classList.remove('active');
-        alert('Erro ao salvar: ' + e.message);
+        console.error('[EDIT] Erro completo:', e);
+        alert('Erro ao salvar: ' + e.message + '\n\nVeja o console (F12) para detalhes.');
     }
 }
 
