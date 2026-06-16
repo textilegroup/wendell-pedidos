@@ -1533,6 +1533,7 @@ async function enviarPedido() {
             fields: {
                 title:      'Pedido ' + numeroPedido + ' - ' + nomeCliente,
                 categoryId: BX_CATEGORY,
+                'ufCrm29_1781572074906': 1,
                 comments:   descLines.join('\n'),
                 // Valor e moeda nativos do Bitrix
                 opportunity:          parseFloat(totalGeral.replace(/\./g,'').replace(',','.')) || 0,
@@ -1978,12 +1979,13 @@ async function salvarEdicaoSb() {
                 fields: {
                     title: novoTitulo,
                     comments: linhas.join('\n'),
+                    'ufCrm29_1781572074906': novaVersao,
                     opportunity: dadosEdit.itens.reduce(function(s,it){
                         return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
                     }, 0)
                 }
             });
-            console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'titulo:', novoTitulo);
+            console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'titulo:', novoTitulo, 'versao:', novaVersao);
 
             // Upload novo PDF sobrepondo o anterior
             document.getElementById('loadingText').textContent = 'Enviando novo PDF...';
