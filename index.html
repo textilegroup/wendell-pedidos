@@ -1967,28 +1967,22 @@ async function salvarEdicaoSb() {
             });
 
             // Atualizar campos texto do Deal
-            // Título com versão: "Pedido 09/06/26 15:42 - Cliente [v2]"
+            // NÃO altera o title — automação do Bitrix cuida do nome
             var novaVersao = (sbPedidoAtual.versao || 1) + 1;
-            var tituloOriginal = sbPedidoAtual.numero_pedido
-                ? 'Pedido ' + sbPedidoAtual.numero_pedido + ' - ' + (sbPedidoAtual.cliente_nome || '')
-                : (sbPedidoAtual.cliente_nome || 'Pedido');
-            // Remover versão anterior do título se já existir
-            tituloOriginal = tituloOriginal.replace(/\s*\[v\d+\]$/, '');
-            var novoTitulo = tituloOriginal + ' [v' + novaVersao + ']';
 
             var resUpd = await bxCallEdit('crm.item.update', {
                 entityTypeId: BX_TYPE_ID,
                 id: dealId,
                 fields: {
-                    title: novoTitulo,
                     comments: linhas.join('\n'),
                     'ufCrm29_1781572074906': String(novaVersao),
+                    'ufCrm29_1773692249': false,
                     opportunity: dadosEdit.itens.reduce(function(s,it){
                         return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
                     }, 0)
                 }
             });
-            console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'titulo:', novoTitulo, 'versao:', novaVersao);
+            console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'versao:', novaVersao);
 
             // Upload novo PDF sobrepondo o anterior
             document.getElementById('loadingText').textContent = 'Enviando novo PDF...';
@@ -2016,11 +2010,7 @@ async function salvarEdicaoSb() {
                 }
             } catch(eLinkPDF) { console.warn('urlMachine:', eLinkPDF.message); }
 
-            // Resetar status de aprovação para pendente
-            await bxCallEdit('crm.item.update', {
-                entityTypeId: BX_TYPE_ID, id: dealId,
-                fields: { 'ufCrm29_1773692249': '' }
-            });
+            // Campo aprovação zerado junto com versão acima
         }
 
         document.getElementById('loadingOverlay').classList.remove('active');
