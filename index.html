@@ -1612,12 +1612,12 @@ async function enviarPedido() {
         // Dados já gravados no Supabase (gravarPedidoSupabase chamado acima)
 
         // ---- 7. Confirmar e limpar ----
-        document.getElementById('pedidoSalvo').textContent = pedido.numero;
+        document.getElementById('pedidoSalvo').textContent = numeroPedido;
         // Atualizar link do botão PDF no modal
         var btnDL = document.getElementById('btnDownloadPDFModal');
         if (btnDL && ultimoPdfDataUri) {
             btnDL.href = ultimoPdfDataUri;
-            btnDL.download = 'pedido_' + pedido.numero.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
+            btnDL.download = 'pedido_' + numeroPedido.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
         }
         document.getElementById('modalConfirmacao').classList.add('active');
         dispararFogos();
