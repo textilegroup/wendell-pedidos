@@ -1750,7 +1750,8 @@ async function buscarPedidosSb() {
             }
             return '<div class="sb-card">' +
                 '<div class="sb-card-header">' +
-                '<span class="sb-card-title">Pedido ' + (p.numero_pedido || p.id.slice(0,8)) + '</span>' +
+                '<span class="sb-card-title">Pedido ' + (p.numero_pedido || p.id.slice(0,8)) +
+                (p.versao > 1 ? ' <span style="background:#d1ecf1;color:#0c5460;font-size:11px;padding:1px 7px;border-radius:9px;font-weight:600">v' + p.versao + '</span>' : '') + '</span>' +
                 '<span class="sb-status ' + statusClass + '">' + (p.status || 'pendente') + '</span>' +
                 '</div>' +
                 '<div class="sb-field"><b>Data:</b> ' + dataFmt + '</div>' +
@@ -1759,7 +1760,17 @@ async function buscarPedidosSb() {
                 '<div class="sb-field"><b>Total:</b> R$ ' + (p.total_geral||'0').toLocaleString('pt-BR', {minimumFractionDigits:2}) +
                 (p.bitrix_deal_id ? ' &nbsp;|&nbsp; <b>Deal Bitrix:</b> <a href="https://fiorella.bitrix24.com.br/crm/type/1070/details/' + p.bitrix_deal_id + '/" target="_blank" style="color:#a01228">#' + p.bitrix_deal_id + ' ↗</a>' : '') + '</div>' +
                 itensHTML +
-                '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
+                + (p.historico && p.historico.length > 1
+                    ? '<details style="margin-top:6px;font-size:11px"><summary style="cursor:pointer;color:#666">Histórico de versões (' + p.historico.length + ')</summary>' +
+                      '<div style="margin-top:4px;padding:6px;background:#f9f9f9;border-radius:4px">' +
+                      p.historico.map(function(h) {
+                          return '<div style="padding:2px 0;border-bottom:1px solid #eee;color:#555">' +
+                              new Date(h.data).toLocaleString('pt-BR') + ' — ' + h.acao +
+                              (h.versao ? ' [v' + h.versao + ']' : '') +
+                              (h.por ? ' por ' + h.por : '') + '</div>';
+                      }).join('') + '</div></details>'
+                    : '')
+                + '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
                 '<button class="btn btn-enviar" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="abrirEditSbIdx(this.dataset.sbidx)">&#9998; Editar</button>' +
                 '<button class="btn btn-pdf" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="gerarPDFSbIdx(this.dataset.sbidx)">&#128196; PDF</button>' +
                 '</div>' +
@@ -1884,16 +1895,19 @@ async function salvarEdicaoSb() {
 
     try {
         // ── 1. Salvar no Supabase ──
+        var novaVersaoSb = (sbPedidoAtual.versao || 1) + 1;
         var upd = {
             vendedor_nome: nomeVend, vendedor_codigo: codVend,
             condicao_pagamento: condPag, faturamento: fatur,
             local_entrega: endereco, observacoes: obs,
             itens: itens, status: 'editado',
             updated_at: new Date().toISOString(),
-            versao: (sbPedidoAtual.versao || 1) + 1,
+            versao: novaVersaoSb,
             historico: (sbPedidoAtual.historico || []).concat([{
-                data: new Date().toISOString(), acao: 'editado',
-                versao: (sbPedidoAtual.versao || 1) + 1
+                data: new Date().toISOString(),
+                acao: 'editado',
+                versao: novaVersaoSb,
+                por: nomeVend || 'admin'
             }])
         };
         await sbFetch('pedidos?id=eq.' + sbPedidoAtual.id, 'PATCH', upd);
@@ -1949,17 +1963,27 @@ async function salvarEdicaoSb() {
             });
 
             // Atualizar campos texto do Deal
+            // Título com versão: "Pedido 09/06/26 15:42 - Cliente [v2]"
+            var novaVersao = (sbPedidoAtual.versao || 1) + 1;
+            var tituloOriginal = sbPedidoAtual.numero_pedido
+                ? 'Pedido ' + sbPedidoAtual.numero_pedido + ' - ' + (sbPedidoAtual.cliente_nome || '')
+                : (sbPedidoAtual.cliente_nome || 'Pedido');
+            // Remover versão anterior do título se já existir
+            tituloOriginal = tituloOriginal.replace(/\s*\[v\d+\]$/, '');
+            var novoTitulo = tituloOriginal + ' [v' + novaVersao + ']';
+
             var resUpd = await bxCallEdit('crm.item.update', {
                 entityTypeId: BX_TYPE_ID,
                 id: dealId,
                 fields: {
+                    title: novoTitulo,
                     comments: linhas.join('\n'),
                     opportunity: dadosEdit.itens.reduce(function(s,it){
                         return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
                     }, 0)
                 }
             });
-            console.log('[EDIT] crm.item.update comments result:', JSON.stringify(resUpd));
+            console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'titulo:', novoTitulo);
 
             // Upload novo PDF sobrepondo o anterior
             document.getElementById('loadingText').textContent = 'Enviando novo PDF...';
