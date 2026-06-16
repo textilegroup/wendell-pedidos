@@ -737,6 +737,7 @@
                 <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
                     <button class="btn btn-enviar" onclick="salvarEdicaoSb()">💾 Salvar e reenviar para aprovação</button>
                     <button class="btn btn-pdf" onclick="gerarPDFSb()">📄 Gerar PDF</button>
+                    <button class="btn" id="btnPDFClienteSb" style="background:#1565c0;color:white;display:none" onclick="gerarPDFClienteSb()">📄 PDF Cliente</button>
                 </div>
             </div>
             <div style="margin-top:10px;flex-shrink:0">
@@ -832,7 +833,8 @@ async function gravarPedidoSupabase(dados, dealId, totalGeral) {
         await sbFetch('pedidos', 'POST', rec);
         console.log('Pedido gravado no Supabase');
     } catch(e) {
-        console.warn('Supabase (nao critico):', e.message);
+        console.error('[SUPABASE] Erro ao gravar pedido:', e.message, e);
+        // Não bloqueia o fluxo mas registra o erro
     }
 }
 var itemAtual = 1;
@@ -1139,7 +1141,9 @@ function coletarDados() {
 // ============================================================
 // GERACAO DE PDF - usando jsPDF nativo sem html2canvas
 // ============================================================
-function gerarPDFDados(dados, filename) {
+function gerarPDFDados(dados, filename, opcoes) {
+    opcoes = opcoes || {};
+    var semComissao = opcoes.semComissao || false;
     var jsPDF = window.jspdf.jsPDF;
     var doc = new jsPDF('p', 'mm', 'a4');
     var pageW = doc.internal.pageSize.getWidth();
@@ -1167,16 +1171,22 @@ function gerarPDFDados(dados, filename) {
     doc.setFont('helvetica', 'normal');
     doc.text('Wendell Global Interlining', margin + 34, 27);
 
-    // ID único à direita: data + hora/seg
-    var idCompleto = dados.numero + ' ' + dados.horaEnvio;
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
+    // ID à direita: Deal Bitrix + versão + data/hora
+    var idCompleto = dados.numero + (dados.horaEnvio ? ' ' + dados.horaEnvio : '');
+    var dealLine   = opcoes.dealId  ? 'Deal #' + opcoes.dealId  : '';
+    var versaoLine = opcoes.versao  ? 'v' + opcoes.versao        : '';
+    var dealVersao = [dealLine, versaoLine].filter(Boolean).join('  ');
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text('ID DO PEDIDO', pageW - margin, 14, {align: 'right'});
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+    doc.text('ID DO PEDIDO', pageW - margin, 12, {align: 'right'});
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.setTextColor(255, 220, 220);
-    doc.text(idCompleto, pageW - margin, 23, {align: 'right'});
+    doc.text(idCompleto, pageW - margin, 20, {align: 'right'});
+    if (dealVersao) {
+        doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 200, 200);
+        doc.text(dealVersao, pageW - margin, 28, {align: 'right'});
+    }
 
     y = 44;
 
@@ -1288,7 +1298,9 @@ function gerarPDFDados(dados, filename) {
     y += 9;
 
     if (dados.itens.length > 0) {
-        var tableHead = [['#', 'Codigo', 'Cor', 'Qtd (m/l)', 'Preco (R$)', 'Com.', 'IPI', 'Data Ent.', 'Total (R$)']];
+        var tableHead = semComissao
+        ? [['#', 'Codigo', 'Cor', 'Qtd (m/l)', 'Preco (R$)', 'IPI', 'Data Ent.', 'Total (R$)']]
+        : [['#', 'Codigo', 'Cor', 'Qtd (m/l)', 'Preco (R$)', 'Com.', 'IPI', 'Data Ent.', 'Total (R$)']];
         var tableBody = [];
         dados.itens.forEach(function(it) {
             var cod = it.codigo || '';
@@ -1562,17 +1574,24 @@ async function enviarPedido() {
         });
 
         // ---- 4. Upload PDF no campo PRÉ-PEDIDO ----
-        // Gravar no Supabase (em paralelo, não bloqueia)
+        // Gravar no Supabase — coletar TODOS os dados antes de qualquer limpeza
         var formDados = {};
         var fd2 = new FormData(document.getElementById('formPedido'));
         fd2.forEach(function(v, k){ formDados[k] = v; });
-        formDados.nomeCliente = document.getElementById('nomeCliente') ? document.getElementById('nomeCliente').value : '';
-        formDados.cnpjCliente = document.getElementById('cnpjCliente') ? document.getElementById('cnpjCliente').value : '';
-        formDados.faturamento = document.getElementById('faturamento') ? document.getElementById('faturamento').value : '';
-        formDados.enderecoEntrega = document.getElementById('enderecoEntrega') ? document.getElementById('enderecoEntrega').value : '';
-        formDados.observacoes = document.getElementById('observacoes') ? document.getElementById('observacoes').value : '';
-        formDados.numeroPedido = numeroPedido;
-        gravarPedidoSupabase(formDados, dealId, document.getElementById('totalGeral').textContent);
+        // Campos extras não capturados pelo FormData
+        formDados.nomeCliente    = (document.getElementById('nomeCliente')    || {value:''}).value;
+        formDados.cnpjCliente    = (document.getElementById('cnpjCliente')    || {value:''}).value;
+        formDados.faturamento    = (document.getElementById('faturamento')    || {value:''}).value;
+        formDados.enderecoEntrega= (document.getElementById('enderecoEntrega')|| {value:''}).value;
+        formDados.observacoes    = (document.getElementById('observacoes')    || {value:''}).value;
+        formDados.numeroPedido   = numeroPedido;
+        // Capturar datas dos itens (campos text dd/mm/aaaa)
+        for (var di = 1; di <= 10; di++) {
+            var dtEl = document.getElementById('dataItem' + di + 'Text') || document.getElementById('dataItem' + di);
+            if (dtEl) formDados['produto' + di + '_data'] = dtEl.value || '';
+        }
+        formDados.totalGeral = document.getElementById('totalGeral').textContent;
+        await gravarPedidoSupabase(formDados, dealId, formDados.totalGeral);
 
         document.getElementById('loadingText').textContent = 'Enviando PDF para Bitrix24...';
         await uploadArquivosCampo(dealId, CAMPO_PRE_PEDIDO, [
@@ -1755,7 +1774,7 @@ async function buscarPedidosSb() {
             return '<div class="sb-card">' +
                 '<div class="sb-card-header">' +
                 '<span class="sb-card-title">Pedido ' + (p.numero_pedido || p.id.slice(0,8)) +
-                + ' <span style="background:#d1ecf1;color:#0c5460;font-size:11px;padding:1px 7px;border-radius:9px;font-weight:600">v' + (p.versao || 1) + '</span>' + '</span>' +
+                ' <span style="background:#d1ecf1;color:#0c5460;font-size:11px;padding:1px 7px;border-radius:9px;font-weight:600"> v' + (p.versao || 1) + '</span></span>' +
                 '<span class="sb-status ' + statusClass + '">' + (p.status || 'pendente') + '</span>' +
                 '</div>' +
                 '<div class="sb-field"><b>Data:</b> ' + dataFmt + '</div>' +
@@ -1777,6 +1796,7 @@ async function buscarPedidosSb() {
                 + '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
                 '<button class="btn btn-enviar" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="abrirEditSbIdx(this.dataset.sbidx)">&#9998; Editar</button>' +
                 '<button class="btn btn-pdf" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="gerarPDFSbIdx(this.dataset.sbidx)">&#128196; PDF</button>' +
+                (p.status === 'aprovado' ? '<button class="btn" style="padding:6px 12px;font-size:12px;background:#1565c0;color:white" data-sbidx="' + idx + '" onclick="gerarPDFClienteIdx(this.dataset.sbidx)">&#128196; PDF Cliente</button>' : '<span style="font-size:11px;color:#999;padding:6px 4px">PDF Cliente: aguardando aprovação</span>') +
                 '</div>' +
                 '</div>';
         }).join('');
@@ -1796,6 +1816,8 @@ function gerarPDFSbIdx(idx) {
 function abrirEditSb(p) {
     sbPedidoAtual = p;
     var dealInfo = p.bitrix_deal_id ? ' — Deal Bitrix #' + p.bitrix_deal_id : ' — SEM DEAL BITRIX';
+    var btnPDFCli = document.getElementById('btnPDFClienteSb');
+    if (btnPDFCli) btnPDFCli.style.display = (p.status === 'aprovado') ? '' : 'none';
     document.getElementById('sbEditTitulo').textContent = 'Editar Pedido ' + (p.numero_pedido || p.id.slice(0,8)) + dealInfo;
     if (!p.bitrix_deal_id) {
         alert('ATENÇÃO: Este pedido não tem Deal Bitrix vinculado.\nSomente o Supabase será atualizado.');
@@ -1944,7 +1966,7 @@ async function salvarEdicaoSb() {
             }, 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
             observacoes: obs
         };
-        var pdfUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__');
+        var pdfUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__', {dealId: sbPedidoAtual.bitrix_deal_id, versao: novaVersaoSb});
         var pdfBase64 = extrairBase64(pdfUri);
         var nomePDF   = 'pre_pedido_edit_' + dadosEdit.numero.replace(/[^0-9a-zA-Z]/g, '_') + '.pdf';
 
@@ -2025,6 +2047,52 @@ async function salvarEdicaoSb() {
     }
 }
 
+function gerarPDFClienteIdx(idx) {
+    var p = sbPedidosCache[parseInt(idx)];
+    if (!p) return;
+    if (p.status !== 'aprovado') { alert('PDF Cliente disponível apenas para pedidos APROVADOS.'); return; }
+    sbPedidoAtual = p;
+    gerarPDFClienteSb();
+}
+
+function gerarPDFClienteSb() {
+    if (!sbPedidoAtual) return;
+    if (sbPedidoAtual.status !== 'aprovado') { alert('PDF Cliente disponível apenas para pedidos APROVADOS.'); return; }
+    var p = sbPedidoAtual;
+    var dados = {
+        numero: p.numero_pedido || p.id.slice(0,8),
+        horaEnvio: '',
+        dataHora: p.data_pedido ? new Date(p.data_pedido).toLocaleString('pt-BR') : '-',
+        vendedor: { codigo: p.vendedor_codigo||'-', nome: p.vendedor_nome||'-' },
+        cliente:  { nome: p.cliente_nome||'-', cnpj: p.cliente_cnpj||'-' },
+        pedido: {
+            dataEntrega: '-', prazoPagamento: p.condicao_pagamento||'-',
+            tipoFrete: '-', faturamento: p.faturamento||'-', enderecoEntrega: p.local_entrega||'-'
+        },
+        itens: (p.itens||[]).map(function(it,i){
+            var qtd = parseFloat(it.quantidade)||0;
+            var pr  = parseFloat((it.preco||'').replace(',','.'))||0;
+            return { numero:i+1, codigo:it.codigo, descricao:it.cor,
+                     quantidade:it.quantidade, preco:it.preco, comissao:'',
+                     dataEntrega:it.data_entrega||'-',
+                     total:(qtd*pr).toFixed(2).replace('.',',') };
+        }),
+        totalGeral: (p.total_geral||0).toLocaleString('pt-BR',{minimumFractionDigits:2}),
+        observacoes: p.observacoes||''
+    };
+    document.getElementById('loadingText').textContent = 'Gerando PDF Cliente...';
+    document.getElementById('loadingOverlay').classList.add('active');
+    setTimeout(function() {
+        try {
+            gerarPDFDados(dados,
+                'pedido_cliente_' + dados.numero.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf',
+                {dealId: p.bitrix_deal_id, versao: p.versao || 1, semComissao: true}
+            );
+        } catch(e) { alert('Erro PDF Cliente: ' + e.message); }
+        document.getElementById('loadingOverlay').classList.remove('active');
+    }, 100);
+}
+
 function gerarPDFSbDireto(p) {
     sbPedidoAtual = p;
     gerarPDFSb();
@@ -2058,7 +2126,7 @@ function gerarPDFSb() {
     document.getElementById('loadingText').textContent = 'Gerando PDF...';
     document.getElementById('loadingOverlay').classList.add('active');
     setTimeout(function() {
-        try { gerarPDFDados(dados, 'pedido_edit_' + dados.numero + '.pdf'); }
+        try { gerarPDFDados(dados, 'pedido_edit_' + dados.numero + '.pdf', {dealId: p.bitrix_deal_id, versao: p.versao || 1}); }
         catch(e) { alert('Erro PDF: ' + e.message); }
         document.getElementById('loadingOverlay').classList.remove('active');
     }, 100);
