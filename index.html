@@ -826,6 +826,7 @@ async function gravarPedidoSupabase(dados, dealId, totalGeral) {
             observacoes: dados.observacoes || '',
             total_geral: parseFloat((totalGeral || '0').toString().replace('.','').replace(',','.')) || 0,
             itens: itens,
+            versao: 1,
             historico: [{ data: new Date().toISOString(), acao: 'criado', deal: dealId }]
         };
         await sbFetch('pedidos', 'POST', rec);
@@ -1752,7 +1753,7 @@ async function buscarPedidosSb() {
             return '<div class="sb-card">' +
                 '<div class="sb-card-header">' +
                 '<span class="sb-card-title">Pedido ' + (p.numero_pedido || p.id.slice(0,8)) +
-                (p.versao > 1 ? ' <span style="background:#d1ecf1;color:#0c5460;font-size:11px;padding:1px 7px;border-radius:9px;font-weight:600">v' + p.versao + '</span>' : '') + '</span>' +
+                + ' <span style="background:#d1ecf1;color:#0c5460;font-size:11px;padding:1px 7px;border-radius:9px;font-weight:600">v' + (p.versao || 1) + '</span>' + '</span>' +
                 '<span class="sb-status ' + statusClass + '">' + (p.status || 'pendente') + '</span>' +
                 '</div>' +
                 '<div class="sb-field"><b>Data:</b> ' + dataFmt + '</div>' +
