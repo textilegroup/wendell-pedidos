@@ -78,7 +78,15 @@
         .pedido-card-actions .btn { padding: 7px 12px; font-size: 11px; min-width: auto; flex: none; }
         .admin-tab-btn { padding:7px 14px;border:1px solid #a01228;border-radius:5px;background:white;color:#a01228;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s }
         .admin-tab-btn:hover,.admin-tab-btn.active { background:#a01228;color:white }
-        .sb-card { border:1px solid #e0e0e0;border-radius:7px;padding:12px;margin-bottom:10px;background:#fafafa;position:relative }
+        .sb-card { border:1px solid #e0e0e0;border-radius:7px;padding:12px;margin-bottom:10px;background:#fafafa;position:relative;transition:border-color .15s }
+        .sb-card.selecionado { border-color:#a01228;background:#fff8f8 }
+        .sb-card-check { width:18px;height:18px;accent-color:#a01228;cursor:pointer;flex-shrink:0 }
+        .barra-selecao { display:none;background:#2d2d2d;color:white;padding:10px 14px;border-radius:7px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap }
+        .barra-selecao.ativa { display:flex }
+        .barra-selecao-info { flex:1;font-size:13px;font-weight:600 }
+        .btn-excluir-sel { background:#b71c1c;color:white;border:none;padding:7px 14px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer }
+        .btn-excluir-sel:hover { background:#7f0000 }
+        .btn-dessel { background:#555;color:white;border:none;padding:7px 12px;border-radius:5px;font-size:12px;cursor:pointer }
         .sb-card-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px }
         .sb-card-title { font-weight:700;color:#a01228;font-size:14px }
         .sb-status { padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase }
@@ -728,6 +736,19 @@
     
                     </select>
                     <button class="btn btn-enviar" style="padding:7px 14px;font-size:13px" onclick="buscarPedidosSb()">🔍 Buscar</button>
+                </div>
+                <!-- Barra de ações em massa -->
+                <div class="barra-selecao" id="barraSelecao">
+                    <span class="barra-selecao-info" id="barraSelecaoInfo">0 selecionado(s)</span>
+                    <button class="btn-excluir-sel" onclick="excluirSelecionados()">🗑️ Excluir selecionados</button>
+                    <button class="btn-dessel" onclick="desselecionarTodos()">✕ Cancelar</button>
+                </div>
+                <!-- Selecionar todos -->
+                <div id="checkTodosWrap" style="display:none;padding:6px 2px;margin-bottom:4px">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#555;cursor:pointer">
+                        <input type="checkbox" id="checkTodos" class="sb-card-check" onchange="toggleSelecionarTodos(this.checked)">
+                        Selecionar todos os pedidos exibidos
+                    </label>
                 </div>
                 <div id="listaSbPedidos"><p style="color:#999;text-align:center">Clique em Buscar para carregar</p></div>
             </div>
@@ -1813,6 +1834,7 @@ var sbPedidosCache = [];
 async function buscarPedidosSb() {
     var lista = document.getElementById('listaSbPedidos');
     lista.innerHTML = '<p style="color:#999;text-align:center">Carregando...</p>';
+    desselecionarTodos();
     try {
         var cliente = document.getElementById('sbBuscaCliente').value.trim();
         var status  = document.getElementById('sbFiltroStatus').value;
@@ -1851,6 +1873,8 @@ async function buscarPedidosSb() {
                     }).catch(function(){});
             }
         });
+        document.getElementById('checkTodosWrap').style.display = data.length > 0 ? 'block' : 'none';
+        document.getElementById('checkTodos').checked = false;
         lista.innerHTML = data.map(function(p, idx) {
             var statusClass = 'sb-status-' + (p.status || 'pendente');
             var dataFmt = p.data_pedido ? new Date(p.data_pedido).toLocaleString('pt-BR') : '-';
@@ -1862,8 +1886,9 @@ async function buscarPedidosSb() {
                                '</td><td>R$ ' + it.preco + '</td><td>' + (it.data_entrega||'-') + '</td></tr>';
                     }).join('') + '</table>';
             }
-            return '<div class="sb-card">' +
+            return '<div class="sb-card" id="sbcard-' + idx + '">' +
                 '<div class="sb-card-header">' +
+                '<input type="checkbox" class="sb-card-check" data-sbidx="' + idx + '" onchange="toggleSelecao(this)" title="Selecionar pedido">' +
                 '<span class="sb-card-title">Pedido ' + (p.numero_pedido || p.id.slice(0,8)) +
                 ' <span style="background:#d1ecf1;color:#0c5460;font-size:11px;padding:1px 7px;border-radius:9px;font-weight:600"> v' + (p.versao || 1) + '</span></span>' +
                 '<span class="sb-status ' + statusClass + '">' + (p.status === 'pendente' ? 'Aguardando Aprovação' : (p.status || 'pendente')) + '</span>' +
@@ -2279,6 +2304,71 @@ function gerarPDFSb() {
 }
 
 var SENHA_EXCLUIR = 'Industria967';
+var idxSelecionados = new Set();
+
+function toggleSelecao(chk) {
+    var idx = parseInt(chk.dataset.sbidx);
+    var card = document.getElementById('sbcard-' + idx);
+    if (chk.checked) {
+        idxSelecionados.add(idx);
+        if (card) card.classList.add('selecionado');
+    } else {
+        idxSelecionados.delete(idx);
+        if (card) card.classList.remove('selecionado');
+    }
+    atualizarBarraSelecao();
+}
+
+function toggleSelecionarTodos(checked) {
+    document.querySelectorAll('.sb-card-check[data-sbidx]').forEach(function(chk) {
+        chk.checked = checked;
+        toggleSelecao(chk);
+    });
+}
+
+function desselecionarTodos() {
+    idxSelecionados.clear();
+    document.querySelectorAll('.sb-card-check').forEach(function(chk){ chk.checked = false; });
+    document.querySelectorAll('.sb-card').forEach(function(c){ c.classList.remove('selecionado'); });
+    document.getElementById('checkTodos').checked = false;
+    atualizarBarraSelecao();
+}
+
+function atualizarBarraSelecao() {
+    var n = idxSelecionados.size;
+    var barra = document.getElementById('barraSelecao');
+    var info  = document.getElementById('barraSelecaoInfo');
+    barra.classList.toggle('ativa', n > 0);
+    if (info) info.textContent = n + ' pedido(s) selecionado(s)';
+}
+
+async function excluirSelecionados() {
+    var arr = Array.from(idxSelecionados);
+    if (arr.length === 0) return;
+    var nomes = arr.map(function(i){
+        var p = sbPedidosCache[i];
+        return p ? (p.numero_pedido || p.id.slice(0,8)) : i;
+    }).join(', ');
+    var senha = prompt('Excluir ' + arr.length + ' pedido(s):\n' + nomes + '\n\nDigite a senha de exclusão:');
+    if (senha === null) return;
+    if (senha !== SENHA_EXCLUIR) { alert('Senha incorreta. Exclusão cancelada.'); return; }
+    if (!confirm('CONFIRMAR exclusão permanente de ' + arr.length + ' pedido(s)?\nEsta ação não pode ser desfeita.')) return;
+
+    document.getElementById('loadingText').textContent = 'Excluindo pedidos...';
+    document.getElementById('loadingOverlay').classList.add('active');
+    var erros = 0;
+    for (var i = 0; i < arr.length; i++) {
+        var p = sbPedidosCache[arr[i]];
+        if (!p) continue;
+        try { await sbFetch('pedidos?id=eq.' + p.id, 'DELETE'); }
+        catch(e) { erros++; console.warn('Erro excluindo', p.id, e.message); }
+    }
+    document.getElementById('loadingOverlay').classList.remove('active');
+    desselecionarTodos();
+    if (erros > 0) alert('Concluído com ' + erros + ' erro(s). Verifique o console.');
+    else alert(arr.length + ' pedido(s) excluído(s) com sucesso.');
+    buscarPedidosSb();
+}
 
 function confirmarExclusao(idx) {
     var p = sbPedidosCache[parseInt(idx)];
