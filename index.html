@@ -1311,7 +1311,12 @@ function gerarPDFDados(dados, filename, opcoes) {
             var cod = it.codigo || '';
             var incideIPI = cod && (cod.charAt(0) === '7' || cod.charAt(0) === '8');
             var ipiPctStr = incideIPI ? '3,25%' : '0%';
-            tableBody.push([it.numero, it.codigo, it.descricao, it.quantidade, it.preco, it.comissao + '%', ipiPctStr, it.dataEntrega, it.total]);
+            if (semComissao) {
+                // Versão cliente: sem coluna comissão
+                tableBody.push([it.numero, it.codigo, it.descricao, it.quantidade, it.preco, ipiPctStr, it.dataEntrega, it.total]);
+            } else {
+                tableBody.push([it.numero, it.codigo, it.descricao, it.quantidade, it.preco, it.comissao + '%', ipiPctStr, it.dataEntrega, it.total]);
+            }
         });
 
         doc.autoTable({
@@ -1335,14 +1340,23 @@ function gerarPDFDados(dados, filename, opcoes) {
             alternateRowStyles: {
                 fillColor: [250, 250, 250]
             },
-            columnStyles: {
+            columnStyles: semComissao ? {
                 0: {cellWidth: 7,  halign: 'center'},   // #
                 1: {cellWidth: 22},                      // Codigo
-                2: {cellWidth: 48},                      // Descricao (-20%)
+                2: {cellWidth: 52},                      // Cor (mais largo sem Com.)
+                3: {cellWidth: 14, halign: 'center'},    // Qtd
+                4: {cellWidth: 20, halign: 'right'},     // Preco
+                5: {cellWidth: 14, halign: 'center'},    // IPI
+                6: {cellWidth: 18, halign: 'center'},    // Data Ent.
+                7: {cellWidth: 20, halign: 'right'}      // Total
+            } : {
+                0: {cellWidth: 7,  halign: 'center'},   // #
+                1: {cellWidth: 22},                      // Codigo
+                2: {cellWidth: 48},                      // Descricao
                 3: {cellWidth: 14, halign: 'center'},    // Qtd
                 4: {cellWidth: 18, halign: 'right'},     // Preco
                 5: {cellWidth: 10, halign: 'center'},    // Com%
-                6: {cellWidth: 14, halign: 'center'},    // IPI (ampliado)
+                6: {cellWidth: 14, halign: 'center'},    // IPI
                 7: {cellWidth: 18, halign: 'center'},    // Data Ent.
                 8: {cellWidth: 20, halign: 'right'}      // Total
             },
@@ -1448,10 +1462,15 @@ function gerarPDF() {
     }, 100);
 }
 
+// ── CONSTANTES BITRIX GLOBAIS ──
+var BX_WEBHOOK       = 'https://fiorella.bitrix24.com.br/rest/1/1kalsjfoz13rhglc/';
+var BX_TYPE_ID       = 1070;
+var BX_CATEGORY      = 59;
+var CAMPO_PRE_PEDIDO = 'ufCrm29_1780621188016';
+
 // ── BITRIX CALL GLOBAL ──
 async function bxCall(method, params) {
-    var BX_WH = 'https://fiorella.bitrix24.com.br/rest/1/1kalsjfoz13rhglc/';
-    var resp = await fetch(BX_WH + method, {
+    var resp = await fetch(BX_WEBHOOK + method, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(params)
@@ -1466,10 +1485,7 @@ async function enviarPedido() {
     // ============================================================
     // BITRIX24 - CONFIGURACOES
     // ============================================================
-    var BX_WEBHOOK = 'https://fiorella.bitrix24.com.br/rest/1/1kalsjfoz13rhglc/';
-    var BX_TYPE_ID   = 1070;   // SPA type
-    var BX_CATEGORY  = 59;     // Pipeline/categoria
-    var CAMPO_PRE_PEDIDO  = 'ufCrm29_1780621188016';   // campo PDF pre-pedido
+    // Constantes Bitrix definidas globalmente acima
     var CAMPO_DOC_COMPRA  = 'ufCrm_1714673455403';     // campo documentos de compra
 
     // ============================================================
@@ -1950,9 +1966,7 @@ function fecharEditSb() {
 async function salvarEdicaoSb() {
     if (!sbPedidoAtual) return;
 
-    var BX_WEBHOOK   = 'https://fiorella.bitrix24.com.br/rest/1/1kalsjfoz13rhglc/';
-    var BX_TYPE_ID   = 1070;
-    var CAMPO_PRE_PEDIDO = 'ufCrm29_1780621188016';
+    // Constantes Bitrix definidas globalmente
 
     // bxCallEdit substituída por bxCall global
 
