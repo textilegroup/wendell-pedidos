@@ -85,7 +85,7 @@
         .sb-status-pendente { background:#fff3cd;color:#856404 }
         .sb-status-aprovado { background:#d4edda;color:#155724 }
         .sb-status-reprovado { background:#f8d7da;color:#721c24 }
-        .sb-status-editado { background:#d1ecf1;color:#0c5460 }
+        .sb-status-editado { background:#fff3cd;color:#856404 }  /* editado = pendente visualmente */
         .sb-field { margin-bottom:3px;font-size:12px;color:#555 }
         .sb-field b { color:#333 }
         .sb-itens-table { width:100%;border-collapse:collapse;margin-top:8px;font-size:12px }
@@ -689,10 +689,14 @@
     <div class="modal-content">
         <h2 style="color:#a01228">✅ Pedido Enviado ao Bitrix!</h2>
         <p>O pedido <strong><span id="pedidoSalvo"></span></strong> foi enviado ao Bitrix com sucesso.</p>
-        <div style="margin-top:14px">
+        <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
             <a id="btnDownloadPDFModal" href="#" download="pedido.pdf"
-               style="display:inline-block;padding:10px 20px;background:#a01228;color:white;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer">
-                📄 Clique aqui para obter uma cópia do PDF
+               style="display:inline-block;padding:10px 18px;background:#a01228;color:white;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none">
+                📄 PDF Comercial
+            </a>
+            <a id="btnDownloadPDFClienteModal" href="#" download="pedido_cliente.pdf"
+               style="display:inline-block;padding:10px 18px;background:#1565c0;color:white;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none">
+                📄 PDF Cliente
             </a>
         </div>
         <button class="btn btn-enviar" onclick="fecharModal('modalConfirmacao')" style="margin-top:14px">OK</button>
@@ -721,7 +725,7 @@
                         <option value="pendente">Pendente</option>
                         <option value="aprovado">Aprovado</option>
                         <option value="reprovado">Reprovado</option>
-                        <option value="editado">Editado</option>
+    
                     </select>
                     <button class="btn btn-enviar" style="padding:7px 14px;font-size:13px" onclick="buscarPedidosSb()">🔍 Buscar</button>
                 </div>
@@ -737,7 +741,7 @@
                 <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
                     <button class="btn btn-enviar" onclick="salvarEdicaoSb()">💾 Salvar e reenviar para aprovação</button>
                     <button class="btn btn-pdf" onclick="gerarPDFSb()">📄 Gerar PDF</button>
-                    <button class="btn" id="btnPDFClienteSb" style="background:#1565c0;color:white;display:none" onclick="gerarPDFClienteSb()">📄 PDF Cliente</button>
+
                 </div>
             </div>
             <div style="margin-top:10px;flex-shrink:0">
@@ -849,7 +853,8 @@ function gerarIdPedido() {
 }
 
 var numeroPedidoAtual = parseInt(localStorage.getItem('ultimoPedido') || '0') + 1;
-var ultimoPdfDataUri  = null;  // guarda o PDF do último pedido enviado para download no modal
+var ultimoPdfDataUri    = null;  // PDF comercial do último pedido
+var ultimoPdfClienteUri = null;  // PDF cliente do último pedido
 var documentosCarregados = [];
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1384,6 +1389,15 @@ function gerarPDFDados(dados, filename, opcoes) {
     }
 
     // --- RODAPE ---
+    if (opcoes && opcoes.aviso) {
+        doc.setFillColor(255, 248, 220);
+        doc.rect(margin, pageH - 20, pageW - margin*2, 9, 'F');
+        doc.setDrawColor(200, 150, 0); doc.setLineWidth(0.3);
+        doc.rect(margin, pageH - 20, pageW - margin*2, 9, 'S');
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+        doc.setTextColor(120, 80, 0);
+        doc.text('ATENCAO: Pedido em analise, sujeito a aprovacao.', pageW/2, pageH - 14, {align: 'center'});
+    }
     doc.setTextColor(180, 180, 180);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
@@ -1493,13 +1507,9 @@ async function enviarPedido() {
         document.getElementById('loadingText').textContent = 'Enviando pedido...';
         document.getElementById('loadingOverlay').classList.add('active');
 
-        // ---- 0. Gerar PDF ANTES de limpar o formulário ----
-        document.getElementById('loadingText').textContent = 'Gerando PDF do pedido...';
-        var dadosPDF   = coletarDados();
-        var pdfDataUri = gerarPDFDados(dadosPDF, '__RETURN_DATA_URI__');
-        var pdfBase64  = extrairBase64(pdfDataUri);
-        ultimoPdfDataUri = pdfDataUri;  // guardar para o modal
-        var nomePDF    = 'pre_pedido_' + dadosPDF.numero.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
+        // ---- 0. Coletar dados do formulário (antes de limpar) ----
+        var dadosPDF = coletarDados();
+        var nomePDF  = 'pre_pedido_' + dadosPDF.numero.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
 
         // ---- 1. Montar campos do Deal ----
         document.getElementById('loadingText').textContent = 'Criando Deal no Bitrix24...';
@@ -1565,6 +1575,18 @@ async function enviarPedido() {
         if (dealId && dealId.item) dealId = dealId.item.id;
         if (!dealId) throw new Error('Deal nao criado — resposta inesperada do Bitrix24.');
 
+        // ---- 0b. Gerar dois PDFs (comercial + cliente) com Deal ID ----
+        document.getElementById('loadingText').textContent = 'Gerando PDFs do pedido...';
+        var opcoesPDF = {dealId: dealId, versao: 1, aviso: true};
+        // PDF Comercial (com comissão)
+        var pdfDataUri   = gerarPDFDados(dadosPDF, '__RETURN_DATA_URI__', opcoesPDF);
+        var pdfBase64    = extrairBase64(pdfDataUri);
+        ultimoPdfDataUri = pdfDataUri;
+        // PDF Cliente (sem comissão)
+        var pdfClienteUri    = gerarPDFDados(dadosPDF, '__RETURN_DATA_URI__', Object.assign({}, opcoesPDF, {semComissao: true}));
+        var pdfClienteBase64 = extrairBase64(pdfClienteUri);
+        ultimoPdfClienteUri  = pdfClienteUri;
+
         // ---- 3b. Gravar link de aprovação no Deal ----
         var linkAprovacao = 'https://textilegroup.github.io/wendell-aprovacao-pedido/?dealId=' + dealId;
         await bxCall('crm.item.update', {
@@ -1593,10 +1615,18 @@ async function enviarPedido() {
         formDados.totalGeral = document.getElementById('totalGeral').textContent;
         await gravarPedidoSupabase(formDados, dealId, formDados.totalGeral);
 
-        document.getElementById('loadingText').textContent = 'Enviando PDF para Bitrix24...';
+        document.getElementById('loadingText').textContent = 'Enviando PDFs para Bitrix24...';
+        var nomePDFCliente = 'cliente_' + nomePDF;
+        // Upload PDF Comercial
         await uploadArquivosCampo(dealId, CAMPO_PRE_PEDIDO, [
             { nome: nomePDF, base64: pdfBase64 }
         ]);
+        // Upload PDF Cliente no campo de documentos
+        try {
+            await uploadArquivosCampo(dealId, 'ufCrm_1714673455403', [
+                { nome: nomePDFCliente, base64: pdfClienteBase64 }
+            ]);
+        } catch(eCli) { console.warn('PDF Cliente upload:', eCli.message); }
 
         // ---- 4b. Capturar urlMachine e gravar no campo link PDF ----
         try {
@@ -1641,6 +1671,11 @@ async function enviarPedido() {
         if (btnDL && ultimoPdfDataUri) {
             btnDL.href = ultimoPdfDataUri;
             btnDL.download = 'pedido_' + numeroPedido.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
+        }
+        var btnDLCli = document.getElementById('btnDownloadPDFClienteModal');
+        if (btnDLCli && ultimoPdfClienteUri) {
+            btnDLCli.href = ultimoPdfClienteUri;
+            btnDLCli.download = 'pedido_cliente_' + numeroPedido.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
         }
         document.getElementById('modalConfirmacao').classList.add('active');
         dispararFogos();
@@ -1760,6 +1795,33 @@ async function buscarPedidosSb() {
             lista.innerHTML = '<p style="color:#999;text-align:center">Nenhum pedido encontrado.</p>'; return;
         }
         sbPedidosCache = data;
+        // Sincronizar status com Bitrix para pedidos pendentes
+        data.forEach(function(p, idx) {
+            if (p.status !== 'aprovado' && p.bitrix_deal_id) {
+                bxCall('crm.item.get', {entityTypeId: BX_TYPE_ID, id: parseInt(p.bitrix_deal_id)})
+                    .then(function(res) {
+                        if (!res || !res.item) return;
+                        var campoAprov = res.item['ufCrm29_1773692249'];
+                        var aprovado = campoAprov && (String(campoAprov) === '4185' ||
+                            (Array.isArray(campoAprov) && String(campoAprov[0]) === '4185'));
+                        if (aprovado && p.status !== 'aprovado') {
+                            sbFetch('pedidos?id=eq.' + p.id, 'PATCH', {status: 'aprovado'})
+                                .then(function() {
+                                    sbPedidosCache[idx].status = 'aprovado';
+                                    // Atualizar badge do card sem recarregar tudo
+                                    var el = document.querySelector('[data-sbidx="' + idx + '"]');
+                                    if (el) {
+                                        var statusEl = el.closest('.sb-card') && el.closest('.sb-card').querySelector('.sb-status');
+                                        if (statusEl) {
+                                            statusEl.className = 'sb-status sb-status-aprovado';
+                                            statusEl.textContent = 'aprovado';
+                                        }
+                                    }
+                                }).catch(function(){});
+                        }
+                    }).catch(function(){});
+            }
+        });
         lista.innerHTML = data.map(function(p, idx) {
             var statusClass = 'sb-status-' + (p.status || 'pendente');
             var dataFmt = p.data_pedido ? new Date(p.data_pedido).toLocaleString('pt-BR') : '-';
@@ -1795,8 +1857,9 @@ async function buscarPedidosSb() {
                     : '')
                 + '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
                 '<button class="btn btn-enviar" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="abrirEditSbIdx(this.dataset.sbidx)">&#9998; Editar</button>' +
+                '<button class="btn" style="padding:6px 12px;font-size:12px;background:#b71c1c;color:white" data-sbidx="' + idx + '" onclick="confirmarExclusao(this.dataset.sbidx)">&#128465; Excluir</button>' +
                 '<button class="btn btn-pdf" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="gerarPDFSbIdx(this.dataset.sbidx)">&#128196; PDF</button>' +
-                (p.status === 'aprovado' ? '<button class="btn" style="padding:6px 12px;font-size:12px;background:#1565c0;color:white" data-sbidx="' + idx + '" onclick="gerarPDFClienteIdx(this.dataset.sbidx)">&#128196; PDF Cliente</button>' : '<span style="font-size:11px;color:#999;padding:6px 4px">PDF Cliente: aguardando aprovação</span>') +
+
                 '</div>' +
                 '</div>';
         }).join('');
@@ -1926,7 +1989,7 @@ async function salvarEdicaoSb() {
             vendedor_nome: nomeVend, vendedor_codigo: codVend,
             condicao_pagamento: condPag, faturamento: fatur,
             local_entrega: endereco, observacoes: obs,
-            itens: itens, status: 'editado',
+            itens: itens, status: 'pendente',
             updated_at: new Date().toISOString(),
             versao: novaVersaoSb,
             historico: (sbPedidoAtual.historico || []).concat([{
@@ -2130,6 +2193,37 @@ function gerarPDFSb() {
         catch(e) { alert('Erro PDF: ' + e.message); }
         document.getElementById('loadingOverlay').classList.remove('active');
     }, 100);
+}
+
+var SENHA_EXCLUIR = 'Industria967';
+
+function confirmarExclusao(idx) {
+    var p = sbPedidosCache[parseInt(idx)];
+    if (!p) return;
+    var senha = prompt('Para EXCLUIR o pedido ' + (p.numero_pedido || p.id.slice(0,8)) + 
+        ' (Cliente: ' + (p.cliente_nome||'-') + '), digite a senha de exclusão:');
+    if (senha === null) return; // cancelou
+    if (senha !== SENHA_EXCLUIR) {
+        alert('Senha incorreta. Exclusão cancelada.');
+        return;
+    }
+    if (!confirm('CONFIRMAR exclusão permanente do pedido ' + (p.numero_pedido || p.id.slice(0,8)) + '?\nEsta ação não pode ser desfeita.')) return;
+    excluirPedido(parseInt(idx), p);
+}
+
+async function excluirPedido(idx, p) {
+    document.getElementById('loadingText').textContent = 'Excluindo pedido...';
+    document.getElementById('loadingOverlay').classList.add('active');
+    try {
+        await sbFetch('pedidos?id=eq.' + p.id, 'DELETE');
+        sbPedidosCache.splice(idx, 1);
+        document.getElementById('loadingOverlay').classList.remove('active');
+        alert('Pedido excluído com sucesso.');
+        buscarPedidosSb();
+    } catch(e) {
+        document.getElementById('loadingOverlay').classList.remove('active');
+        alert('Erro ao excluir: ' + e.message);
+    }
 }
 
 function fecharAdminPanel() {
