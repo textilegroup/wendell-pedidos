@@ -1448,6 +1448,20 @@ function gerarPDF() {
     }, 100);
 }
 
+// ── BITRIX CALL GLOBAL ──
+async function bxCall(method, params) {
+    var BX_WH = 'https://fiorella.bitrix24.com.br/rest/1/1kalsjfoz13rhglc/';
+    var resp = await fetch(BX_WH + method, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(params)
+    });
+    if (!resp.ok) throw new Error('Bitrix24 HTTP ' + resp.status + ' em ' + method);
+    var json = await resp.json();
+    if (json.error) throw new Error('Bitrix24 erro: ' + json.error_description);
+    return json.result;
+}
+
 async function enviarPedido() {
     // ============================================================
     // BITRIX24 - CONFIGURACOES
@@ -1471,17 +1485,7 @@ async function enviarPedido() {
     // ============================================================
     // HELPER: chama REST do Bitrix24
     // ============================================================
-    async function bxCall(method, params) {
-        var resp = await fetch(BX_WEBHOOK + method, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(params)
-        });
-        if (!resp.ok) throw new Error('Bitrix24 HTTP ' + resp.status + ' em ' + method);
-        var json = await resp.json();
-        if (json.error) throw new Error('Bitrix24 erro: ' + json.error_description);
-        return json.result;
-    }
+    // bxCall movida para escopo global abaixo
 
     // ============================================================
     // HELPER: faz upload de arquivo para um campo do Deal
@@ -1950,17 +1954,7 @@ async function salvarEdicaoSb() {
     var BX_TYPE_ID   = 1070;
     var CAMPO_PRE_PEDIDO = 'ufCrm29_1780621188016';
 
-    async function bxCallEdit(method, params) {
-        var resp = await fetch(BX_WEBHOOK + method, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(params)
-        });
-        if (!resp.ok) throw new Error('Bitrix HTTP ' + resp.status);
-        var json = await resp.json();
-        if (json.error) throw new Error(json.error_description || json.error);
-        return json.result;
-    }
+    // bxCallEdit substituída por bxCall global
 
     // Coletar itens do formulário de edição
     var itens = [];
@@ -2065,7 +2059,7 @@ async function salvarEdicaoSb() {
             // NÃO altera o title — automação do Bitrix cuida do nome
             var novaVersao = (sbPedidoAtual.versao || 1) + 1;
 
-            var resUpd = await bxCallEdit('crm.item.update', {
+            var resUpd = await bxCall('crm.item.update', {
                 entityTypeId: BX_TYPE_ID,
                 id: dealId,
                 fields: {
@@ -2084,20 +2078,20 @@ async function salvarEdicaoSb() {
             console.log('[EDIT] Enviando PDF:', nomePDF, 'para dealId:', dealId, 'campo:', CAMPO_PRE_PEDIDO);
             var fieldsUpd = {};
             fieldsUpd[CAMPO_PRE_PEDIDO] = [[nomePDF, pdfBase64]];
-            var resPDF = await bxCallEdit('crm.item.update', {
+            var resPDF = await bxCall('crm.item.update', {
                 entityTypeId: BX_TYPE_ID, id: dealId, fields: fieldsUpd
             });
             console.log('[EDIT] Upload PDF result:', JSON.stringify(resPDF));
 
             // Capturar urlMachine e gravar no campo link
             try {
-                var itemAtualizado = await bxCallEdit('crm.item.get', { entityTypeId: BX_TYPE_ID, id: dealId });
+                var itemAtualizado = await bxCall('crm.item.get', { entityTypeId: BX_TYPE_ID, id: dealId });
                 var arrPDF = itemAtualizado && itemAtualizado.item && itemAtualizado.item[CAMPO_PRE_PEDIDO];
                 if (Array.isArray(arrPDF) && arrPDF.length > 0) {
                     var arqObj = arrPDF[arrPDF.length - 1];
                     var urlPDF = arqObj.urlMachine || arqObj.url || '';
                     if (urlPDF) {
-                        await bxCallEdit('crm.item.update', {
+                        await bxCall('crm.item.update', {
                             entityTypeId: BX_TYPE_ID, id: dealId,
                             fields: { 'ufCrm29_1780885857294': urlPDF }
                         });
