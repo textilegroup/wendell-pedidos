@@ -722,7 +722,7 @@
                     <input type="text" id="sbBuscaCliente" placeholder="Buscar por cliente..." style="flex:1;min-width:150px;padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:13px">
                     <select id="sbFiltroStatus" style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:13px">
                         <option value="">Todos os status</option>
-                        <option value="pendente">Pendente</option>
+                        <option value="pendente">Aguardando Aprovação</option>
                         <option value="aprovado">Aprovado</option>
                         <option value="reprovado">Reprovado</option>
     
@@ -1178,7 +1178,7 @@ function gerarPDFDados(dados, filename, opcoes) {
 
     // ID à direita: Deal Bitrix + versão + data/hora
     var idCompleto = dados.numero + (dados.horaEnvio ? ' ' + dados.horaEnvio : '');
-    var dealLine   = opcoes.dealId  ? 'Deal #' + opcoes.dealId  : '';
+    var dealLine   = opcoes.dealId  ? 'Deal ' + opcoes.dealId  : '';
     var versaoLine = opcoes.versao  ? 'v' + opcoes.versao        : '';
     var dealVersao = [dealLine, versaoLine].filter(Boolean).join('  ');
     doc.setFontSize(16); doc.setFont('helvetica', 'bold');
@@ -1600,8 +1600,8 @@ async function enviarPedido() {
         var versaoPDF  = 1;
         var opcoesPDF  = {dealId: dealId, versao: versaoPDF, aviso: true};
         // Nomes corretos conforme padrão solicitado
-        var nomePDF        = 'PRE-PEDIDO #' + dealId + ' V' + versaoPDF + '.pdf';
-        var nomePDFCliente = 'PRE-PEDIDO CLIENTE #' + dealId + ' V' + versaoPDF + '.pdf';
+        var nomePDF        = 'PRE-PEDIDO ' + dealId + ' V' + versaoPDF + '.pdf';
+        var nomePDFCliente = 'PRE-PEDIDO CLIENTE ' + dealId + ' V' + versaoPDF + '.pdf';
         // PDF Comercial (com comissão)
         var pdfDataUri   = gerarPDFDados(dadosPDF, '__RETURN_DATA_URI__', opcoesPDF);
         var pdfBase64    = extrairBase64(pdfDataUri);
@@ -1866,7 +1866,7 @@ async function buscarPedidosSb() {
                 '<div class="sb-card-header">' +
                 '<span class="sb-card-title">Pedido ' + (p.numero_pedido || p.id.slice(0,8)) +
                 ' <span style="background:#d1ecf1;color:#0c5460;font-size:11px;padding:1px 7px;border-radius:9px;font-weight:600"> v' + (p.versao || 1) + '</span></span>' +
-                '<span class="sb-status ' + statusClass + '">' + (p.status || 'pendente') + '</span>' +
+                '<span class="sb-status ' + statusClass + '">' + (p.status === 'pendente' ? 'Aguardando Aprovação' : (p.status || 'pendente')) + '</span>' +
                 '</div>' +
                 '<div class="sb-field"><b>Data:</b> ' + dataFmt + '</div>' +
                 '<div class="sb-field"><b>Cliente:</b> ' + (p.cliente_nome||'-') + ' &nbsp;|&nbsp; <b>CNPJ:</b> ' + (p.cliente_cnpj||'-') + '</div>' +
@@ -1887,7 +1887,8 @@ async function buscarPedidosSb() {
                 + '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
                 '<button class="btn btn-enviar" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="abrirEditSbIdx(this.dataset.sbidx)">&#9998; Editar</button>' +
                 '<button class="btn" style="padding:6px 12px;font-size:12px;background:#b71c1c;color:white" data-sbidx="' + idx + '" onclick="confirmarExclusao(this.dataset.sbidx)">&#128465; Excluir</button>' +
-                '<button class="btn btn-pdf" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="gerarPDFSbIdx(this.dataset.sbidx)">&#128196; PDF</button>' +
+                '<button class="btn btn-pdf" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="gerarPDFSbIdx(this.dataset.sbidx)">&#128196; PDF Comercial</button>' +
+                '<button class="btn" style="padding:6px 12px;font-size:12px;background:#1565c0;color:white" data-sbidx="' + idx + '" onclick="gerarPDFClienteAdminIdx(this.dataset.sbidx)">&#128196; PDF Cliente</button>' +
 
                 '</div>' +
                 '</div>';
@@ -1901,6 +1902,43 @@ function abrirEditSbIdx(idx) {
     var p = sbPedidosCache[parseInt(idx)];
     if (p) abrirEditSb(p);
 }
+function gerarPDFClienteAdminIdx(idx) {
+    var p = sbPedidosCache[parseInt(idx)];
+    if (!p) return;
+    sbPedidoAtual = p;
+    // Montar dados do pedido para gerar PDF Cliente
+    var dados = {
+        numero: p.numero_pedido || p.id.slice(0,8),
+        horaEnvio: '',
+        dataHora: p.data_pedido ? new Date(p.data_pedido).toLocaleString('pt-BR') : '-',
+        vendedor: { codigo: p.vendedor_codigo||'-', nome: p.vendedor_nome||'-' },
+        cliente:  { nome: p.cliente_nome||'-', cnpj: p.cliente_cnpj||'-' },
+        pedido: {
+            dataEntrega: '-', prazoPagamento: p.condicao_pagamento||'-',
+            tipoFrete: '-', faturamento: p.faturamento||'-', enderecoEntrega: p.local_entrega||'-'
+        },
+        itens: (p.itens||[]).map(function(it,i){
+            var qtd = parseFloat(it.quantidade)||0;
+            var pr  = parseFloat((it.preco||'').replace(',','.'))||0;
+            return { numero:i+1, codigo:it.codigo, descricao:it.cor,
+                     quantidade:it.quantidade, preco:it.preco, comissao:'',
+                     dataEntrega:it.data_entrega||'-',
+                     total:(qtd*pr).toFixed(2).replace('.',',') };
+        }),
+        totalGeral: (p.total_geral||0).toLocaleString('pt-BR',{minimumFractionDigits:2}),
+        observacoes: p.observacoes||''
+    };
+    document.getElementById('loadingText').textContent = 'Gerando PDF Cliente...';
+    document.getElementById('loadingOverlay').classList.add('active');
+    setTimeout(function() {
+        try {
+            var nomeCli = 'PRE-PEDIDO CLIENTE ' + (p.bitrix_deal_id||'') + ' V' + (p.versao||1) + '.pdf';
+            gerarPDFDados(dados, nomeCli, {dealId: p.bitrix_deal_id, versao: p.versao||1, semComissao: true, aviso: p.status !== 'aprovado'});
+        } catch(e) { alert('Erro PDF Cliente: ' + e.message); }
+        document.getElementById('loadingOverlay').classList.remove('active');
+    }, 100);
+}
+
 function gerarPDFSbIdx(idx) {
     var p = sbPedidosCache[parseInt(idx)];
     if (p) gerarPDFSbDireto(p);
@@ -2048,8 +2086,8 @@ async function salvarEdicaoSb() {
         };
         var pdfUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__', {dealId: sbPedidoAtual.bitrix_deal_id, versao: novaVersaoSb});
         var pdfBase64 = extrairBase64(pdfUri);
-        var nomePDF        = 'PRE-PEDIDO #' + (sbPedidoAtual.bitrix_deal_id||'?') + ' V' + novaVersaoSb + '.pdf';
-        var nomePDFCliente2 = 'PRE-PEDIDO CLIENTE #' + (sbPedidoAtual.bitrix_deal_id||'?') + ' V' + novaVersaoSb + '.pdf';
+        var nomePDF        = 'PRE-PEDIDO ' + (sbPedidoAtual.bitrix_deal_id||'?') + ' V' + novaVersaoSb + '.pdf';
+        var nomePDFCliente2 = 'PRE-PEDIDO CLIENTE ' + (sbPedidoAtual.bitrix_deal_id||'?') + ' V' + novaVersaoSb + '.pdf';
 
         // ── 3. Atualizar Deal no Bitrix ──
         if (sbPedidoAtual.bitrix_deal_id) {
@@ -2087,15 +2125,28 @@ async function salvarEdicaoSb() {
             });
             console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'versao:', novaVersao);
 
-            // Upload novo PDF sobrepondo o anterior
-            document.getElementById('loadingText').textContent = 'Enviando novo PDF...';
-            console.log('[EDIT] Enviando PDF:', nomePDF, 'para dealId:', dealId, 'campo:', CAMPO_PRE_PEDIDO);
+            // Gerar PDF Cliente na edição
+            var pdfClienteEditUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__', {dealId: sbPedidoAtual.bitrix_deal_id, versao: novaVersaoSb, semComissao: true, aviso: true});
+            var pdfClienteEditBase64 = extrairBase64(pdfClienteEditUri);
+
+            // Upload PDF Comercial
+            document.getElementById('loadingText').textContent = 'Enviando PDFs...';
             var fieldsUpd = {};
             fieldsUpd[CAMPO_PRE_PEDIDO] = [[nomePDF, pdfBase64]];
             var resPDF = await bxCall('crm.item.update', {
                 entityTypeId: BX_TYPE_ID, id: dealId, fields: fieldsUpd
             });
-            console.log('[EDIT] Upload PDF result:', JSON.stringify(resPDF));
+            console.log('[EDIT] Upload PDF Comercial:', JSON.stringify(resPDF));
+
+            // Upload PDF Cliente no campo específico
+            try {
+                var fieldsCliente = {};
+                fieldsCliente['ufCrm29_1781659138335'] = [[nomePDFCliente2, pdfClienteEditBase64]];
+                await bxCall('crm.item.update', {
+                    entityTypeId: BX_TYPE_ID, id: dealId, fields: fieldsCliente
+                });
+                console.log('[EDIT] Upload PDF Cliente OK');
+            } catch(eCliEdit) { console.warn('[EDIT] PDF Cliente:', eCliEdit.message); }
 
             // Capturar urlMachine e gravar no campo link
             try {
