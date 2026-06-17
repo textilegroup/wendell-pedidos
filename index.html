@@ -1509,7 +1509,7 @@ async function enviarPedido() {
 
         // ---- 0. Coletar dados do formulário (antes de limpar) ----
         var dadosPDF = coletarDados();
-        var nomePDF  = 'pre_pedido_' + dadosPDF.numero.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
+        // nomePDF será redefinido após obter dealId
 
         // ---- 1. Montar campos do Deal ----
         document.getElementById('loadingText').textContent = 'Criando Deal no Bitrix24...';
@@ -1575,9 +1575,13 @@ async function enviarPedido() {
         if (dealId && dealId.item) dealId = dealId.item.id;
         if (!dealId) throw new Error('Deal nao criado — resposta inesperada do Bitrix24.');
 
-        // ---- 0b. Gerar dois PDFs (comercial + cliente) com Deal ID ----
+        // ---- 0b. Gerar dois PDFs com Deal ID e Versão ----
         document.getElementById('loadingText').textContent = 'Gerando PDFs do pedido...';
-        var opcoesPDF = {dealId: dealId, versao: 1, aviso: true};
+        var versaoPDF  = 1;
+        var opcoesPDF  = {dealId: dealId, versao: versaoPDF, aviso: true};
+        // Nomes corretos conforme padrão solicitado
+        var nomePDF        = 'PRE-PEDIDO #' + dealId + ' V' + versaoPDF + '.pdf';
+        var nomePDFCliente = 'PRE-PEDIDO CLIENTE #' + dealId + ' V' + versaoPDF + '.pdf';
         // PDF Comercial (com comissão)
         var pdfDataUri   = gerarPDFDados(dadosPDF, '__RETURN_DATA_URI__', opcoesPDF);
         var pdfBase64    = extrairBase64(pdfDataUri);
@@ -1586,6 +1590,7 @@ async function enviarPedido() {
         var pdfClienteUri    = gerarPDFDados(dadosPDF, '__RETURN_DATA_URI__', Object.assign({}, opcoesPDF, {semComissao: true}));
         var pdfClienteBase64 = extrairBase64(pdfClienteUri);
         ultimoPdfClienteUri  = pdfClienteUri;
+        console.log('[PDF] Gerando:', nomePDF, 'e', nomePDFCliente);
 
         // ---- 3b. Gravar link de aprovação no Deal ----
         var linkAprovacao = 'https://textilegroup.github.io/wendell-aprovacao-pedido/?dealId=' + dealId;
@@ -1616,17 +1621,21 @@ async function enviarPedido() {
         await gravarPedidoSupabase(formDados, dealId, formDados.totalGeral);
 
         document.getElementById('loadingText').textContent = 'Enviando PDFs para Bitrix24...';
-        var nomePDFCliente = 'cliente_' + nomePDF;
+        // nomePDFCliente definido acima com nome correto
         // Upload PDF Comercial
         await uploadArquivosCampo(dealId, CAMPO_PRE_PEDIDO, [
             { nome: nomePDF, base64: pdfBase64 }
         ]);
-        // Upload PDF Cliente no campo de documentos
+        // Upload PDF Cliente no campo específico ufCrm29_1781659138335
+        document.getElementById('loadingText').textContent = 'Enviando PDF Cliente...';
         try {
-            await uploadArquivosCampo(dealId, 'ufCrm_1714673455403', [
+            await uploadArquivosCampo(dealId, 'ufCrm29_1781659138335', [
                 { nome: nomePDFCliente, base64: pdfClienteBase64 }
             ]);
-        } catch(eCli) { console.warn('PDF Cliente upload:', eCli.message); }
+            console.log('[PDF] PDF Cliente enviado para ufCrm29_1781659138335');
+        } catch(eCli) {
+            console.warn('[PDF] Erro PDF Cliente upload:', eCli.message);
+        }
 
         // ---- 4b. Capturar urlMachine e gravar no campo link PDF ----
         try {
@@ -1670,12 +1679,12 @@ async function enviarPedido() {
         var btnDL = document.getElementById('btnDownloadPDFModal');
         if (btnDL && ultimoPdfDataUri) {
             btnDL.href = ultimoPdfDataUri;
-            btnDL.download = 'pedido_' + numeroPedido.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
+            btnDL.download = nomePDF;
         }
         var btnDLCli = document.getElementById('btnDownloadPDFClienteModal');
         if (btnDLCli && ultimoPdfClienteUri) {
             btnDLCli.href = ultimoPdfClienteUri;
-            btnDLCli.download = 'pedido_cliente_' + numeroPedido.replace(/[^0-9a-zA-Z]/g,'_') + '.pdf';
+            btnDLCli.download = nomePDFCliente;
         }
         document.getElementById('modalConfirmacao').classList.add('active');
         dispararFogos();
@@ -2031,7 +2040,8 @@ async function salvarEdicaoSb() {
         };
         var pdfUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__', {dealId: sbPedidoAtual.bitrix_deal_id, versao: novaVersaoSb});
         var pdfBase64 = extrairBase64(pdfUri);
-        var nomePDF   = 'pre_pedido_edit_' + dadosEdit.numero.replace(/[^0-9a-zA-Z]/g, '_') + '.pdf';
+        var nomePDF        = 'PRE-PEDIDO #' + (sbPedidoAtual.bitrix_deal_id||'?') + ' V' + novaVersaoSb + '.pdf';
+        var nomePDFCliente2 = 'PRE-PEDIDO CLIENTE #' + (sbPedidoAtual.bitrix_deal_id||'?') + ' V' + novaVersaoSb + '.pdf';
 
         // ── 3. Atualizar Deal no Bitrix ──
         if (sbPedidoAtual.bitrix_deal_id) {
