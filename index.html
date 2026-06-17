@@ -2117,13 +2117,27 @@ async function salvarEdicaoSb() {
                 fields: {
                     comments: linhas.join('\n'),
                     'ufCrm29_1781572074906': String(novaVersao),
-                    'ufCrm29_1773692249': false,
                     opportunity: dadosEdit.itens.reduce(function(s,it){
                         return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
                     }, 0)
                 }
             });
             console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'versao:', novaVersao);
+
+            // Zerar campo aprovação — tentar múltiplas formas para campo de lista
+            try {
+                // Buscar o campo para ver os valores disponíveis
+                var itemCheck = await bxCall('crm.item.get', {entityTypeId: BX_TYPE_ID, id: dealId});
+                var campoAtual = itemCheck && itemCheck.item && itemCheck.item['ufCrm29_1773692249'];
+                console.log('[EDIT] Campo aprovação atual:', JSON.stringify(campoAtual));
+                // Tentar limpar com array vazio (padrão Bitrix SPA)
+                var resAprov = await bxCall('crm.item.update', {
+                    entityTypeId: BX_TYPE_ID,
+                    id: dealId,
+                    fields: { 'ufCrm29_1773692249': [] }
+                });
+                console.log('[EDIT] Campo aprovação zerado:', JSON.stringify(resAprov));
+            } catch(eAprov) { console.warn('[EDIT] Zerar aprovação:', eAprov.message); }
 
             // Gerar PDF Cliente na edição
             var pdfClienteEditUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__', {dealId: sbPedidoAtual.bitrix_deal_id, versao: novaVersaoSb, semComissao: true, aviso: true});
