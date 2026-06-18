@@ -103,6 +103,55 @@
         .sb-edit-inp { padding:7px 9px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit;outline:none;width:100% }
         .sb-edit-inp:focus { border-color:#a01228 }
         #adminPanel { position:relative }
+
+        /* MÓDULO APROVAÇÃO INLINE */
+        .aprov-overlay { display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:20000;justify-content:center;align-items:flex-start;padding:20px;overflow-y:auto }
+        .aprov-overlay.active { display:flex }
+        .aprov-card { background:white;border-radius:12px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25);overflow:hidden;margin:auto }
+        .aprov-header { background:#a01228;color:white;padding:14px 18px;display:flex;justify-content:space-between;align-items:center }
+        .aprov-header h3 { font-size:15px;font-weight:700;margin:0 }
+        .aprov-close { background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;padding:0 4px }
+        .aprov-body { padding:18px }
+        .aprov-info { border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:14px }
+        .aprov-info-title { background:#f4f4f4;padding:7px 12px;font-size:11px;font-weight:700;color:#a01228;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #e0e0e0 }
+        .aprov-info-row { display:flex;justify-content:space-between;align-items:center;padding:6px 12px;border-bottom:1px solid #f5f5f5;font-size:13px }
+        .aprov-info-row:last-child { border-bottom:none }
+        .aprov-info-label { font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase }
+        .aprov-info-value { font-weight:600;color:#1a1a1a;text-align:right }
+        .aprov-info-value.id { color:#a01228;font-size:15px;font-family:monospace }
+        .aprov-pdf-btn { display:block;margin-bottom:12px;padding:11px;background:#1a1a1a;color:white;border-radius:7px;font-size:14px;font-weight:700;text-decoration:none;text-align:center }
+        .aprov-state { display:none;flex-direction:column;align-items:center;padding:36px 18px;text-align:center }
+        .aprov-state.active { display:flex }
+        .aprov-state-icon { font-size:48px;margin-bottom:12px }
+        .aprov-state-title { font-size:20px;font-weight:700;margin-bottom:6px }
+        .aprov-state-sub { font-size:13px;color:#6b7280;line-height:1.5 }
+        .aprov-btn-group { display:flex;gap:10px;margin-bottom:12px }
+        .aprov-btn-ap,.aprov-btn-rp { flex:1;padding:13px;border:2px solid;border-radius:7px;font-size:16px;font-weight:700;cursor:pointer;background:white;transition:all .18s }
+        .aprov-btn-ap { border-color:#1b7a3e;color:#1b7a3e }
+        .aprov-btn-ap:hover,.aprov-btn-ap.ativo { background:#1b7a3e;color:white }
+        .aprov-btn-rp { border-color:#a01228;color:#a01228 }
+        .aprov-btn-rp:hover,.aprov-btn-rp.ativo { background:#a01228;color:white }
+        .aprov-motivo { display:none;margin-bottom:12px }
+        .aprov-motivo.visible { display:block }
+        .aprov-motivo label { font-size:12px;font-weight:700;color:#a01228;text-transform:uppercase;display:block;margin-bottom:5px }
+        .aprov-motivo textarea { width:100%;padding:9px 11px;border:2px solid #a01228;border-radius:7px;font-family:inherit;font-size:13px;resize:vertical;min-height:80px;outline:none }
+        .aprov-btn-confirmar { width:100%;padding:14px;background:#a01228;color:white;border:none;border-radius:7px;font-size:16px;font-weight:700;cursor:pointer;transition:background .18s;margin-bottom:8px }
+        .aprov-btn-confirmar:disabled { background:#ccc;cursor:not-allowed }
+        .aprov-btn-editar { width:100%;padding:11px;background:#2d3748;color:white;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;transition:background .18s }
+        /* Edição dentro da aprovação */
+        .aprov-edit-panel { display:none;border-top:2px solid #a01228;margin-top:14px;padding-top:14px }
+        .aprov-edit-panel.open { display:block }
+        .aprov-edit-title { font-size:13px;font-weight:700;color:#a01228;text-transform:uppercase;margin-bottom:10px }
+        .aprov-edit-grid { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px }
+        .aprov-edit-field label { font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;display:block;margin-bottom:3px }
+        .aprov-edit-field input,.aprov-edit-field textarea { width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit;outline:none }
+        .aprov-edit-field input:focus { border-color:#a01228 }
+        .aprov-itens-table { width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px }
+        .aprov-itens-table th { background:#a01228;color:white;padding:4px 6px;text-align:left }
+        .aprov-itens-table td { padding:3px 5px;border-bottom:1px solid #eee }
+        .aprov-itens-table input,.aprov-itens-table select { width:100%;padding:3px 4px;border:1px solid #ddd;border-radius:3px;font-size:11px }
+        .aprov-btn-salvar-edit { background:#a01228;color:white;border:none;padding:10px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px }
+        .aprov-btn-cancelar-edit { background:#718096;color:white;border:none;padding:10px 18px;border-radius:6px;font-size:13px;cursor:pointer }
         .password-input { margin: 15px 0; text-align: left; }
         .password-input label { font-size: 13px; color: #555; font-weight: 600; }
         .password-input input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%; margin-top: 6px; font-size: 14px; font-family: inherit; }
@@ -708,6 +757,77 @@
             </a>
         </div>
         <button class="btn btn-enviar" onclick="fecharModal('modalConfirmacao')" style="margin-top:14px">OK</button>
+    </div>
+</div>
+
+<!-- MODAL APROVAÇÃO INLINE -->
+<div class="aprov-overlay" id="aprovOverlay">
+    <div class="aprov-card">
+        <div class="aprov-header">
+            <h3 id="aprovTitulo">Aprovação de Pedido</h3>
+            <button class="aprov-close" onclick="fecharAprovacao()">&#10005;</button>
+        </div>
+        <div class="aprov-body">
+            <div class="aprov-state active" id="aprovLoading">
+                <div style="width:40px;height:40px;border:4px solid #eee;border-top:4px solid #a01228;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px"></div>
+                <p style="color:#999;font-size:13px">Carregando pedido...</p>
+            </div>
+            <div class="aprov-state" id="aprovAlready">
+                <div class="aprov-state-icon" id="aprovAlreadyIcon">&#128274;</div>
+                <div class="aprov-state-title" id="aprovAlreadyTitle">Ja Respondido</div>
+                <p class="aprov-state-sub" id="aprovAlreadySub"></p>
+            </div>
+            <div class="aprov-state" id="aprovError">
+                <div class="aprov-state-icon">&#9888;&#65039;</div>
+                <div class="aprov-state-title" style="color:#a01228">Erro</div>
+                <p class="aprov-state-sub" id="aprovErrorMsg"></p>
+            </div>
+            <div class="aprov-state" id="aprovSuccess">
+                <div class="aprov-state-icon" id="aprovSuccessIcon">&#9989;</div>
+                <div class="aprov-state-title" id="aprovSuccessTitle">Resposta Enviada!</div>
+                <p class="aprov-state-sub" id="aprovSuccessSub"></p>
+                <button class="aprov-btn-editar" style="margin-top:14px" onclick="fecharAprovacao()">Fechar</button>
+            </div>
+            <div id="aprovForm" style="display:none">
+                <div class="aprov-info">
+                    <div class="aprov-info-title">Dados do Pedido</div>
+                    <div class="aprov-info-row"><span class="aprov-info-label">ID Bitrix</span><span class="aprov-info-value id" id="aprovDealId">-</span></div>
+                    <div class="aprov-info-row"><span class="aprov-info-label">Cliente</span><span class="aprov-info-value" id="aprovCliente">-</span></div>
+                    <div class="aprov-info-row"><span class="aprov-info-label">Total</span><span class="aprov-info-value" id="aprovTotal">-</span></div>
+                    <div class="aprov-info-row"><span class="aprov-info-label">Versao</span><span class="aprov-info-value" id="aprovVersao">-</span></div>
+                </div>
+                <a id="aprovPdfBtn" href="#" target="_blank" class="aprov-pdf-btn" style="display:none">&#128196; VER PDF DO PEDIDO</a>
+                <div class="aprov-btn-group">
+                    <button class="aprov-btn-ap" id="aprovBtnAp" onclick="aprovSelecionarDecisao('aprovado')">&#10003; APROVADO</button>
+                    <button class="aprov-btn-rp" id="aprovBtnRp" onclick="aprovSelecionarDecisao('reprovado')">&#10007; REPROVADO</button>
+                </div>
+                <div class="aprov-motivo" id="aprovMotivoArea">
+                    <label>Motivo da Reprovacao *</label>
+                    <textarea id="aprovMotivoTexto" placeholder="Descreva o motivo..."></textarea>
+                </div>
+                <button class="aprov-btn-confirmar" id="aprovBtnConfirmar" onclick="aprovConfirmarDecisao()" disabled>CONFIRMAR DECISAO</button>
+                <button class="aprov-btn-editar" style="margin-top:8px" onclick="aprovAbrirEdicao()">&#9998; Editar pedido antes de decidir</button>
+                <div class="aprov-edit-panel" id="aprovEditPanel">
+                    <div class="aprov-edit-title">&#9998; Editar Pedido</div>
+                    <div class="aprov-edit-grid">
+                        <div class="aprov-edit-field"><label>Vendedor</label><input id="aprovEditNomeVend"></div>
+                        <div class="aprov-edit-field"><label>Codigo</label><input id="aprovEditCodVend"></div>
+                        <div class="aprov-edit-field"><label>Cond. pagamento</label><input id="aprovEditCondPag"></div>
+                        <div class="aprov-edit-field"><label>Faturamento</label><input id="aprovEditFatur"></div>
+                        <div class="aprov-edit-field" style="grid-column:1/-1"><label>Endereco entrega</label><input id="aprovEditEndereco"></div>
+                        <div class="aprov-edit-field" style="grid-column:1/-1"><label>Observacoes</label><textarea id="aprovEditObs" rows="2" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit"></textarea></div>
+                    </div>
+                    <div style="overflow-x:auto">
+                        <table class="aprov-itens-table"><thead><tr><th>#</th><th>Codigo</th><th>Qtd</th><th>Preco</th><th>Com%</th><th>Data Ent.</th></tr></thead>
+                        <tbody id="aprovEditItens"></tbody></table>
+                    </div>
+                    <div style="margin-top:10px">
+                        <button class="aprov-btn-salvar-edit" onclick="aprovSalvarEdicao()">&#128190; Salvar alteracoes</button>
+                        <button class="aprov-btn-cancelar-edit" onclick="document.getElementById('aprovEditPanel').classList.remove('open')">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1911,6 +2031,7 @@ async function buscarPedidosSb() {
                     : '')
                 + '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
                 '<button class="btn btn-enviar" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="abrirEditSbIdx(this.dataset.sbidx)">&#9998; Editar</button>' +
+                '<button class="btn" style="padding:6px 12px;font-size:12px;background:#1b5e20;color:white" data-sbidx="' + idx + '" onclick="abrirAprovacaoAdmin(this.dataset.sbidx)">&#10003; Aprovacao</button>' +
                 '<button class="btn" style="padding:6px 12px;font-size:12px;background:#505152;color:white" data-sbidx="' + idx + '" onclick="confirmarExclusao(this.dataset.sbidx)">&#128465; Excluir</button>' +
                 '<button class="btn btn-pdf" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="gerarPDFSbIdx(this.dataset.sbidx)">&#128196; PDF Comercial</button>' +
                 '<button class="btn" style="padding:6px 12px;font-size:12px;background:#1565c0;color:white" data-sbidx="' + idx + '" onclick="gerarPDFClienteAdminIdx(this.dataset.sbidx)">&#128196; PDF Cliente</button>' +
@@ -2301,6 +2422,254 @@ function gerarPDFSb() {
         catch(e) { alert('Erro PDF: ' + e.message); }
         document.getElementById('loadingOverlay').classList.remove('active');
     }, 100);
+}
+
+// ──────────────────────────────────────────────
+// MÓDULO APROVAÇÃO INLINE
+// ──────────────────────────────────────────────
+var CAMPO_STATUS_AP   = 'ufCrm29_1773692249';
+var CAMPO_MOTIVO_AP   = 'ufCrm29_1770778401663';
+var CAMPO_DATA_APR_AP = 'ufCrm29_1780887933377';
+var CAMPO_PRE_PED_AP  = 'ufCrm29_1780621188016';
+var ID_APROVADO_AP    = '4185';
+var ID_REPROVADO_AP   = '4187';
+var aprovDealIdAtual  = null;
+var aprovDecisao      = null;
+var aprovItemSb       = null;
+
+function showAprov(id) {
+    ['aprovLoading','aprovAlready','aprovError','aprovSuccess'].forEach(function(s){
+        document.getElementById(s).classList.remove('active');
+    });
+    document.getElementById('aprovForm').style.display = 'none';
+    if (id === 'form') {
+        document.getElementById('aprovForm').style.display = 'block';
+    } else {
+        document.getElementById(id).classList.add('active');
+    }
+}
+
+async function abrirAprovacaoAdmin(idx) {
+    var p = sbPedidosCache[parseInt(idx)];
+    if (!p) return;
+    aprovItemSb      = p;
+    aprovDealIdAtual = p.bitrix_deal_id;
+    aprovDecisao     = null;
+
+    // Reset UI
+    document.getElementById('aprovBtnAp').classList.remove('ativo');
+    document.getElementById('aprovBtnRp').classList.remove('ativo');
+    document.getElementById('aprovMotivoArea').classList.remove('visible');
+    document.getElementById('aprovMotivoTexto').value = '';
+    document.getElementById('aprovBtnConfirmar').disabled = true;
+    document.getElementById('aprovEditPanel').classList.remove('open');
+    document.getElementById('aprovTitulo').textContent = 'Aprovacao #' + aprovDealIdAtual + ' v' + (p.versao || 1);
+
+    document.getElementById('aprovOverlay').classList.add('active');
+    showAprov('aprovLoading');
+
+    try {
+        if (!aprovDealIdAtual) throw new Error('Pedido sem Deal Bitrix vinculado');
+        var result = await bxCall('crm.item.get', { entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual) });
+        var item = result && result.item;
+        if (!item) throw new Error('Pedido #' + aprovDealIdAtual + ' nao encontrado');
+
+        // Verificar se ja votou
+        var statusAtual = item[CAMPO_STATUS_AP];
+        var jaVotou = statusAtual && statusAtual !== '' && statusAtual !== null &&
+                      statusAtual !== '0' && String(statusAtual).length > 0 &&
+                      !Array.isArray(statusAtual);
+        if (Array.isArray(statusAtual) && statusAtual.length > 0) jaVotou = true;
+
+        if (jaVotou) {
+            var foiAprovado = (String(statusAtual) === ID_APROVADO_AP ||
+                (Array.isArray(statusAtual) && String(statusAtual[0]) === ID_APROVADO_AP));
+            document.getElementById('aprovAlreadyIcon').textContent  = foiAprovado ? '&#9989;' : '&#10060;';
+            document.getElementById('aprovAlreadyTitle').textContent = foiAprovado ? 'Pedido Liberado' : 'Pedido Reprovado';
+            document.getElementById('aprovAlreadyTitle').style.color = foiAprovado ? '#1b7a3e' : '#a01228';
+            var motivo = item[CAMPO_MOTIVO_AP] || '';
+            document.getElementById('aprovAlreadySub').innerHTML = (foiAprovado ? 'Este pedido ja foi APROVADO.' : 'Este pedido foi REPROVADO.') +
+                (motivo ? '<br><br><strong>Motivo:</strong> ' + motivo : '');
+            showAprov('aprovAlready');
+            return;
+        }
+
+        // Preencher dados
+        document.getElementById('aprovDealId').textContent = '#' + aprovDealIdAtual;
+        document.getElementById('aprovCliente').textContent = p.cliente_nome || '-';
+        document.getElementById('aprovTotal').textContent = 'R$ ' + (p.total_geral || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
+        document.getElementById('aprovVersao').textContent = 'v' + (p.versao || 1);
+
+        // Botão PDF
+        var linkPDF = p.bitrix_deal_id ? '' : '';
+        try {
+            var arrPDF = item[CAMPO_PRE_PED_AP];
+            if (Array.isArray(arrPDF) && arrPDF.length > 0) {
+                var arq = arrPDF[arrPDF.length - 1];
+                linkPDF = (arq && (arq.urlMachine || arq.url)) || '';
+            }
+        } catch(e) {}
+        var pdfBtn = document.getElementById('aprovPdfBtn');
+        if (linkPDF) { pdfBtn.href = linkPDF; pdfBtn.style.display = 'block'; }
+        else { pdfBtn.style.display = 'none'; }
+
+        // Preencher campos de edicao
+        document.getElementById('aprovEditNomeVend').value = p.vendedor_nome || '';
+        document.getElementById('aprovEditCodVend').value  = p.vendedor_codigo || '';
+        document.getElementById('aprovEditCondPag').value  = p.condicao_pagamento || '';
+        document.getElementById('aprovEditFatur').value    = p.faturamento || '';
+        document.getElementById('aprovEditEndereco').value = p.local_entrega || '';
+        document.getElementById('aprovEditObs').value      = p.observacoes || '';
+
+        // Preencher tabela itens
+        var itens = p.itens || [];
+        while (itens.length < 10) itens.push({codigo:'',cor:'',quantidade:'',preco:'',comissao:'',data_entrega:''});
+        var optsHtml = '<option value="">Selecionar...</option>' +
+            Object.keys(produtos).map(function(c){ return '<option value="' + c + '">' + c + '</option>'; }).join('');
+        document.getElementById('aprovEditItens').innerHTML = itens.map(function(it,i){
+            return '<tr>' +
+                '<td style="color:#999;font-weight:700">' + (i+1) + '</td>' +
+                '<td><select id="aeiCod' + i + '" style="min-width:110px">' + optsHtml.replace('value="' + it.codigo + '"', 'value="' + it.codigo + '" selected') + '</select></td>' +
+                '<td><input id="aeiQtd' + i + '" value="' + (it.quantidade||'') + '" style="width:55px"></td>' +
+                '<td><input id="aeiPrc' + i + '" value="' + (it.preco||'') + '" style="width:65px"></td>' +
+                '<td><input id="aeiCom' + i + '" value="' + (it.comissao||'') + '" style="width:45px"></td>' +
+                '<td><input id="aeiDt' + i + '"  value="' + (it.data_entrega||'') + '" placeholder="dd/mm/aa" style="width:85px"></td>' +
+                '</tr>';
+        }).join('');
+
+        showAprov('form');
+
+    } catch(e) {
+        document.getElementById('aprovErrorMsg').textContent = e.message;
+        showAprov('aprovError');
+    }
+}
+
+function fecharAprovacao() {
+    document.getElementById('aprovOverlay').classList.remove('active');
+    aprovDealIdAtual = null; aprovDecisao = null; aprovItemSb = null;
+}
+
+function aprovSelecionarDecisao(tipo) {
+    aprovDecisao = tipo;
+    document.getElementById('aprovBtnAp').classList.toggle('ativo', tipo === 'aprovado');
+    document.getElementById('aprovBtnRp').classList.toggle('ativo', tipo === 'reprovado');
+    document.getElementById('aprovMotivoArea').classList.toggle('visible', tipo === 'reprovado');
+    if (tipo === 'aprovado') document.getElementById('aprovMotivoTexto').value = '';
+    document.getElementById('aprovBtnConfirmar').disabled = false;
+}
+
+function aprovAbrirEdicao() {
+    document.getElementById('aprovEditPanel').classList.toggle('open');
+    if (document.getElementById('aprovEditPanel').classList.contains('open')) {
+        document.getElementById('aprovEditPanel').scrollIntoView({behavior:'smooth'});
+    }
+}
+
+async function aprovConfirmarDecisao() {
+    if (!aprovDecisao) return;
+    if (aprovDecisao === 'reprovado') {
+        var motivo = document.getElementById('aprovMotivoTexto').value.trim();
+        if (!motivo) { document.getElementById('aprovMotivoTexto').focus(); return; }
+    }
+    var btn = document.getElementById('aprovBtnConfirmar');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    try {
+        var agora = new Date();
+        var dataISO = agora.getFullYear() + '-' + String(agora.getMonth()+1).padStart(2,'0') + '-' +
+                      String(agora.getDate()).padStart(2,'0') + 'T' +
+                      String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0') + ':00+00:00';
+        var fields = {};
+        fields[CAMPO_STATUS_AP]   = aprovDecisao === 'aprovado' ? ID_APROVADO_AP : ID_REPROVADO_AP;
+        fields[CAMPO_DATA_APR_AP] = dataISO;
+        if (aprovDecisao === 'reprovado') fields[CAMPO_MOTIVO_AP] = document.getElementById('aprovMotivoTexto').value.trim();
+
+        await bxCall('crm.item.update', { entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual), fields: fields });
+
+        // Atualizar status no Supabase
+        if (aprovItemSb && aprovItemSb.id) {
+            await sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', {
+                status: aprovDecisao === 'aprovado' ? 'aprovado' : 'pendente',
+                updated_at: new Date().toISOString()
+            });
+            // Atualizar cache local
+            var cacheIdx = sbPedidosCache.findIndex(function(x){ return x.id === aprovItemSb.id; });
+            if (cacheIdx >= 0) sbPedidosCache[cacheIdx].status = aprovDecisao === 'aprovado' ? 'aprovado' : 'pendente';
+        }
+
+        document.getElementById('aprovSuccessIcon').textContent  = aprovDecisao === 'aprovado' ? '&#9989;' : '&#10060;';
+        document.getElementById('aprovSuccessTitle').textContent = aprovDecisao === 'aprovado' ? 'Pedido Aprovado!' : 'Pedido Reprovado';
+        document.getElementById('aprovSuccessTitle').style.color = aprovDecisao === 'aprovado' ? '#1b7a3e' : '#a01228';
+        document.getElementById('aprovSuccessSub').textContent   = aprovDecisao === 'aprovado' ? 'O pedido foi aprovado com sucesso.' : 'O pedido foi reprovado.';
+        showAprov('aprovSuccess');
+        // Atualizar card na lista sem recarregar tudo
+        buscarPedidosSb();
+    } catch(e) {
+        btn.disabled = false; btn.textContent = 'CONFIRMAR DECISAO';
+        alert('Erro: ' + e.message);
+    }
+}
+
+async function aprovSalvarEdicao() {
+    if (!aprovItemSb) return;
+    var itens = [];
+    for (var i = 0; i < 10; i++) {
+        var cod = (document.getElementById('aeiCod' + i)||{value:''}).value;
+        if (cod) itens.push({
+            numero: i+1, codigo: cod, cor: produtos[cod] || '',
+            quantidade: (document.getElementById('aeiQtd' + i)||{value:''}).value,
+            preco:      (document.getElementById('aeiPrc' + i)||{value:''}).value,
+            comissao:   (document.getElementById('aeiCom' + i)||{value:''}).value,
+            data_entrega: (document.getElementById('aeiDt' + i)||{value:''}).value
+        });
+    }
+    var nomeVend  = document.getElementById('aprovEditNomeVend').value;
+    var codVend   = document.getElementById('aprovEditCodVend').value;
+    var condPag   = document.getElementById('aprovEditCondPag').value;
+    var fatur     = document.getElementById('aprovEditFatur').value;
+    var endereco  = document.getElementById('aprovEditEndereco').value;
+    var obs       = document.getElementById('aprovEditObs').value;
+    var novaVersao = (aprovItemSb.versao || 1) + 1;
+
+    var btnS = document.querySelector('.aprov-btn-salvar-edit');
+    btnS.textContent = 'Salvando...'; btnS.disabled = true;
+    try {
+        // Atualizar Supabase
+        await sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', {
+            vendedor_nome: nomeVend, vendedor_codigo: codVend,
+            condicao_pagamento: condPag, faturamento: fatur,
+            local_entrega: endereco, observacoes: obs,
+            itens: itens, status: 'pendente',
+            updated_at: new Date().toISOString(),
+            versao: novaVersao,
+            historico: (aprovItemSb.historico || []).concat([{data: new Date().toISOString(), acao: 'editado via aprovacao', versao: novaVersao}])
+        });
+        // Atualizar Bitrix
+        var linhas = ['Pedido (EDITADO via aprovacao v' + novaVersao + ') - ' + new Date().toLocaleString('pt-BR'), ''];
+        linhas.push('CLIENTE: ' + (aprovItemSb.cliente_nome || '-'));
+        linhas.push('VENDEDOR: ' + nomeVend + ' (' + codVend + ')');
+        if (obs) linhas.push('OBS: ' + obs);
+        itens.forEach(function(it){ linhas.push('- ' + it.codigo + ' | Qtd: ' + it.quantidade + ' | R$ ' + it.preco); });
+        await bxCall('crm.item.update', {
+            entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual),
+            fields: {
+                comments: linhas.join('\n'),
+                'ufCrm29_1781572074906': String(novaVersao),
+                'ufCrm29_1773692249': [],
+                opportunity: itens.reduce(function(s,it){ return s+(parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0); }, 0)
+            }
+        });
+        // Atualizar cache e dados locais
+        aprovItemSb.versao = novaVersao;
+        document.getElementById('aprovVersao').textContent = 'v' + novaVersao;
+        document.getElementById('aprovTitulo').textContent = 'Aprovacao #' + aprovDealIdAtual + ' v' + novaVersao;
+        document.getElementById('aprovEditPanel').classList.remove('open');
+        alert('Pedido atualizado para v' + novaVersao + '. Agora voce pode aprovar ou reprovar.');
+        btnS.textContent = 'Salvar alteracoes'; btnS.disabled = false;
+    } catch(e) {
+        btnS.textContent = 'Salvar alteracoes'; btnS.disabled = false;
+        alert('Erro ao salvar: ' + e.message);
+    }
 }
 
 var SENHA_EXCLUIR = 'Industria967';
