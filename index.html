@@ -1718,12 +1718,12 @@ async function enviarPedido() {
                 title:      'Pedido ' + numeroPedido + ' - ' + nomeCliente,
                 categoryId: BX_CATEGORY,
                 'ufCrm29_1781572074906': '1',
+                'ufCrm29_1774462000':    nomeCliente,
+                'ufCrm29_1775593217433': document.getElementById('cnpjCliente').value || '',
                 comments:   descLines.join('\n'),
-                // Valor e moeda nativos do Bitrix
                 opportunity:          parseFloat(totalGeral.replace(/\./g,'').replace(',','.')) || 0,
                 isManualOpportunity:  'Y',
                 currencyId:           'BRL',
-                // Campo local de faturamento (lista)
                 'ufCrm29_1780884219281': document.getElementById('faturamento').value || ''
             }
         };
@@ -2263,27 +2263,13 @@ async function salvarEdicaoSb() {
                 fields: {
                     comments: linhas.join('\n'),
                     'ufCrm29_1781572074906': String(novaVersao),
+                    'ufCrm29_1773692249':    [],
                     opportunity: dadosEdit.itens.reduce(function(s,it){
                         return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
                     }, 0)
                 }
             });
             console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'versao:', novaVersao);
-
-            // Zerar campo aprovação — tentar múltiplas formas para campo de lista
-            try {
-                // Buscar o campo para ver os valores disponíveis
-                var itemCheck = await bxCall('crm.item.get', {entityTypeId: BX_TYPE_ID, id: dealId});
-                var campoAtual = itemCheck && itemCheck.item && itemCheck.item['ufCrm29_1773692249'];
-                console.log('[EDIT] Campo aprovação atual:', JSON.stringify(campoAtual));
-                // Tentar limpar com array vazio (padrão Bitrix SPA)
-                var resAprov = await bxCall('crm.item.update', {
-                    entityTypeId: BX_TYPE_ID,
-                    id: dealId,
-                    fields: { 'ufCrm29_1773692249': [] }
-                });
-                console.log('[EDIT] Campo aprovação zerado:', JSON.stringify(resAprov));
-            } catch(eAprov) { console.warn('[EDIT] Zerar aprovação:', eAprov.message); }
 
             // Gerar PDF Cliente na edição
             var pdfClienteEditUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__', {dealId: sbPedidoAtual.bitrix_deal_id, versao: novaVersaoSb, semComissao: true, aviso: true});
@@ -2655,10 +2641,37 @@ async function aprovSalvarEdicao() {
             fields: {
                 comments: linhas.join('\n'),
                 'ufCrm29_1781572074906': String(novaVersao),
-                'ufCrm29_1773692249': [],
+                'ufCrm29_1773692249':    [],
                 opportunity: itens.reduce(function(s,it){ return s+(parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0); }, 0)
             }
         });
+        // Gerar e enviar PDFs atualizados
+        try {
+            var aprovDadosPDF = {
+                numero: aprovItemSb.numero_pedido || aprovDealIdAtual,
+                horaEnvio: '', dataHora: new Date().toLocaleString('pt-BR'),
+                vendedor: { nome: nomeVend, codigo: codVend },
+                cliente:  { nome: aprovItemSb.cliente_nome||'-', cnpj: aprovItemSb.cliente_cnpj||'-' },
+                pedido: { dataEntrega:'-', prazoPagamento:condPag, tipoFrete:'-', faturamento:fatur, enderecoEntrega:endereco },
+                itens: itens.map(function(it,i){
+                    var q=parseFloat(it.quantidade)||0, p2=parseFloat((it.preco||'').replace(',','.'))||0;
+                    return {numero:i+1,codigo:it.codigo,descricao:it.cor,quantidade:it.quantidade,
+                            preco:it.preco,comissao:it.comissao,dataEntrega:it.data_entrega||'-',
+                            total:(q*p2).toFixed(2).replace('.',',')};
+                }),
+                totalGeral: itens.reduce(function(s,it){return s+(parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);},0).toLocaleString('pt-BR',{minimumFractionDigits:2}),
+                observacoes: obs
+            };
+            var opcPDF  = {dealId: aprovDealIdAtual, versao: novaVersao, aviso: true};
+            var nomePDFa    = 'PRE-PEDIDO ' + aprovDealIdAtual + ' V' + novaVersao + '.pdf';
+            var nomePDFClia = 'PRE-PEDIDO CLIENTE ' + aprovDealIdAtual + ' V' + novaVersao + '.pdf';
+            var pdfComB64   = extrairBase64(gerarPDFDados(aprovDadosPDF, '__RETURN_DATA_URI__', opcPDF));
+            var pdfCliB64   = extrairBase64(gerarPDFDados(aprovDadosPDF, '__RETURN_DATA_URI__', Object.assign({}, opcPDF, {semComissao:true})));
+            var fUpd = {}; fUpd[CAMPO_PRE_PEDIDO] = [[nomePDFa, pdfComB64]];
+            await bxCall('crm.item.update', {entityTypeId:BX_TYPE_ID, id:parseInt(aprovDealIdAtual), fields:fUpd});
+            var fCli = {}; fCli['ufCrm29_1781659138335'] = [[nomePDFClia, pdfCliB64]];
+            await bxCall('crm.item.update', {entityTypeId:BX_TYPE_ID, id:parseInt(aprovDealIdAtual), fields:fCli});
+        } catch(ePDF) { console.warn('[APROV EDIT] PDFs:', ePDF.message); }
         // Atualizar cache e dados locais
         aprovItemSb.versao = novaVersao;
         document.getElementById('aprovVersao').textContent = 'v' + novaVersao;
