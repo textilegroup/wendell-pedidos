@@ -795,6 +795,7 @@
                     <div class="aprov-info-row"><span class="aprov-info-label">Cliente</span><span class="aprov-info-value" id="aprovCliente">-</span></div>
                     <div class="aprov-info-row"><span class="aprov-info-label">Total</span><span class="aprov-info-value" id="aprovTotal">-</span></div>
                     <div class="aprov-info-row"><span class="aprov-info-label">Versao</span><span class="aprov-info-value" id="aprovVersao">-</span></div>
+                    <div class="aprov-info-row"><span class="aprov-info-label">Etapa Bitrix</span><span class="aprov-info-value" id="aprovEtapa" style="font-size:12px;color:#555">-</span></div>
                 </div>
                 <a id="aprovPdfBtn" href="#" target="_blank" class="aprov-pdf-btn" style="display:none">&#128196; VER PDF DO PEDIDO</a>
                 <div class="aprov-btn-group">
@@ -1966,6 +1967,28 @@ async function buscarPedidosSb() {
             lista.innerHTML = '<p style="color:#999;text-align:center">Nenhum pedido encontrado.</p>'; return;
         }
         sbPedidosCache = data;
+        // Buscar stageId do Bitrix para cada pedido (em background)
+        data.forEach(function(p, idx) {
+            if (p.bitrix_deal_id) {
+                bxCall('crm.item.get', {entityTypeId: BX_TYPE_ID, id: parseInt(p.bitrix_deal_id)})
+                    .then(function(res) {
+                        if (!res || !res.item) return;
+                        sbPedidosCache[idx]._stageId    = res.item.stageId || '';
+                        sbPedidosCache[idx]._stageName  = res.item.stageId || '';
+                        // Buscar nome da etapa
+                        return bxCall('crm.status.get', {id: res.item.stageId});
+                    })
+                    .then(function(stRes) {
+                        if (!stRes) return;
+                        var nome = (Array.isArray(stRes) ? stRes[0] : stRes);
+                        if (nome && nome.NAME) sbPedidosCache[idx]._stageName = nome.NAME;
+                        // Atualizar badge etapa no card se já renderizado
+                        var etEl = document.getElementById('etapa-' + idx);
+                        if (etEl) etEl.textContent = sbPedidosCache[idx]._stageName;
+                    })
+                    .catch(function(){});
+            }
+        });
         // Sincronizar status com Bitrix para pedidos pendentes
         data.forEach(function(p, idx) {
             if (p.status !== 'aprovado' && p.bitrix_deal_id) {
@@ -2016,6 +2039,7 @@ async function buscarPedidosSb() {
                 '<div class="sb-field"><b>Data:</b> ' + dataFmt + '</div>' +
                 '<div class="sb-field"><b>Cliente:</b> ' + (p.cliente_nome||'-') + ' &nbsp;|&nbsp; <b>CNPJ:</b> ' + (p.cliente_cnpj||'-') + '</div>' +
                 '<div class="sb-field"><b>Vendedor:</b> ' + (p.vendedor_nome||'-') + ' (' + (p.vendedor_codigo||'-') + ')</div>' +
+                '<div class="sb-field"><b>Etapa Bitrix:</b> <span id="etapa-' + idx + '">' + (p._stageName || 'carregando...') + '</span></div>' +
                 '<div class="sb-field"><b>Total:</b> R$ ' + (p.total_geral||'0').toLocaleString('pt-BR', {minimumFractionDigits:2}) +
                 (p.bitrix_deal_id ? ' &nbsp;|&nbsp; <b>Deal Bitrix:</b> <a href="https://fiorella.bitrix24.com.br/crm/type/1070/details/' + p.bitrix_deal_id + '/" target="_blank" style="color:#a01228">#' + p.bitrix_deal_id + ' ↗</a>' : '') + '</div>' +
                 itensHTML +
@@ -2090,6 +2114,14 @@ function gerarPDFSbIdx(idx) {
     if (p) gerarPDFSbDireto(p);
 }
 function abrirEditSb(p) {
+    // Verificar se etapa permite edição
+    var etapaNome = (p._stageName || '').toLowerCase();
+    var etapasBloqueadas = ['faturado','faturar','concluido','concluído','cancelado','cancelar','entregue','finalizado'];
+    var bloqueado = etapasBloqueadas.some(function(e){ return etapaNome.includes(e); });
+    if (bloqueado) {
+        alert('Pedido em etapa "' + (p._stageName || 'avançada') + '" — edição não permitida a partir de Faturado.');
+        return;
+    }
     sbPedidoAtual = p;
     var dealInfo = p.bitrix_deal_id ? ' — Deal Bitrix #' + p.bitrix_deal_id : ' — SEM DEAL BITRIX';
     var btnPDFCli = document.getElementById('btnPDFClienteSb');
@@ -2255,7 +2287,7 @@ async function salvarEdicaoSb() {
 
             // Atualizar campos texto do Deal
             // NÃO altera o title — automação do Bitrix cuida do nome
-            var novaVersao = (sbPedidoAtual.versao || 1) + 1;
+            var novaVersao = novaVersaoSb; // mesma variável, evitar duplicata
 
             var resUpd = await bxCall('crm.item.update', {
                 entityTypeId: BX_TYPE_ID,
@@ -2485,6 +2517,7 @@ async function abrirAprovacaoAdmin(idx) {
         document.getElementById('aprovCliente').textContent = p.cliente_nome || '-';
         document.getElementById('aprovTotal').textContent = 'R$ ' + (p.total_geral || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
         document.getElementById('aprovVersao').textContent = 'v' + (p.versao || 1);
+        document.getElementById('aprovEtapa').textContent = p._stageName || 'Carregando...';
 
         // Botão PDF
         var linkPDF = p.bitrix_deal_id ? '' : '';
@@ -2546,6 +2579,12 @@ function aprovSelecionarDecisao(tipo) {
 }
 
 function aprovAbrirEdicao() {
+    var etapaNome = (aprovItemSb && aprovItemSb._stageName || '').toLowerCase();
+    var etapasBloq = ['faturado','faturar','concluido','concluído','cancelado','cancelar','entregue','finalizado'];
+    if (etapasBloq.some(function(e){ return etapaNome.includes(e); })) {
+        alert('Pedido em etapa "' + (aprovItemSb._stageName||'avancada') + '" — edição não permitida.');
+        return;
+    }
     document.getElementById('aprovEditPanel').classList.toggle('open');
     if (document.getElementById('aprovEditPanel').classList.contains('open')) {
         document.getElementById('aprovEditPanel').scrollIntoView({behavior:'smooth'});
