@@ -1836,7 +1836,7 @@ async function enviarPedido() {
         // Dados já gravados no Supabase (gravarPedidoSupabase chamado acima)
 
         // ---- 7. Confirmar e limpar ----
-        document.getElementById('pedidoSalvo').textContent = numeroPedido;
+        document.getElementById('pedidoSalvo').textContent = String(numeroPedido || dealId || '');
         // Atualizar link do botão PDF no modal
         var btnDL = document.getElementById('btnDownloadPDFModal');
         if (btnDL && ultimoPdfDataUri) {
@@ -1968,27 +1968,30 @@ async function buscarPedidosSb() {
         }
         sbPedidosCache = data;
         // Buscar stageId do Bitrix para cada pedido (em background)
-        data.forEach(function(p, idx) {
-            if (p.bitrix_deal_id) {
-                bxCall('crm.item.get', {entityTypeId: BX_TYPE_ID, id: parseInt(p.bitrix_deal_id)})
-                    .then(function(res) {
-                        if (!res || !res.item) return;
-                        sbPedidosCache[idx]._stageId    = res.item.stageId || '';
-                        sbPedidosCache[idx]._stageName  = res.item.stageId || '';
-                        // Buscar nome da etapa
-                        return bxCall('crm.status.get', {id: res.item.stageId});
-                    })
-                    .then(function(stRes) {
-                        if (!stRes) return;
-                        var nome = (Array.isArray(stRes) ? stRes[0] : stRes);
-                        if (nome && nome.NAME) sbPedidosCache[idx]._stageName = nome.NAME;
-                        // Atualizar badge etapa no card se já renderizado
-                        var etEl = document.getElementById('etapa-' + idx);
-                        if (etEl) etEl.textContent = sbPedidosCache[idx]._stageName;
-                    })
-                    .catch(function(){});
-            }
-        });
+        // Usar crm.status.list uma vez para mapear todos os estágios
+        bxCall('crm.status.list', {filter: {ENTITY_ID: 'DYNAMIC_1070_STAGE_59'}})
+            .catch(function(){ return bxCall('crm.stage.list', {entityTypeId: BX_TYPE_ID, categoryId: 59}); })
+            .then(function(stages) {
+                var stageMap = {};
+                var arr = (stages && stages.result) ? stages.result : (Array.isArray(stages) ? stages : []);
+                arr.forEach(function(s){ if(s.STATUS_ID||s.id) stageMap[s.STATUS_ID||s.id] = s.NAME||s.name||s.STATUS_ID||s.id; });
+
+                data.forEach(function(p, idx) {
+                    if (!p.bitrix_deal_id) return;
+                    bxCall('crm.item.get', {entityTypeId: BX_TYPE_ID, id: parseInt(p.bitrix_deal_id)})
+                        .then(function(res) {
+                            if (!res || !res.item) return;
+                            var stId = res.item.stageId || '';
+                            var stName = stageMap[stId] || stId;
+                            sbPedidosCache[idx]._stageId   = stId;
+                            sbPedidosCache[idx]._stageName = stName;
+                            var etEl = document.getElementById('etapa-' + idx);
+                            if (etEl) etEl.textContent = stName || '-';
+                        })
+                        .catch(function(){});
+                });
+            })
+            .catch(function(){});
         // Sincronizar status com Bitrix para pedidos pendentes
         data.forEach(function(p, idx) {
             if (p.status !== 'aprovado' && p.bitrix_deal_id) {
@@ -2293,6 +2296,7 @@ async function salvarEdicaoSb() {
                 entityTypeId: BX_TYPE_ID,
                 id: dealId,
                 fields: {
+                    title: 'Pedido ' + (sbPedidoAtual.numero_pedido||'') + ' - ' + (sbPedidoAtual.cliente_nome||'') + ' [v' + novaVersao + ']',
                     comments: linhas.join('\n'),
                     'ufCrm29_1781572074906': String(novaVersao),
                     'ufCrm29_1773692249':    [],
