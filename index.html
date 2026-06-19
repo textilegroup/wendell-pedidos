@@ -61,7 +61,7 @@
         .btn-limpar { background: #ddd; color: #333; }
         .btn-enviar { background: #a01228; color: white; }
         .btn-admin { background: #333; color: white; }
-        .btn-pdf { background: #2e7d32; color: white; }
+        .btn-pdf { background: #2e7d32; color: white; display: none; }
         .btn-secondary { background: #1565c0; color: white; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
         .modal.active { display: flex; }
@@ -2292,20 +2292,26 @@ async function salvarEdicaoSb() {
             // NÃO altera o title — automação do Bitrix cuida do nome
             var novaVersao = novaVersaoSb; // mesma variável, evitar duplicata
 
-            var resUpd = await bxCall('crm.item.update', {
+            // Passo 1: zerar aprovação e atualizar dados (SEM mudar versão ainda)
+            await bxCall('crm.item.update', {
                 entityTypeId: BX_TYPE_ID,
                 id: dealId,
                 fields: {
                     title: 'Pedido ' + (sbPedidoAtual.numero_pedido||'') + ' - ' + (sbPedidoAtual.cliente_nome||'') + ' [v' + novaVersao + ']',
                     comments: linhas.join('\n'),
-                    'ufCrm29_1781572074906': String(novaVersao),
-                    'ufCrm29_1773692249':    null,
+                    'ufCrm29_1773692249': null,
                     opportunity: dadosEdit.itens.reduce(function(s,it){
                         return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
                     }, 0)
                 }
             });
-            console.log('[EDIT] crm.item.update result:', JSON.stringify(resUpd), 'versao:', novaVersao);
+            // Passo 2: incrementar versão (dispara automação UMA VEZ, aprovação já está zerada)
+            var resUpd = await bxCall('crm.item.update', {
+                entityTypeId: BX_TYPE_ID,
+                id: dealId,
+                fields: { 'ufCrm29_1781572074906': String(novaVersao) }
+            });
+            console.log('[EDIT] Versão atualizada:', novaVersao);
 
             // Gerar PDF Cliente na edição
             var pdfClienteEditUri    = gerarPDFDados(dadosEdit, '__RETURN_DATA_URI__', {dealId: sbPedidoAtual.bitrix_deal_id, versao: novaVersaoSb, semComissao: true, aviso: true});
@@ -2679,14 +2685,19 @@ async function aprovSalvarEdicao() {
         linhas.push('VENDEDOR: ' + nomeVend + ' (' + codVend + ')');
         if (obs) linhas.push('OBS: ' + obs);
         itens.forEach(function(it){ linhas.push('- ' + it.codigo + ' | Qtd: ' + it.quantidade + ' | R$ ' + it.preco); });
+        // Passo 1: zerar aprovação e dados (sem versão)
         await bxCall('crm.item.update', {
             entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual),
             fields: {
                 comments: linhas.join('\n'),
-                'ufCrm29_1781572074906': String(novaVersao),
-                'ufCrm29_1773692249':    null,
+                'ufCrm29_1773692249': null,
                 opportunity: itens.reduce(function(s,it){ return s+(parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0); }, 0)
             }
+        });
+        // Passo 2: versão (dispara automação)
+        await bxCall('crm.item.update', {
+            entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual),
+            fields: { 'ufCrm29_1781572074906': String(novaVersao) }
         });
         // Gerar e enviar PDFs atualizados
         try {
