@@ -2299,7 +2299,7 @@ async function salvarEdicaoSb() {
                     title: 'Pedido ' + (sbPedidoAtual.numero_pedido||'') + ' - ' + (sbPedidoAtual.cliente_nome||'') + ' [v' + novaVersao + ']',
                     comments: linhas.join('\n'),
                     'ufCrm29_1781572074906': String(novaVersao),
-                    'ufCrm29_1773692249':    [],
+                    'ufCrm29_1773692249':    null,
                     opportunity: dadosEdit.itens.reduce(function(s,it){
                         return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
                     }, 0)
@@ -2684,7 +2684,7 @@ async function aprovSalvarEdicao() {
             fields: {
                 comments: linhas.join('\n'),
                 'ufCrm29_1781572074906': String(novaVersao),
-                'ufCrm29_1773692249':    [],
+                'ufCrm29_1773692249':    null,
                 opportunity: itens.reduce(function(s,it){ return s+(parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0); }, 0)
             }
         });
