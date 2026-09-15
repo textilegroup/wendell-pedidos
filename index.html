@@ -140,20 +140,50 @@
         .aprov-motivo.visible { display:block }
         .aprov-motivo label { font-size:12px;font-weight:700;color:#a01228;text-transform:uppercase;display:block;margin-bottom:5px }
         .aprov-motivo textarea { width:100%;padding:9px 11px;border:2px solid #a01228;border-radius:7px;font-family:inherit;font-size:13px;resize:vertical;min-height:80px;outline:none }
-        /* Contador de etapa dentro do modal de aprovacao */
-        .aprov-etapa-bar { display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f4f6f8;border:1px solid #e0e0e0;border-radius:8px;padding:9px 12px;margin-bottom:12px }
-        .aprov-etapa-label { font-size:12px;font-weight:700;color:#555;text-transform:uppercase }
-        .aprov-etapa-cont { font-size:15px;font-weight:800;padding:3px 12px;border-radius:12px;background:#e9ecef;color:#495057 }
-        .aprov-etapa-cont.e1 { background:#cfe2ff;color:#084298 }
-        .aprov-etapa-cont.e2 { background:#d4edda;color:#155724 }
-        .aprov-etapa-desc { font-size:11px;color:#6b7280;margin:-6px 0 12px;line-height:1.4 }
-        /* Senha do aprovador */
-        .aprov-senha { margin-bottom:12px }
-        .aprov-senha label { font-size:12px;font-weight:700;color:#555;text-transform:uppercase;display:block;margin-bottom:5px }
-        .aprov-senha input { width:100%;padding:10px 11px;border:2px solid #ddd;border-radius:7px;font-family:inherit;font-size:14px;outline:none }
-        .aprov-senha input:focus { border-color:#a01228 }
-        .aprov-senha .err { display:none;color:#a01228;font-size:12px;font-weight:600;margin-top:5px }
-        .aprov-senha .err.visible { display:block }
+        /* ── Contador de etapa: informacao PRINCIPAL do display ── */
+        .aprov-etapa-bar { text-align:center;background:#f4f6f8;border:1px solid #e0e0e0;border-radius:10px;padding:16px 12px 14px;margin-bottom:12px }
+        .aprov-etapa-label { display:block;font-size:11px;font-weight:700;color:#8a9199;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px }
+        .aprov-etapa-cont { display:inline-block;font-size:34px;font-weight:800;line-height:1;letter-spacing:-1px;color:#495057 }
+        .aprov-etapa-cont.e1 { color:#084298 }
+        .aprov-etapa-cont.e2 { color:#1b7a3e }
+        .aprov-etapa-fase { display:block;margin-top:7px;font-size:13px;font-weight:700;color:#a01228 }
+        .aprov-etapa-desc { font-size:11px;color:#6b7280;margin:-6px 0 12px;line-height:1.4;text-align:center }
+
+        /* ── Linha do tempo de assinaturas ── */
+        .aprov-tl { border:1px solid #e0e0e0;border-radius:8px;padding:13px 14px 4px;margin-bottom:14px;background:#fff }
+        .aprov-tl-titulo { font-size:11px;font-weight:700;color:#8a9199;text-transform:uppercase;letter-spacing:.8px;margin-bottom:11px }
+        .aprov-tl-item { position:relative;padding:0 0 15px 25px;border-left:2px solid #e6e8eb;margin-left:6px }
+        .aprov-tl-item:last-child { border-left-color:transparent;padding-bottom:6px }
+        .aprov-tl-dot { position:absolute;left:-9px;top:0;width:16px;height:16px;border-radius:50%;background:#e6e8eb;color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 0 0 1px #e6e8eb }
+        .aprov-tl-dot.ok    { background:#1b7a3e;box-shadow:0 0 0 1px #1b7a3e }
+        .aprov-tl-dot.info  { background:#0d6efd;box-shadow:0 0 0 1px #0d6efd }
+        .aprov-tl-dot.erro  { background:#a01228;box-shadow:0 0 0 1px #a01228 }
+        .aprov-tl-dot.espera{ background:#fff;border:2px dashed #b9bec4;box-shadow:none }
+        .aprov-tl-fase { font-size:12.5px;font-weight:700;color:#333;line-height:1.3 }
+        .aprov-tl-item.pend .aprov-tl-fase { color:#9aa0a6;font-weight:600 }
+        .aprov-tl-quem { font-size:12px;color:#555;margin-top:2px }
+        .aprov-tl-quem b { color:#1b5e20 }
+        .aprov-tl-quando { font-size:11px;color:#9aa0a6;margin-top:1px }
+        .aprov-tl-motivo { font-size:11.5px;color:#a01228;margin-top:3px;background:#fdf0f2;border-radius:4px;padding:4px 7px;line-height:1.4 }
+
+        /* ── Login do hub Wendell ── */
+        .aprov-login { border:2px solid #a01228;border-radius:9px;padding:13px 14px;margin-bottom:12px;background:#fffafb }
+        .aprov-login-tit { font-size:12px;font-weight:700;color:#a01228;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px }
+        .aprov-login-sub { font-size:11.5px;color:#6b7280;margin-bottom:10px;line-height:1.4 }
+        .aprov-login label { font-size:11px;font-weight:700;color:#555;text-transform:uppercase;display:block;margin:0 0 4px }
+        .aprov-login input { width:100%;padding:10px 11px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:14px;outline:none;margin-bottom:9px }
+        .aprov-login input:focus { border-color:#a01228 }
+        .aprov-login .err { display:none;color:#a01228;font-size:12px;font-weight:600;margin-top:2px }
+        .aprov-login .err.visible { display:block }
+        .aprov-btn-login { width:100%;padding:11px;background:#a01228;color:white;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer }
+        .aprov-btn-login:disabled { background:#ccc;cursor:not-allowed }
+        .aprov-logado { display:flex;align-items:center;gap:9px;background:#eef7f0;border:1px solid #cfe6d6;border-radius:8px;padding:9px 12px;margin-bottom:12px }
+        .aprov-logado-av { width:30px;height:30px;border-radius:50%;background:#1b7a3e;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0 }
+        .aprov-logado-txt { flex:1;min-width:0 }
+        .aprov-logado-nome { font-size:13px;font-weight:700;color:#1b5e20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+        .aprov-logado-mail { font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+        .aprov-logado-sair { background:none;border:none;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline;flex-shrink:0 }
+        .aprov-bloqueio { background:#fff4e5;border:1px solid #ffd9a8;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;color:#8a5200;line-height:1.5 }
         .aprov-btn-confirmar { width:100%;padding:14px;background:#a01228;color:white;border:none;border-radius:7px;font-size:16px;font-weight:700;cursor:pointer;transition:background .18s;margin-bottom:8px }
         .aprov-btn-confirmar:disabled { background:#ccc;cursor:not-allowed }
         .aprov-btn-editar { width:100%;padding:11px;background:#2d3748;color:white;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;transition:background .18s }
@@ -825,8 +855,35 @@
                 <div class="aprov-etapa-bar">
                     <span class="aprov-etapa-label">Status da aprovação</span>
                     <span class="aprov-etapa-cont" id="aprovEtapaCont">0/2</span>
+                    <span class="aprov-etapa-fase" id="aprovEtapaFase">Aprovação 1/2</span>
                 </div>
                 <p class="aprov-etapa-desc" id="aprovEtapaDesc"></p>
+
+                <!-- LINHA DO TEMPO DAS ASSINATURAS -->
+                <div class="aprov-tl" id="aprovTimeline"></div>
+
+                <!-- LOGIN DO HUB WENDELL -->
+                <div class="aprov-login" id="aprovLoginArea">
+                    <div class="aprov-login-tit">Identifique-se para assinar</div>
+                    <div class="aprov-login-sub">Use seu e-mail e senha do Hub Wendell. Sua assinatura fica registrada no pedido.</div>
+                    <label>E-mail</label>
+                    <input type="email" id="aprovLoginEmail" placeholder="nome@wendellservices.com" autocomplete="username">
+                    <label>Senha</label>
+                    <input type="password" id="aprovLoginSenha" placeholder="Sua senha do hub" autocomplete="current-password"
+                           onkeypress="if(event.key==='Enter')aprovFazerLogin()">
+                    <button class="aprov-btn-login" id="aprovBtnLogin" onclick="aprovFazerLogin()">ENTRAR</button>
+                    <p class="err" id="aprovLoginErro"></p>
+                </div>
+                <div class="aprov-logado" id="aprovLogadoArea" style="display:none">
+                    <div class="aprov-logado-av" id="aprovLogadoAv">--</div>
+                    <div class="aprov-logado-txt">
+                        <div class="aprov-logado-nome" id="aprovLogadoNome">-</div>
+                        <div class="aprov-logado-mail" id="aprovLogadoMail">-</div>
+                    </div>
+                    <button class="aprov-logado-sair" onclick="hubLogout(true)">sair</button>
+                </div>
+                <div class="aprov-bloqueio" id="aprovBloqueio" style="display:none"></div>
+
                 <div class="aprov-info">
                     <div class="aprov-info-title">Dados do Pedido</div>
                     <div class="aprov-info-row"><span class="aprov-info-label">ID Bitrix</span><span class="aprov-info-value id" id="aprovDealId">-</span></div>
@@ -843,12 +900,6 @@
                 <div class="aprov-motivo" id="aprovMotivoArea">
                     <label>Motivo da Reprovacao *</label>
                     <textarea id="aprovMotivoTexto" placeholder="Descreva o motivo..."></textarea>
-                </div>
-                <div class="aprov-senha" id="aprovSenhaArea">
-                    <label id="aprovSenhaLabel">Senha do 1&ordm; aprovador</label>
-                    <input type="password" id="aprovSenha" placeholder="Digite a senha" autocomplete="off"
-                           onkeypress="if(event.key==='Enter')aprovConfirmarDecisao()">
-                    <p class="err" id="aprovSenhaErro">Senha incorreta para esta etapa.</p>
                 </div>
                 <button class="aprov-btn-confirmar" id="aprovBtnConfirmar" onclick="aprovConfirmarDecisao()" disabled>CONFIRMAR DECISAO</button>
                 <button class="aprov-btn-editar" style="margin-top:8px" onclick="aprovAbrirEdicao()">&#9998; Editar pedido antes de decidir</button>
@@ -878,14 +929,22 @@
 
 <div class="modal" id="modalAdmin">
     <div class="modal-content" style="max-width:760px;width:95vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column">
-        <h2 style="flex-shrink:0">Area do Administrador</h2>
+        <h2 style="flex-shrink:0;margin-bottom:2px">Area do Administrador</h2>
+        <p id="adminUsuarioAtivo" style="flex-shrink:0;font-size:11.5px;color:#1b5e20;font-weight:600;margin:0 0 10px"></p>
         <div id="adminLogin" style="flex-shrink:0">
             <div class="password-input">
-                <label>Senha de Acesso:</label>
-                <input type="password" id="senhaAdmin" placeholder="Digite a senha" onkeypress="if(event.key==='Enter')verificarSenha()">
+                <p style="font-size:12.5px;color:#6b7280;margin:0 0 10px;line-height:1.5">
+                    Acesso com seu login do <strong>Hub Wendell</strong> (mesmo e-mail e senha das outras ferramentas).
+                </p>
+                <label>E-mail:</label>
+                <input type="email" id="emailAdmin" placeholder="nome@wendellservices.com" autocomplete="username"
+                       style="margin-bottom:8px">
+                <label>Senha:</label>
+                <input type="password" id="senhaAdmin" placeholder="Sua senha do hub" autocomplete="current-password"
+                       onkeypress="if(event.key==='Enter')verificarSenha()">
                 <p class="error-msg" id="erroSenha" style="display:none;">Senha incorreta!</p>
             </div>
-            <button class="btn btn-enviar" onclick="verificarSenha()" style="margin:5px">Entrar</button>
+            <button class="btn btn-enviar" id="btnEntrarAdmin" onclick="verificarSenha()" style="margin:5px">Entrar</button>
             <button class="btn btn-limpar" onclick="fecharModal('modalAdmin')" style="margin:5px">Cancelar</button>
         </div>
         <div id="adminPanel" style="display:none;flex:1;overflow:hidden;display:none;flex-direction:column">
@@ -964,15 +1023,95 @@ var produtos = {
     'WENFUSE15 0100':'Branca','SOLVY 0100':'Branca'
 };
 
-var SENHA_ADMIN = 'admin123';
+// ═════════════════════════════════════════════════════════
+// MÓDULO DE SEGURANÇA — HUB DE ACESSO WENDELL
+// Autentica pelo Supabase Auth (mesmo e-mail/senha das demais
+// ferramentas do hub) e confere acesso à ferramenta 'pedidos'
+// em app_acessos. A sessão vive apenas em memória: fechou a
+// aba, precisa logar de novo — proposital, pois cada
+// assinatura de aprovação deve ser um ato autenticado.
+// ═════════════════════════════════════════════════════════
+var HUB_FERRAMENTA = 'pedidos';
+var AUTH = { token:null, user:null, expiraEm:0 };
 
-// ─────────────────────────────────────────────────────────
-// SENHAS DE APROVAÇÃO — ALTERE OS DOIS VALORES ABAIXO
-// Etapa 1/2: libera o pedido e encaminha ao aprovador final
-// Etapa 2/2: aprovação final, grava no Bitrix e move o card
-// ─────────────────────────────────────────────────────────
-var SENHA_APROV_1 = 'Aprov1Wendell';
-var SENHA_APROV_2 = 'Aprov2Wendell';
+function hubLogado() {
+    return !!(AUTH.token && AUTH.user && Date.now() < AUTH.expiraEm);
+}
+
+function hubIniciais(nome) {
+    var p = String(nome||'?').trim().split(/\s+/);
+    return ((p[0]||'?')[0] + (p.length > 1 ? p[p.length-1][0] : '')).toUpperCase();
+}
+
+// fetch no Supabase usando o token do usuario logado (e nao a anon key)
+async function sbFetchAuth(path, method, body) {
+    var opts = {
+        method: method || 'GET',
+        headers: {
+            'apikey': SB_KEY,
+            'Authorization': 'Bearer ' + AUTH.token,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    var r = await fetch(SB_URL + '/rest/v1/' + path, opts);
+    if (!r.ok) throw new Error('Supabase ' + r.status + ': ' + (await r.text()));
+    var txt = await r.text();
+    return txt ? JSON.parse(txt) : null;
+}
+
+async function hubLogin(email, senha) {
+    email = String(email||'').trim().toLowerCase();
+    if (!email || !senha) throw new Error('Informe e-mail e senha.');
+
+    var r = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: senha })
+    });
+    var d = await r.json();
+    if (!r.ok || !d.access_token) {
+        var msg = d.error_description || d.msg || d.message || 'E-mail ou senha inválidos.';
+        if (/invalid login/i.test(msg)) msg = 'E-mail ou senha inválidos.';
+        throw new Error(msg);
+    }
+    AUTH.token    = d.access_token;
+    AUTH.expiraEm = Date.now() + ((d.expires_in || 3600) * 1000);
+
+    // Perfil no hub (a policy app_usuarios_select permite ler a propria linha)
+    var perfil;
+    try {
+        perfil = await sbFetchAuth('app_usuarios?user_id=eq.' + d.user.id +
+                                   '&select=nome,email,nivel,organizacao,ativo&limit=1');
+    } catch(e) { perfil = null; }
+    var u = perfil && perfil[0];
+    if (!u)        { hubLogout(); throw new Error('Seu usuário não está cadastrado no Hub Wendell.'); }
+    if (!u.ativo)  { hubLogout(); throw new Error('Seu usuário está inativo no Hub Wendell.'); }
+
+    // Acesso à ferramenta 'pedidos'
+    var temAcesso = false;
+    try {
+        var ac = await sbFetchAuth('app_acessos?user_id=eq.' + d.user.id +
+                                   '&ferramenta=eq.' + HUB_FERRAMENTA + '&select=permissao&limit=1');
+        temAcesso = !!(ac && ac.length);
+    } catch(e) { temAcesso = false; }
+    if (!temAcesso) {
+        hubLogout();
+        throw new Error('Seu usuário não tem acesso à ferramenta Pedidos. Peça liberação no Hub Wendell.');
+    }
+
+    AUTH.user = { id: d.user.id, nome: u.nome, email: u.email || email, organizacao: u.organizacao };
+    return AUTH.user;
+}
+
+function hubLogout(recarregarUI) {
+    AUTH = { token:null, user:null, expiraEm:0 };
+    if (recarregarUI) {
+        aprovAtualizarPainelLogin();
+        aprovAtualizarBotaoConfirmar();
+    }
+}
 
 // ─────────────────────────────────────────────────────────
 // LINK DE APROVAÇÃO — agora aponta para ESTE proprio arquivo.
@@ -2184,6 +2323,10 @@ async function buscarPedidosSb() {
                 '<div class="sb-field"><b>Cliente:</b> ' + (p.cliente_nome||'-') + ' &nbsp;|&nbsp; <b>CNPJ:</b> ' + (p.cliente_cnpj||'-') + '</div>' +
                 '<div class="sb-field"><b>Vendedor:</b> ' + (p.vendedor_nome||'-') + ' (' + (p.vendedor_codigo||'-') + ')</div>' +
                 '<div class="sb-field"><b>Etapa Bitrix:</b> <span id="etapa-' + idx + '">' + (p._stageName || 'carregando...') + '</span></div>' +
+                '<div class="sb-field"><b>Assinaturas:</b> ' +
+                    '1/2 ' + (p.aprov1_por ? '<span style="color:#1b5e20;font-weight:600">' + esc(p.aprov1_por) + '</span>' : '<span style="color:#9aa0a6">pendente</span>') +
+                    ' &nbsp;·&nbsp; 2/2 ' + (p.aprov2_por ? '<span style="color:#1b5e20;font-weight:600">' + esc(p.aprov2_por) + '</span>' : '<span style="color:#9aa0a6">pendente</span>') +
+                '</div>' +
                 '<div class="sb-field"><b>Total:</b> R$ ' + (p.total_geral||'0').toLocaleString('pt-BR', {minimumFractionDigits:2}) +
                 (p.bitrix_deal_id ? ' &nbsp;|&nbsp; <b>Deal Bitrix:</b> <a href="https://fiorella.bitrix24.com.br/crm/type/1070/details/' + p.bitrix_deal_id + '/" target="_blank" style="color:#a01228">#' + p.bitrix_deal_id + ' ↗</a>' : '') + '</div>' +
                 itensHTML +
@@ -2372,7 +2515,9 @@ async function salvarEdicaoSb() {
             // Edicao reinicia o ciclo de aprovacao do zero (volta para 0/2)
             aprovacao_etapa: 0,
             aprov1_decisao: null, aprov1_data: null, aprov1_motivo: null,
+            aprov1_por: null, aprov1_email: null, aprov1_user_id: null,
             aprov2_data: null, aprov2_motivo: null,
+            aprov2_por: null, aprov2_email: null, aprov2_user_id: null,
             historico: (sbPedidoAtual.historico || []).concat([{
                 data: new Date().toISOString(),
                 acao: 'editado — aprovação reiniciada (0/2)',
@@ -2621,6 +2766,142 @@ function aprovRotuloStatus(status, etapa) {
     return etapa >= 1 ? 'Aguardando Aprovação Final 2/2' : 'Aguardando 1ª Aprovação 1/2';
 }
 
+// ── Data curta para a linha do tempo ──
+function aprovData(iso) {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+    catch(e) { return ''; }
+}
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+}
+
+// ──────────────────────────────────────────────
+// LINHA DO TEMPO DAS ASSINATURAS
+// ──────────────────────────────────────────────
+function aprovRenderTimeline(p) {
+    var etapa = parseInt(p.aprovacao_etapa || 0) || 0;
+    var itens = [];
+
+    // 1. Criacao
+    itens.push({
+        cls:'info', icone:'&#9679;', fase:'Pedido criado' + (p.versao > 1 ? ' (v1)' : ''),
+        quem: p.vendedor_nome ? ('Vendedor: ' + p.vendedor_nome) : '',
+        quando: aprovData(p.data_pedido || p.created_at)
+    });
+
+    // 2. Edicoes registradas no historico
+    (p.historico || []).forEach(function(h) {
+        if (!h || !h.acao) return;
+        if (String(h.acao).indexOf('criado') === 0) return;
+        if (String(h.acao).indexOf('aprovado') === 0 || String(h.acao).indexOf('reprovado') === 0) return;
+        itens.push({
+            cls:'info', icone:'&#9998;',
+            fase:'Pedido editado' + (h.versao ? ' — v' + h.versao : ''),
+            quem: h.por ? ('Por: ' + h.por) : '',
+            quando: aprovData(h.data)
+        });
+    });
+
+    // 3. Aprovacao 1/2
+    if (p.aprov1_decisao === 'aprovado') {
+        itens.push({cls:'ok', icone:'&#10003;', fase:'Aprovação 1/2 — assinada',
+            quem: '<b>' + esc(p.aprov1_por || 'assinante não identificado') + '</b>' +
+                  (p.aprov1_email ? '<br><span style="color:#8a9199">' + esc(p.aprov1_email) + '</span>' : ''),
+            quando: aprovData(p.aprov1_data)});
+    } else if (p.aprov1_decisao === 'reprovado') {
+        itens.push({cls:'erro', icone:'&#10007;', fase:'Aprovação 1/2 — REPROVADA',
+            quem: '<b style="color:#a01228">' + esc(p.aprov1_por || 'assinante não identificado') + '</b>',
+            quando: aprovData(p.aprov1_data), motivo: p.aprov1_motivo});
+    } else {
+        itens.push({cls:'espera', icone:'', fase:'Aprovação 1/2', quem:'Aguardando assinatura', pendente:true});
+    }
+
+    // 4. Aprovacao final 2/2
+    if (etapa >= 2) {
+        itens.push({cls:'ok', icone:'&#10003;', fase:'Aprovação Final 2/2 — assinada',
+            quem: '<b>' + esc(p.aprov2_por || 'assinante não identificado') + '</b>' +
+                  (p.aprov2_email ? '<br><span style="color:#8a9199">' + esc(p.aprov2_email) + '</span>' : ''),
+            quando: aprovData(p.aprov2_data)});
+    } else if (p.status === 'reprovado' && etapa === 1) {
+        itens.push({cls:'erro', icone:'&#10007;', fase:'Aprovação Final 2/2 — REPROVADA',
+            quem: '<b style="color:#a01228">' + esc(p.aprov2_por || 'assinante não identificado') + '</b>',
+            quando: aprovData(p.aprov2_data), motivo: p.aprov2_motivo});
+    } else if (p.status === 'reprovado') {
+        itens.push({cls:'espera', icone:'', fase:'Aprovação Final 2/2',
+            quem:'Não realizada — pedido reprovado na 1ª etapa', pendente:true});
+    } else {
+        itens.push({cls:'espera', icone:'', fase:'Aprovação Final 2/2',
+            quem: etapa >= 1 ? 'Aguardando assinatura' : 'Liberada após a 1ª aprovação', pendente:true});
+    }
+
+    document.getElementById('aprovTimeline').innerHTML =
+        '<div class="aprov-tl-titulo">Linha do tempo</div>' +
+        itens.map(function(i) {
+            return '<div class="aprov-tl-item' + (i.pendente ? ' pend' : '') + '">' +
+                '<div class="aprov-tl-dot ' + i.cls + '">' + (i.icone || '') + '</div>' +
+                '<div class="aprov-tl-fase">' + i.fase + '</div>' +
+                (i.quem   ? '<div class="aprov-tl-quem">' + i.quem + '</div>' : '') +
+                (i.quando ? '<div class="aprov-tl-quando">' + i.quando + '</div>' : '') +
+                (i.motivo ? '<div class="aprov-tl-motivo"><strong>Motivo:</strong> ' + esc(i.motivo) + '</div>' : '') +
+                '</div>';
+        }).join('');
+}
+
+// ──────────────────────────────────────────────
+// PAINEL DE LOGIN DENTRO DA APROVAÇÃO
+// ──────────────────────────────────────────────
+// Regra: a mesma pessoa nao pode assinar as duas etapas do mesmo pedido.
+function aprovMesmoAssinante() {
+    return !!(hubLogado() && aprovItemSb && aprovEtapaAtual >= 1 &&
+              aprovItemSb.aprov1_user_id && aprovItemSb.aprov1_user_id === AUTH.user.id);
+}
+
+function aprovAtualizarPainelLogin() {
+    var logado = hubLogado();
+    document.getElementById('aprovLoginArea').style.display  = logado ? 'none'  : 'block';
+    document.getElementById('aprovLogadoArea').style.display = logado ? 'flex'  : 'none';
+    if (logado) {
+        document.getElementById('aprovLogadoAv').textContent   = hubIniciais(AUTH.user.nome);
+        document.getElementById('aprovLogadoNome').textContent = AUTH.user.nome;
+        document.getElementById('aprovLogadoMail').textContent = AUTH.user.email;
+    }
+    var bloq = document.getElementById('aprovBloqueio');
+    if (aprovMesmoAssinante()) {
+        bloq.innerHTML = '<strong>Assinatura dupla bloqueada.</strong><br>' +
+            'Você já assinou a aprovação 1/2 deste pedido. A aprovação final precisa ser assinada por outra pessoa com acesso à ferramenta Pedidos.';
+        bloq.style.display = 'block';
+    } else {
+        bloq.style.display = 'none';
+    }
+    aprovAtualizarBotaoConfirmar();
+}
+
+function aprovAtualizarBotaoConfirmar() {
+    var btn = document.getElementById('aprovBtnConfirmar');
+    if (!btn) return;
+    btn.disabled = !(aprovDecisao && hubLogado() && !aprovMesmoAssinante());
+}
+
+async function aprovFazerLogin() {
+    var btn  = document.getElementById('aprovBtnLogin');
+    var erro = document.getElementById('aprovLoginErro');
+    erro.classList.remove('visible');
+    btn.disabled = true; btn.textContent = 'Entrando...';
+    try {
+        await hubLogin(document.getElementById('aprovLoginEmail').value,
+                       document.getElementById('aprovLoginSenha').value);
+        document.getElementById('aprovLoginSenha').value = '';
+        aprovAtualizarPainelLogin();
+    } catch(e) {
+        erro.textContent = e.message;
+        erro.classList.add('visible');
+    }
+    btn.disabled = false; btn.textContent = 'ENTRAR';
+}
+
 function showAprov(id) {
     ['aprovLoading','aprovAlready','aprovError','aprovSuccess'].forEach(function(s){
         document.getElementById(s).classList.remove('active');
@@ -2646,25 +2927,28 @@ async function abrirAprovacaoAdmin(idx) {
     document.getElementById('aprovBtnRp').classList.remove('ativo');
     document.getElementById('aprovMotivoArea').classList.remove('visible');
     document.getElementById('aprovMotivoTexto').value = '';
-    document.getElementById('aprovSenha').value = '';
-    document.getElementById('aprovSenhaErro').classList.remove('visible');
+    document.getElementById('aprovLoginErro').classList.remove('visible');
+    document.getElementById('aprovLoginSenha').value = '';
     document.getElementById('aprovBtnConfirmar').disabled = true;
     document.getElementById('aprovBtnConfirmar').textContent = 'CONFIRMAR DECISAO';
     document.getElementById('aprovEditPanel').classList.remove('open');
 
-    // Titulo / contador conforme a etapa
+    // ── Barra de titulo: identifica o PEDIDO, nunca o status ──
     var ehFinal = (aprovEtapaAtual >= 1);
     document.getElementById('aprovTitulo').textContent =
-        (ehFinal ? 'Aprovação Final Pedido 2/2' : 'Aprovação de Pedido 1/2') +
-        ' — #' + aprovDealIdAtual + ' v' + (p.versao || 1);
+        'Aprovação de Pedido #' + aprovDealIdAtual + ' v' + (p.versao || 1);
+
+    // ── Contador: informacao principal do display ──
     var contEl = document.getElementById('aprovEtapaCont');
     contEl.textContent = aprovEtapaAtual + '/2';
     contEl.className = 'aprov-etapa-cont e' + aprovEtapaAtual;
+    document.getElementById('aprovEtapaFase').textContent = ehFinal
+        ? 'Aprovação Final 2/2' : 'Aprovação 1/2';
     document.getElementById('aprovEtapaDesc').textContent = ehFinal
         ? 'A 1ª aprovação já foi registrada. Esta é a decisão FINAL: ela grava o status no Bitrix e movimenta o card.'
         : 'Esta é a 1ª aprovação. Ela apenas libera o pedido para o aprovador final — nada é gravado no Bitrix nesta etapa.';
-    document.getElementById('aprovSenhaLabel').textContent = ehFinal
-        ? 'Senha do 2º aprovador (final)' : 'Senha do 1º aprovador';
+    aprovRenderTimeline(p);
+    aprovAtualizarPainelLogin();
 
     document.getElementById('aprovOverlay').classList.add('active');
     showAprov('aprovLoading');
@@ -2766,7 +3050,7 @@ async function abrirAprovacaoAdmin(idx) {
 
 function fecharAprovacao() {
     document.getElementById('aprovOverlay').classList.remove('active');
-    document.getElementById('aprovSenha').value = '';
+    document.getElementById('aprovLoginSenha').value = '';
     if (MODO_APROVACAO_LINK) {
         var bt = document.getElementById('telaAprovLinkBtn');
         if (bt && bt.style.display === 'none') {
@@ -2784,7 +3068,7 @@ function aprovSelecionarDecisao(tipo) {
     document.getElementById('aprovBtnRp').classList.toggle('ativo', tipo === 'reprovado');
     document.getElementById('aprovMotivoArea').classList.toggle('visible', tipo === 'reprovado');
     if (tipo === 'aprovado') document.getElementById('aprovMotivoTexto').value = '';
-    document.getElementById('aprovBtnConfirmar').disabled = false;
+    aprovAtualizarBotaoConfirmar();
 }
 
 function aprovAbrirEdicao() {
@@ -2807,18 +3091,18 @@ async function aprovConfirmarDecisao() {
         document.getElementById('aprovMotivoTexto').focus(); return;
     }
 
-    // ── Senha da etapa ──
-    var ehFinal   = (aprovEtapaAtual >= 1);
-    var esperada  = ehFinal ? SENHA_APROV_2 : SENHA_APROV_1;
-    var digitada  = document.getElementById('aprovSenha').value;
-    var errEl     = document.getElementById('aprovSenhaErro');
-    if (digitada !== esperada) {
-        errEl.textContent = 'Senha incorreta para a aprovação ' + (ehFinal ? 'final (2/2)' : '1/2') + '.';
-        errEl.classList.add('visible');
-        document.getElementById('aprovSenha').focus();
+    // ── Identidade do assinante (hub Wendell) ──
+    var ehFinal = (aprovEtapaAtual >= 1);
+    if (!hubLogado()) {
+        aprovAtualizarPainelLogin();
+        document.getElementById('aprovLoginEmail').focus();
         return;
     }
-    errEl.classList.remove('visible');
+    if (aprovMesmoAssinante()) {
+        aprovAtualizarPainelLogin();
+        return;
+    }
+    var assinante = AUTH.user;
 
     var btn = document.getElementById('aprovBtnConfirmar');
     btn.disabled = true; btn.textContent = 'Enviando...';
@@ -2834,12 +3118,16 @@ async function aprovConfirmarDecisao() {
                 aprov1_decisao : aprovDecisao,
                 aprov1_data    : nowISO,
                 aprov1_motivo  : (aprovDecisao === 'reprovado' ? motivo : null),
+                aprov1_por     : assinante.nome,
+                aprov1_email   : assinante.email,
+                aprov1_user_id : assinante.id,
                 status         : (aprovDecisao === 'aprovado' ? 'pendente' : 'reprovado'),
                 updated_at     : nowISO,
                 historico: (aprovItemSb.historico || []).concat([{
                     data: nowISO,
                     acao: aprovDecisao === 'aprovado' ? 'aprovado na etapa 1/2' : 'reprovado na etapa 1/2',
-                    versao: aprovItemSb.versao || 1
+                    versao: aprovItemSb.versao || 1,
+                    por: assinante.nome + ' <' + assinante.email + '>'
                 }])
             };
             await sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', patch1);
@@ -2849,6 +3137,10 @@ async function aprovConfirmarDecisao() {
                 sbPedidosCache[ci1].aprovacao_etapa = novaEtapa1;
                 sbPedidosCache[ci1].aprov1_decisao  = aprovDecisao;
                 sbPedidosCache[ci1].aprov1_motivo   = patch1.aprov1_motivo;
+                sbPedidosCache[ci1].aprov1_por      = assinante.nome;
+                sbPedidosCache[ci1].aprov1_email    = assinante.email;
+                sbPedidosCache[ci1].aprov1_user_id  = assinante.id;
+                sbPedidosCache[ci1].aprov1_data     = nowISO;
             }
 
             document.getElementById('aprovSuccessIcon').innerHTML    = aprovDecisao === 'aprovado' ? '&#9989;' : '&#10060;';
@@ -2874,12 +3166,16 @@ async function aprovConfirmarDecisao() {
                     aprovacao_etapa: aprovDecisao === 'aprovado' ? 2 : 1,
                     aprov2_data    : nowISO,
                     aprov2_motivo  : (aprovDecisao === 'reprovado' ? motivo : null),
+                    aprov2_por     : assinante.nome,
+                    aprov2_email   : assinante.email,
+                    aprov2_user_id : assinante.id,
                     status         : aprovDecisao === 'aprovado' ? 'aprovado' : 'reprovado',
                     updated_at     : nowISO,
                     historico: (aprovItemSb.historico || []).concat([{
                         data: nowISO,
                         acao: aprovDecisao === 'aprovado' ? 'aprovado na etapa final 2/2' : 'reprovado na etapa final 2/2',
-                        versao: aprovItemSb.versao || 1
+                        versao: aprovItemSb.versao || 1,
+                        por: assinante.nome + ' <' + assinante.email + '>'
                     }])
                 };
                 await sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', patch2);
@@ -2887,6 +3183,10 @@ async function aprovConfirmarDecisao() {
                 if (ci2 >= 0) {
                     sbPedidosCache[ci2].status          = patch2.status;
                     sbPedidosCache[ci2].aprovacao_etapa = patch2.aprovacao_etapa;
+                    sbPedidosCache[ci2].aprov2_por      = assinante.nome;
+                    sbPedidosCache[ci2].aprov2_email    = assinante.email;
+                    sbPedidosCache[ci2].aprov2_user_id  = assinante.id;
+                    sbPedidosCache[ci2].aprov2_data     = nowISO;
                 }
             }
 
@@ -2957,7 +3257,9 @@ async function aprovSalvarEdicao() {
             // Edicao reinicia o ciclo de aprovacao do zero (volta para 0/2)
             aprovacao_etapa: 0,
             aprov1_decisao: null, aprov1_data: null, aprov1_motivo: null,
+            aprov1_por: null, aprov1_email: null, aprov1_user_id: null,
             aprov2_data: null, aprov2_motivo: null,
+            aprov2_por: null, aprov2_email: null, aprov2_user_id: null,
             historico: (aprovItemSb.historico || []).concat([{data: new Date().toISOString(), acao: 'editado via aprovacao — aprovação reiniciada (0/2)', versao: novaVersao, por: nomeVend || 'admin'}])
         });
         // Atualizar Bitrix
@@ -3034,15 +3336,23 @@ async function aprovSalvarEdicao() {
             sbPedidosCache[ciAp].aprovacao_etapa = 0;
             sbPedidosCache[ciAp].status = 'pendente';
         }
+        // Edicao limpa as assinaturas anteriores
+        aprovItemSb.aprov1_decisao = null; aprovItemSb.aprov1_data = null;
+        aprovItemSb.aprov1_motivo  = null; aprovItemSb.aprov1_por  = null;
+        aprovItemSb.aprov1_email   = null; aprovItemSb.aprov1_user_id = null;
+        aprovItemSb.aprov2_data    = null; aprovItemSb.aprov2_motivo  = null;
+        aprovItemSb.aprov2_por     = null; aprovItemSb.aprov2_email   = null;
+        aprovItemSb.aprov2_user_id = null;
+
         document.getElementById('aprovVersao').textContent = 'v' + novaVersao;
-        document.getElementById('aprovTitulo').textContent = 'Aprovação de Pedido 1/2 — #' + aprovDealIdAtual + ' v' + novaVersao;
+        document.getElementById('aprovTitulo').textContent = 'Aprovação de Pedido #' + aprovDealIdAtual + ' v' + novaVersao;
         var contApE = document.getElementById('aprovEtapaCont');
         contApE.textContent = '0/2'; contApE.className = 'aprov-etapa-cont e0';
+        document.getElementById('aprovEtapaFase').textContent = 'Aprovação 1/2';
         document.getElementById('aprovEtapaDesc').textContent =
             'A edição reiniciou o ciclo: o pedido voltou para a 1ª aprovação (0/2).';
-        document.getElementById('aprovSenhaLabel').textContent = 'Senha do 1º aprovador';
-        document.getElementById('aprovSenha').value = '';
-        document.getElementById('aprovSenhaErro').classList.remove('visible');
+        aprovRenderTimeline(aprovItemSb);
+        aprovAtualizarPainelLogin();
         document.getElementById('aprovEditPanel').classList.remove('open');
         alert('Pedido atualizado para v' + novaVersao + '.\n\nO ciclo de aprovação foi reiniciado: agora este pedido precisa novamente da 1ª aprovação (1/2) e depois da aprovação final (2/2).');
         btnS.textContent = 'Salvar alteracoes'; btnS.disabled = false;
@@ -3153,6 +3463,7 @@ function fecharAdminPanel() {
     document.getElementById('adminPanel').style.display = 'none';
     document.getElementById('senhaAdmin').value = '';
     document.getElementById('erroSenha').style.display = 'none';
+    hubLogout();
     fecharModal('modalAdmin');
 }
 
@@ -3164,15 +3475,26 @@ function abrirModalAdmin() {
     document.getElementById('modalAdmin').classList.add('active');
 }
 
-function verificarSenha() {
-    if (document.getElementById('senhaAdmin').value === SENHA_ADMIN) {
+async function verificarSenha() {
+    var erro = document.getElementById('erroSenha');
+    var btn  = document.getElementById('btnEntrarAdmin');
+    erro.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Entrando...';
+    try {
+        var u = await hubLogin(document.getElementById('emailAdmin').value,
+                               document.getElementById('senhaAdmin').value);
+        document.getElementById('senhaAdmin').value = '';
         document.getElementById('adminLogin').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
         document.getElementById('adminPanel').style.flexDirection = 'column';
+        var cab = document.getElementById('adminUsuarioAtivo');
+        if (cab) cab.textContent = u.nome + ' — ' + u.email;
         buscarPedidosSb();
-    } else {
-        document.getElementById('erroSenha').style.display = 'block';
+    } catch(e) {
+        erro.textContent = e.message;
+        erro.style.display = 'block';
     }
+    btn.disabled = false; btn.textContent = 'Entrar';
 }
 </script>
 
