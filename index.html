@@ -94,7 +94,7 @@
         .sb-status-aprovado { background:#d4edda;color:#155724 }
         .sb-status-reprovado { background:#f8d7da;color:#721c24 }
         .sb-status-editado { background:#fff3cd;color:#856404 }  /* editado = pendente visualmente */
-        /* Contador de aprovação 0/2, 1/2, 2/2 */
+        /* Contador de aprovação 0/3 .. 3/3 */
         .sb-etapa { padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:#e9ecef;color:#495057;white-space:nowrap }
         .sb-etapa-0 { background:#e9ecef;color:#495057 }
         .sb-etapa-1 { background:#cfe2ff;color:#084298 }
@@ -855,7 +855,7 @@
                 <div class="aprov-etapa-bar">
                     <span class="aprov-etapa-label">Status da aprovação</span>
                     <span class="aprov-etapa-cont" id="aprovEtapaCont">0/2</span>
-                    <span class="aprov-etapa-fase" id="aprovEtapaFase">Aprovação 1/2</span>
+                    <span class="aprov-etapa-fase" id="aprovEtapaFase">Aprovação Comercial Inicial 1/3</span>
                 </div>
                 <p class="aprov-etapa-desc" id="aprovEtapaDesc"></p>
 
@@ -956,8 +956,9 @@
                         <option value="">Todos os status</option>
                         <option value="pendente">Pendentes (todos)</option>
                         <option value="etapa0">Aguardando 1ª Aprovação (0/2)</option>
-                        <option value="etapa1">Aguardando Aprovação Final (1/2)</option>
-                        <option value="aprovado">Aprovado (2/2)</option>
+                        <option value="etapa1">Aguardando Cadastral (1/3)</option>
+                        <option value="etapa2">Aguardando Comercial Final (2/3)</option>
+                        <option value="aprovado">Aprovado (3/3)</option>
                         <option value="reprovado">Reprovado</option>
                     </select>
                     <button class="btn btn-enviar" style="padding:7px 14px;font-size:13px" onclick="buscarPedidosSb()">🔍 Buscar</button>
@@ -1211,6 +1212,7 @@ var documentosCarregados = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     // ── Modo aprovação por link: ?dealId=NNN vindo do card do Bitrix ──
+    aprovCarregarEtapas();   // responsaveis de cada assinatura, vindos do funil PEDIDOS
     var qsDeal = new URLSearchParams(location.search).get('dealId');
     if (qsDeal && /^\d+$/.test(qsDeal)) {
         carregarSelectsProdutos();   // necessario para o painel de edicao dentro da aprovacao
@@ -1240,7 +1242,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ──────────────────────────────────────────────
 // MODO APROVAÇÃO POR LINK  (?dealId=NNN)
 // Substitui o app externo wendell-aprovacao-pedido.
-// Nao exige a senha de admin — apenas a senha da etapa (1/2 ou 2/2).
+// Nao exige a senha de admin — apenas o login do hub do responsavel pela etapa.
 // ──────────────────────────────────────────────
 function aprovLinkMsg(html, mostrarBotao) {
     var el = document.getElementById('telaAprovLinkMsg');
@@ -2225,6 +2227,7 @@ async function buscarPedidosSb() {
         if (cliente) qs += '&cliente_nome=ilike.*' + encodeURIComponent(cliente) + '*';
         if (status === 'etapa0')      qs += '&status=eq.pendente&aprovacao_etapa=eq.0';
         else if (status === 'etapa1') qs += '&status=eq.pendente&aprovacao_etapa=eq.1';
+        else if (status === 'etapa2') qs += '&status=eq.pendente&aprovacao_etapa=eq.2';
         else if (status)              qs += '&status=eq.' + status;
         var data = await sbFetch('pedidos?' + qs);
         if (!data || !data.length) {
@@ -2256,7 +2259,7 @@ async function buscarPedidosSb() {
                 });
             })
             .catch(function(){});
-        // Sincronizar status com Bitrix (decisao FINAL 2/2 vive no Bitrix).
+        // Sincronizar status com Bitrix (decisao FINAL 3/3 vive no Bitrix).
         // Cobre tambem decisoes tomadas pelo app externo de aprovacao.
         data.forEach(function(p, idx) {
             if (p.status !== 'aprovado' && p.status !== 'reprovado' && p.bitrix_deal_id) {
@@ -2270,14 +2273,14 @@ async function buscarPedidosSb() {
                         if (!aprovado && !reprovado) return;
 
                         var patch = aprovado
-                            ? { status: 'aprovado',  aprovacao_etapa: 2, updated_at: new Date().toISOString() }
-                            : { status: 'reprovado', aprov2_motivo: res.item[CAMPO_MOTIVO_AP] || null,
+                            ? { status: 'aprovado',  aprovacao_etapa: APROV_TOTAL, updated_at: new Date().toISOString() }
+                            : { status: 'reprovado', updated_at: new Date().toISOString(),
                                 updated_at: new Date().toISOString() };
 
                         sbFetch('pedidos?id=eq.' + p.id, 'PATCH', patch)
                             .then(function() {
                                 sbPedidosCache[idx].status = patch.status;
-                                if (aprovado) sbPedidosCache[idx].aprovacao_etapa = 2;
+                                if (aprovado) sbPedidosCache[idx].aprovacao_etapa = APROV_TOTAL;
                                 // Atualizar badges do card sem recarregar tudo
                                 var card = document.getElementById('sbcard-' + idx);
                                 if (card) {
@@ -2289,7 +2292,7 @@ async function buscarPedidosSb() {
                                     var etEl = card.querySelector('.sb-etapa');
                                     if (etEl && aprovado) {
                                         etEl.className = 'sb-etapa sb-etapa-2';
-                                        etEl.textContent = 'Aprovação 2/2';
+                                        etEl.textContent = 'Aprovação ' + APROV_TOTAL + '/' + APROV_TOTAL + '';
                                     }
                                 }
                             }).catch(function(){});
@@ -2324,8 +2327,11 @@ async function buscarPedidosSb() {
                 '<div class="sb-field"><b>Vendedor:</b> ' + (p.vendedor_nome||'-') + ' (' + (p.vendedor_codigo||'-') + ')</div>' +
                 '<div class="sb-field"><b>Etapa Bitrix:</b> <span id="etapa-' + idx + '">' + (p._stageName || 'carregando...') + '</span></div>' +
                 '<div class="sb-field"><b>Assinaturas:</b> ' +
-                    '1/2 ' + (p.aprov1_por ? '<span style="color:#1b5e20;font-weight:600">' + esc(p.aprov1_por) + '</span>' : '<span style="color:#9aa0a6">pendente</span>') +
-                    ' &nbsp;·&nbsp; 2/2 ' + (p.aprov2_por ? '<span style="color:#1b5e20;font-weight:600">' + esc(p.aprov2_por) + '</span>' : '<span style="color:#9aa0a6">pendente</span>') +
+                    [1,2,3].map(function(nn){
+                        var q = p['aprov'+nn+'_por'];
+                        return nn + '/3 ' + (q ? '<span style="color:#1b5e20;font-weight:600">' + esc(q) + '</span>'
+                                               : '<span style="color:#9aa0a6">pendente</span>');
+                    }).join(' &nbsp;·&nbsp; ') +
                 '</div>' +
                 '<div class="sb-field"><b>Total:</b> R$ ' + (p.total_geral||'0').toLocaleString('pt-BR', {minimumFractionDigits:2}) +
                 (p.bitrix_deal_id ? ' &nbsp;|&nbsp; <b>Deal Bitrix:</b> <a href="https://fiorella.bitrix24.com.br/crm/type/1070/details/' + p.bitrix_deal_id + '/" target="_blank" style="color:#a01228">#' + p.bitrix_deal_id + ' ↗</a>' : '') + '</div>' +
@@ -2342,7 +2348,7 @@ async function buscarPedidosSb() {
                     : '')
                 + '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
                 '<button class="btn btn-enviar" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="abrirEditSbIdx(this.dataset.sbidx)">&#9998; Editar</button>' +
-                '<button class="btn" style="padding:6px 12px;font-size:12px;background:' + (etapa === 0 ? '#1b5e20' : '#0d47a1') + ';color:white" data-sbidx="' + idx + '" onclick="abrirAprovacaoAdmin(this.dataset.sbidx)">&#10003; ' + (etapa >= 2 ? 'Aprovacao 2/2' : (etapa === 1 ? 'Aprovacao Final 2/2' : 'Aprovacao 1/2')) + '</button>' +
+                '<button class="btn" style="padding:6px 12px;font-size:12px;background:' + (etapa === 0 ? '#1b5e20' : '#0d47a1') + ';color:white" data-sbidx="' + idx + '" onclick="abrirAprovacaoAdmin(this.dataset.sbidx)">&#10003; Aprovacao ' + Math.min(etapa+1,3) + '/3</button>' +
                 '<button class="btn" style="padding:6px 12px;font-size:12px;background:#505152;color:white" data-sbidx="' + idx + '" onclick="confirmarExclusao(this.dataset.sbidx)">&#128465; Excluir</button>' +
                 '<button class="btn btn-pdf" style="padding:6px 12px;font-size:12px" data-sbidx="' + idx + '" onclick="gerarPDFSbIdx(this.dataset.sbidx)">&#128196; PDF Comercial</button>' +
                 '<button class="btn" style="padding:6px 12px;font-size:12px;background:#1565c0;color:white" data-sbidx="' + idx + '" onclick="gerarPDFClienteAdminIdx(this.dataset.sbidx)">&#128196; PDF Cliente</button>' +
@@ -2516,8 +2522,10 @@ async function salvarEdicaoSb() {
             aprovacao_etapa: 0,
             aprov1_decisao: null, aprov1_data: null, aprov1_motivo: null,
             aprov1_por: null, aprov1_email: null, aprov1_user_id: null,
-            aprov2_data: null, aprov2_motivo: null,
+            aprov2_decisao: null, aprov2_data: null, aprov2_motivo: null,
             aprov2_por: null, aprov2_email: null, aprov2_user_id: null,
+            aprov3_decisao: null, aprov3_data: null, aprov3_motivo: null,
+            aprov3_por: null, aprov3_email: null, aprov3_user_id: null,
             historico: (sbPedidoAtual.historico || []).concat([{
                 data: new Date().toISOString(),
                 acao: 'editado — aprovação reiniciada (0/2)',
@@ -2756,14 +2764,53 @@ var ID_REPROVADO_AP   = '4187';
 var aprovDealIdAtual  = null;
 var aprovDecisao      = null;
 var aprovItemSb       = null;
-var aprovEtapaAtual   = 0;   // 0 = vai votar 1/2 ; 1 = vai votar 2/2 (final)
+var aprovEtapaAtual   = 0;   // assinaturas ja concluidas: 0, 1 ou 2 (vai assinar a proxima)
 
-// Rotulo de status considerando a etapa de aprovacao (0/2, 1/2, 2/2)
+// ── Configuracao das 3 etapas (espelha o funil PEDIDOS do Wendell Pipelines) ──
+// Carregada do banco em aprovCarregarEtapas(); o fallback abaixo vale se a
+// chamada falhar, para o modulo nunca ficar sem configuracao.
+var APROV_ETAPAS = [
+    {etapa:1, nome:'Aprovação Comercial Inicial 1/3', responsavel_nome:'Arthur Rodrigues', responsavel_email:'arthur@wendellservices.com'},
+    {etapa:2, nome:'Aprovação Cadastral 2/3',         responsavel_nome:'Isabella Stuque',  responsavel_email:'isabella@wendellservices.com'},
+    {etapa:3, nome:'Aprovação Comercial Final 3/3',   responsavel_nome:'Michael',          responsavel_email:'michael@wendellservices.com'}
+];
+var APROV_TOTAL = 3;
+
+async function aprovCarregarEtapas() {
+    try {
+        var r = await fetch(SB_URL + '/rest/v1/rpc/fn_pedidos_etapas_aprovacao', {
+            method:'POST',
+            headers:{'apikey':SB_KEY,'Authorization':'Bearer ' + SB_KEY,'Content-Type':'application/json'},
+            body:'{}'
+        });
+        if (!r.ok) return;
+        var d = await r.json();
+        if (Array.isArray(d) && d.length === 3 && d.every(function(x){ return x.etapa && x.responsavel_email; })) {
+            APROV_ETAPAS = d.map(function(x){
+                return {etapa:x.etapa, nome:aprovNomeCurto(x.nome),
+                        responsavel_nome:x.responsavel_nome, responsavel_email:String(x.responsavel_email||'').toLowerCase()};
+            });
+        }
+    } catch(e) { console.warn('[APROV] etapas do funil:', e.message); }
+}
+
+// 'APROVAÇÃO COMERCIAL INICIAL 1/3' -> 'Aprovação Comercial Inicial 1/3'
+function aprovNomeCurto(n) {
+    return String(n||'').toLowerCase().replace(/(^|\s)([a-zà-ú])/g, function(m,a,b){ return a + b.toUpperCase(); })
+                        .replace(/(\d)\/(\d)/, '$1/$2');
+}
+
+function aprovCfg(etapaNum) {
+    for (var i=0;i<APROV_ETAPAS.length;i++) if (APROV_ETAPAS[i].etapa === etapaNum) return APROV_ETAPAS[i];
+    return {etapa:etapaNum, nome:'Aprovação ' + etapaNum + '/' + APROV_TOTAL, responsavel_nome:'', responsavel_email:''};
+}
+
+// Rotulo de status considerando a etapa de aprovacao (0/3 .. 3/3)
 function aprovRotuloStatus(status, etapa) {
     etapa = parseInt(etapa || 0) || 0;
-    if (status === 'aprovado')  return 'Aprovado 2/2';
-    if (status === 'reprovado') return etapa >= 1 ? 'Reprovado na Final 2/2' : 'Reprovado na 1ª 1/2';
-    return etapa >= 1 ? 'Aguardando Aprovação Final 2/2' : 'Aguardando 1ª Aprovação 1/2';
+    if (status === 'aprovado')  return 'Aprovado 3/3';
+    if (status === 'reprovado') return 'Reprovado na ' + Math.min(etapa+1, APROV_TOTAL) + '/' + APROV_TOTAL;
+    return 'Aguardando ' + Math.min(etapa+1, APROV_TOTAL) + '/' + APROV_TOTAL + ' — ' + aprovCfg(etapa+1).responsavel_nome;
 }
 
 // ── Data curta para a linha do tempo ──
@@ -2805,36 +2852,36 @@ function aprovRenderTimeline(p) {
         });
     });
 
-    // 3. Aprovacao 1/2
-    if (p.aprov1_decisao === 'aprovado') {
-        itens.push({cls:'ok', icone:'&#10003;', fase:'Aprovação 1/2 — assinada',
-            quem: '<b>' + esc(p.aprov1_por || 'assinante não identificado') + '</b>' +
-                  (p.aprov1_email ? '<br><span style="color:#8a9199">' + esc(p.aprov1_email) + '</span>' : ''),
-            quando: aprovData(p.aprov1_data)});
-    } else if (p.aprov1_decisao === 'reprovado') {
-        itens.push({cls:'erro', icone:'&#10007;', fase:'Aprovação 1/2 — REPROVADA',
-            quem: '<b style="color:#a01228">' + esc(p.aprov1_por || 'assinante não identificado') + '</b>',
-            quando: aprovData(p.aprov1_data), motivo: p.aprov1_motivo});
-    } else {
-        itens.push({cls:'espera', icone:'', fase:'Aprovação 1/2', quem:'Aguardando assinatura', pendente:true});
-    }
+    // 3. As tres assinaturas
+    for (var n = 1; n <= APROV_TOTAL; n++) {
+        var cfg   = aprovCfg(n);
+        var quem  = p['aprov' + n + '_por'];
+        var mail  = p['aprov' + n + '_email'];
+        var dt    = p['aprov' + n + '_data'];
+        var mot   = p['aprov' + n + '_motivo'];
+        var assinada  = etapa >= n;
+        // reprovacao acontece na etapa (etapa+1); so essa linha vira vermelha
+        var reprovada = (p.status === 'reprovado' && n === etapa + 1);
 
-    // 4. Aprovacao final 2/2
-    if (etapa >= 2) {
-        itens.push({cls:'ok', icone:'&#10003;', fase:'Aprovação Final 2/2 — assinada',
-            quem: '<b>' + esc(p.aprov2_por || 'assinante não identificado') + '</b>' +
-                  (p.aprov2_email ? '<br><span style="color:#8a9199">' + esc(p.aprov2_email) + '</span>' : ''),
-            quando: aprovData(p.aprov2_data)});
-    } else if (p.status === 'reprovado' && etapa === 1) {
-        itens.push({cls:'erro', icone:'&#10007;', fase:'Aprovação Final 2/2 — REPROVADA',
-            quem: '<b style="color:#a01228">' + esc(p.aprov2_por || 'assinante não identificado') + '</b>',
-            quando: aprovData(p.aprov2_data), motivo: p.aprov2_motivo});
-    } else if (p.status === 'reprovado') {
-        itens.push({cls:'espera', icone:'', fase:'Aprovação Final 2/2',
-            quem:'Não realizada — pedido reprovado na 1ª etapa', pendente:true});
-    } else {
-        itens.push({cls:'espera', icone:'', fase:'Aprovação Final 2/2',
-            quem: etapa >= 1 ? 'Aguardando assinatura' : 'Liberada após a 1ª aprovação', pendente:true});
+        if (assinada) {
+            itens.push({cls:'ok', icone:'&#10003;', fase:cfg.nome + ' — assinada',
+                quem:'<b>' + esc(quem || cfg.responsavel_nome || 'assinante não identificado') + '</b>' +
+                     (mail ? '<br><span style="color:#8a9199">' + esc(mail) + '</span>' : ''),
+                quando:aprovData(dt)});
+        } else if (reprovada) {
+            itens.push({cls:'erro', icone:'&#10007;', fase:cfg.nome + ' — REPROVADA',
+                quem:'<b style="color:#a01228">' + esc(quem || 'assinante não identificado') + '</b>' +
+                     (mail ? '<br><span style="color:#8a9199">' + esc(mail) + '</span>' : ''),
+                quando:aprovData(dt), motivo:mot});
+        } else if (p.status === 'reprovado') {
+            itens.push({cls:'espera', icone:'', fase:cfg.nome,
+                quem:'Não realizada — pedido reprovado antes', pendente:true});
+        } else {
+            itens.push({cls:'espera', icone:'', fase:cfg.nome,
+                quem:(n === etapa + 1 ? 'Aguardando assinatura de ' : 'Liberada depois — ') +
+                     (cfg.responsavel_nome || 'responsável não definido'),
+                pendente:true});
+        }
     }
 
     document.getElementById('aprovTimeline').innerHTML =
@@ -2853,10 +2900,38 @@ function aprovRenderTimeline(p) {
 // ──────────────────────────────────────────────
 // PAINEL DE LOGIN DENTRO DA APROVAÇÃO
 // ──────────────────────────────────────────────
-// Regra: a mesma pessoa nao pode assinar as duas etapas do mesmo pedido.
-function aprovMesmoAssinante() {
-    return !!(hubLogado() && aprovItemSb && aprovEtapaAtual >= 1 &&
-              aprovItemSb.aprov1_user_id && aprovItemSb.aprov1_user_id === AUTH.user.id);
+// Regra: cada etapa so pode ser assinada pelo responsavel definido no funil.
+// Devolve null quando pode assinar, ou o texto do impedimento.
+function aprovImpedimento() {
+    if (!hubLogado() || !aprovItemSb) return null;
+    var prox = aprovEtapaAtual + 1;
+    var cfg  = aprovCfg(prox);
+    var meu  = String(AUTH.user.email || '').toLowerCase();
+
+    if (cfg.responsavel_email && meu !== cfg.responsavel_email) {
+        return '<strong>Esta etapa não é sua.</strong><br>' +
+               'A <strong>' + esc(cfg.nome) + '</strong> só pode ser assinada por <strong>' +
+               esc(cfg.responsavel_nome || cfg.responsavel_email) + '</strong> (' + esc(cfg.responsavel_email) + ').' +
+               '<br>Você está logado como ' + esc(AUTH.user.email) + '.';
+    }
+    // Rede de seguranca: ninguem assina duas etapas do mesmo pedido
+    var jaAssinou = [aprovItemSb.aprov1_user_id, aprovItemSb.aprov2_user_id, aprovItemSb.aprov3_user_id]
+                    .filter(Boolean).indexOf(AUTH.user.id) >= 0;
+    if (jaAssinou) {
+        return '<strong>Assinatura dupla bloqueada.</strong><br>' +
+               'Você já assinou uma etapa deste pedido. Cada etapa precisa de um assinante diferente.';
+    }
+    return null;
+}
+
+function aprovMesmoAssinante() { return aprovImpedimento() !== null; }
+
+// Motivo da reprovacao, venha de qual etapa vier
+function aprovMotivoReprovacao(p) {
+    for (var n = APROV_TOTAL; n >= 1; n--) {
+        if (p['aprov' + n + '_decisao'] === 'reprovado' && p['aprov' + n + '_motivo']) return p['aprov' + n + '_motivo'];
+    }
+    return '';
 }
 
 function aprovAtualizarPainelLogin() {
@@ -2869,13 +2944,9 @@ function aprovAtualizarPainelLogin() {
         document.getElementById('aprovLogadoMail').textContent = AUTH.user.email;
     }
     var bloq = document.getElementById('aprovBloqueio');
-    if (aprovMesmoAssinante()) {
-        bloq.innerHTML = '<strong>Assinatura dupla bloqueada.</strong><br>' +
-            'Você já assinou a aprovação 1/2 deste pedido. A aprovação final precisa ser assinada por outra pessoa com acesso à ferramenta Pedidos.';
-        bloq.style.display = 'block';
-    } else {
-        bloq.style.display = 'none';
-    }
+    var imp  = aprovImpedimento();
+    if (imp) { bloq.innerHTML = imp; bloq.style.display = 'block'; }
+    else     { bloq.style.display = 'none'; }
     aprovAtualizarBotaoConfirmar();
 }
 
@@ -2934,19 +3005,20 @@ async function abrirAprovacaoAdmin(idx) {
     document.getElementById('aprovEditPanel').classList.remove('open');
 
     // ── Barra de titulo: identifica o PEDIDO, nunca o status ──
-    var ehFinal = (aprovEtapaAtual >= 1);
+    var proxNum = aprovEtapaAtual + 1;
+    var cfgProx = aprovCfg(proxNum);
+    var ehFinal = (proxNum >= APROV_TOTAL);
     document.getElementById('aprovTitulo').textContent =
         'Aprovação de Pedido #' + aprovDealIdAtual + ' v' + (p.versao || 1);
 
     // ── Contador: informacao principal do display ──
     var contEl = document.getElementById('aprovEtapaCont');
-    contEl.textContent = aprovEtapaAtual + '/2';
-    contEl.className = 'aprov-etapa-cont e' + aprovEtapaAtual;
-    document.getElementById('aprovEtapaFase').textContent = ehFinal
-        ? 'Aprovação Final 2/2' : 'Aprovação 1/2';
+    contEl.textContent = aprovEtapaAtual + '/' + APROV_TOTAL;
+    contEl.className = 'aprov-etapa-cont e' + (aprovEtapaAtual >= APROV_TOTAL ? 2 : (aprovEtapaAtual > 0 ? 1 : 0));
+    document.getElementById('aprovEtapaFase').textContent = cfgProx.nome;
     document.getElementById('aprovEtapaDesc').textContent = ehFinal
-        ? 'A 1ª aprovação já foi registrada. Esta é a decisão FINAL: ela grava o status no Bitrix e movimenta o card.'
-        : 'Esta é a 1ª aprovação. Ela apenas libera o pedido para o aprovador final — nada é gravado no Bitrix nesta etapa.';
+        ? 'Última assinatura. Ela grava o status no Bitrix e movimenta o card no funil PEDIDOS.'
+        : 'Esta assinatura libera o pedido para a etapa seguinte. Nada é gravado no Bitrix até a ' + APROV_TOTAL + '/' + APROV_TOTAL + '.';
     aprovRenderTimeline(p);
     aprovAtualizarPainelLogin();
 
@@ -2968,29 +3040,46 @@ async function abrirAprovacaoAdmin(idx) {
         if (jaVotou) {
             var foiAprovado = (valAtual === ID_APROVADO_AP);
             document.getElementById('aprovAlreadyIcon').innerHTML   = foiAprovado ? '&#9989;' : '&#10060;';
-            document.getElementById('aprovAlreadyTitle').textContent = foiAprovado ? 'Pedido Liberado (2/2)' : 'Pedido Reprovado';
+            document.getElementById('aprovAlreadyTitle').textContent = foiAprovado ? 'Pedido Liberado (' + APROV_TOTAL + '/' + APROV_TOTAL + ')' : 'Pedido Reprovado';
             document.getElementById('aprovAlreadyTitle').style.color = foiAprovado ? '#1b7a3e' : '#a01228';
             var motivo = item[CAMPO_MOTIVO_AP] || '';
-            document.getElementById('aprovAlreadySub').innerHTML = (foiAprovado ? 'Este pedido ja foi APROVADO na etapa final (2/2).' : 'Este pedido foi REPROVADO.') +
+            document.getElementById('aprovAlreadySub').innerHTML = (foiAprovado ? 'Este pedido ja foi APROVADO na etapa final (' + APROV_TOTAL + '/' + APROV_TOTAL + ').' : 'Este pedido foi REPROVADO.') +
                 (motivo ? '<br><br><strong>Motivo:</strong> ' + motivo : '');
             showAprov('aprovAlready');
             // Manter o Supabase alinhado com a decisao final do Bitrix
             if (aprovItemSb && aprovItemSb.id) {
                 var patchSync = foiAprovado
-                    ? { status: 'aprovado', aprovacao_etapa: 2, updated_at: new Date().toISOString() }
-                    : { status: 'reprovado', aprov2_motivo: motivo || null, updated_at: new Date().toISOString() };
+                    ? { status: 'aprovado', aprovacao_etapa: APROV_TOTAL, updated_at: new Date().toISOString() }
+                    : { status: 'reprovado', updated_at: new Date().toISOString() };
                 sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', patchSync).catch(function(){});
             }
             return;
         }
 
-        // Pedido ja reprovado na 1a etapa (so existe no Supabase)
+        // Ciclo ja completo: as 3 assinaturas existem no Supabase
+        if (aprovEtapaAtual >= APROV_TOTAL) {
+            document.getElementById('aprovAlreadyIcon').innerHTML    = '&#9989;';
+            document.getElementById('aprovAlreadyTitle').textContent = 'Pedido Aprovado (' + APROV_TOTAL + '/' + APROV_TOTAL + ')';
+            document.getElementById('aprovAlreadyTitle').style.color = '#1b7a3e';
+            document.getElementById('aprovAlreadySub').innerHTML =
+                'As ' + APROV_TOTAL + ' assinaturas já foram registradas.<br><br>' +
+                [1,2,3].map(function(nn){
+                    return '<strong>' + esc(aprovCfg(nn).nome) + '</strong><br>' +
+                           esc(aprovItemSb['aprov'+nn+'_por'] || '—') +
+                           (aprovItemSb['aprov'+nn+'_data'] ? ' &middot; ' + aprovData(aprovItemSb['aprov'+nn+'_data']) : '');
+                }).join('<br><br>');
+            showAprov('aprovAlready');
+            return;
+        }
+
+        // Pedido reprovado em alguma etapa (registro vive no Supabase)
         if (aprovItemSb.status === 'reprovado') {
             document.getElementById('aprovAlreadyIcon').innerHTML   = '&#10060;';
-            document.getElementById('aprovAlreadyTitle').textContent = 'Pedido Reprovado na 1ª etapa';
+            document.getElementById('aprovAlreadyTitle').textContent =
+                'Pedido Reprovado na ' + Math.min(aprovEtapaAtual + 1, APROV_TOTAL) + '/' + APROV_TOTAL;
             document.getElementById('aprovAlreadyTitle').style.color = '#a01228';
-            document.getElementById('aprovAlreadySub').innerHTML = 'Este pedido foi REPROVADO na aprovação 1/2 e não seguiu para a aprovação final.' +
-                (aprovItemSb.aprov1_motivo ? '<br><br><strong>Motivo:</strong> ' + aprovItemSb.aprov1_motivo : '') +
+            document.getElementById('aprovAlreadySub').innerHTML = 'Este pedido foi REPROVADO e não seguiu no ciclo de aprovação.' +
+                (aprovMotivoReprovacao(aprovItemSb) ? '<br><br><strong>Motivo:</strong> ' + esc(aprovMotivoReprovacao(aprovItemSb)) : '') +
                 '<br><br>Edite o pedido para reiniciar o ciclo de aprovação.';
             showAprov('aprovAlready');
             return;
@@ -3092,125 +3181,93 @@ async function aprovConfirmarDecisao() {
     }
 
     // ── Identidade do assinante (hub Wendell) ──
-    var ehFinal = (aprovEtapaAtual >= 1);
     if (!hubLogado()) {
         aprovAtualizarPainelLogin();
         document.getElementById('aprovLoginEmail').focus();
         return;
     }
-    if (aprovMesmoAssinante()) {
-        aprovAtualizarPainelLogin();
-        return;
-    }
+    if (aprovImpedimento()) { aprovAtualizarPainelLogin(); return; }
+
     var assinante = AUTH.user;
+    var n         = aprovEtapaAtual + 1;          // etapa sendo assinada: 1, 2 ou 3
+    var cfg       = aprovCfg(n);
+    var ehFinal   = (n >= APROV_TOTAL);
+    var aprovou   = (aprovDecisao === 'aprovado');
 
     var btn = document.getElementById('aprovBtnConfirmar');
     btn.disabled = true; btn.textContent = 'Enviando...';
     try {
-        var agora = new Date();
+        var agora  = new Date();
         var nowISO = agora.toISOString();
 
-        if (!ehFinal) {
-            // ──────────── ETAPA 1/2 — somente Supabase, nao toca no Bitrix ────────────
-            var novaEtapa1 = (aprovDecisao === 'aprovado') ? 1 : 0;
-            var patch1 = {
-                aprovacao_etapa: novaEtapa1,
-                aprov1_decisao : aprovDecisao,
-                aprov1_data    : nowISO,
-                aprov1_motivo  : (aprovDecisao === 'reprovado' ? motivo : null),
-                aprov1_por     : assinante.nome,
-                aprov1_email   : assinante.email,
-                aprov1_user_id : assinante.id,
-                status         : (aprovDecisao === 'aprovado' ? 'pendente' : 'reprovado'),
-                updated_at     : nowISO,
-                historico: (aprovItemSb.historico || []).concat([{
-                    data: nowISO,
-                    acao: aprovDecisao === 'aprovado' ? 'aprovado na etapa 1/2' : 'reprovado na etapa 1/2',
-                    versao: aprovItemSb.versao || 1,
-                    por: assinante.nome + ' <' + assinante.email + '>'
-                }])
-            };
-            await sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', patch1);
-            var ci1 = sbPedidosCache.findIndex(function(x){ return x.id === aprovItemSb.id; });
-            if (ci1 >= 0) {
-                sbPedidosCache[ci1].status          = patch1.status;
-                sbPedidosCache[ci1].aprovacao_etapa = novaEtapa1;
-                sbPedidosCache[ci1].aprov1_decisao  = aprovDecisao;
-                sbPedidosCache[ci1].aprov1_motivo   = patch1.aprov1_motivo;
-                sbPedidosCache[ci1].aprov1_por      = assinante.nome;
-                sbPedidosCache[ci1].aprov1_email    = assinante.email;
-                sbPedidosCache[ci1].aprov1_user_id  = assinante.id;
-                sbPedidosCache[ci1].aprov1_data     = nowISO;
-            }
-
-            document.getElementById('aprovSuccessIcon').innerHTML    = aprovDecisao === 'aprovado' ? '&#9989;' : '&#10060;';
-            document.getElementById('aprovSuccessTitle').textContent = aprovDecisao === 'aprovado' ? 'Aprovado 1/2' : 'Reprovado na 1ª etapa';
-            document.getElementById('aprovSuccessTitle').style.color = aprovDecisao === 'aprovado' ? '#084298' : '#a01228';
-            document.getElementById('aprovSuccessSub').textContent   = aprovDecisao === 'aprovado'
-                ? 'Pedido liberado e encaminhado para a APROVAÇÃO FINAL (2/2). Nada foi alterado no Bitrix nesta etapa.'
-                : 'Pedido reprovado na 1ª etapa. Não seguiu para a aprovação final e o Bitrix não foi alterado.';
-        } else {
-            // ──────────── ETAPA 2/2 — decisao FINAL, grava no Bitrix e move o card ────────────
+        // ── Bitrix: so na ULTIMA assinatura (e na reprovacao, em qualquer etapa,
+        //    para o Deal nao ficar aberto esperando uma decisao que nao vem) ──
+        if (ehFinal || !aprovou) {
             var dataISO = agora.getFullYear() + '-' + String(agora.getMonth()+1).padStart(2,'0') + '-' +
                           String(agora.getDate()).padStart(2,'0') + 'T' +
-                          String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0') + ':00+00:00';
+                          String(agora.getHours()).padStart(2,'0') + ':' +
+                          String(agora.getMinutes()).padStart(2,'0') + ':00+00:00';
             var fields = {};
-            fields[CAMPO_STATUS_AP]   = aprovDecisao === 'aprovado' ? ID_APROVADO_AP : ID_REPROVADO_AP;
+            fields[CAMPO_STATUS_AP]   = aprovou ? ID_APROVADO_AP : ID_REPROVADO_AP;
             fields[CAMPO_DATA_APR_AP] = dataISO;
-            if (aprovDecisao === 'reprovado') fields[CAMPO_MOTIVO_AP] = motivo;
-
-            await bxCall('crm.item.update', { entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual), fields: fields });
-
-            if (aprovItemSb && aprovItemSb.id) {
-                var patch2 = {
-                    aprovacao_etapa: aprovDecisao === 'aprovado' ? 2 : 1,
-                    aprov2_data    : nowISO,
-                    aprov2_motivo  : (aprovDecisao === 'reprovado' ? motivo : null),
-                    aprov2_por     : assinante.nome,
-                    aprov2_email   : assinante.email,
-                    aprov2_user_id : assinante.id,
-                    status         : aprovDecisao === 'aprovado' ? 'aprovado' : 'reprovado',
-                    updated_at     : nowISO,
-                    historico: (aprovItemSb.historico || []).concat([{
-                        data: nowISO,
-                        acao: aprovDecisao === 'aprovado' ? 'aprovado na etapa final 2/2' : 'reprovado na etapa final 2/2',
-                        versao: aprovItemSb.versao || 1,
-                        por: assinante.nome + ' <' + assinante.email + '>'
-                    }])
-                };
-                await sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', patch2);
-                var ci2 = sbPedidosCache.findIndex(function(x){ return x.id === aprovItemSb.id; });
-                if (ci2 >= 0) {
-                    sbPedidosCache[ci2].status          = patch2.status;
-                    sbPedidosCache[ci2].aprovacao_etapa = patch2.aprovacao_etapa;
-                    sbPedidosCache[ci2].aprov2_por      = assinante.nome;
-                    sbPedidosCache[ci2].aprov2_email    = assinante.email;
-                    sbPedidosCache[ci2].aprov2_user_id  = assinante.id;
-                    sbPedidosCache[ci2].aprov2_data     = nowISO;
-                }
-            }
-
-            document.getElementById('aprovSuccessIcon').innerHTML    = aprovDecisao === 'aprovado' ? '&#9989;' : '&#10060;';
-            document.getElementById('aprovSuccessTitle').textContent = aprovDecisao === 'aprovado' ? 'Pedido Aprovado! (2/2)' : 'Pedido Reprovado (final)';
-            document.getElementById('aprovSuccessTitle').style.color = aprovDecisao === 'aprovado' ? '#1b7a3e' : '#a01228';
-            document.getElementById('aprovSuccessSub').textContent   = aprovDecisao === 'aprovado'
-                ? 'Aprovação final concluída. O status foi gravado no Bitrix e o card será movido pela automação.'
-                : 'Reprovação final registrada no Bitrix e no Supabase.';
+            if (!aprovou) fields[CAMPO_MOTIVO_AP] = '[' + cfg.nome + '] ' + motivo;
+            await bxCall('crm.item.update', {
+                entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual), fields: fields });
         }
+
+        // ── Supabase: assinatura da etapa n ──
+        var patch = {
+            aprovacao_etapa: aprovou ? n : aprovEtapaAtual,
+            status         : aprovou ? (ehFinal ? 'aprovado' : 'pendente') : 'reprovado',
+            updated_at     : nowISO,
+            historico: (aprovItemSb.historico || []).concat([{
+                data: nowISO,
+                acao: (aprovou ? 'aprovado' : 'reprovado') + ' na etapa ' + n + '/' + APROV_TOTAL + ' (' + cfg.nome + ')',
+                versao: aprovItemSb.versao || 1,
+                por: assinante.nome + ' <' + assinante.email + '>'
+            }])
+        };
+        patch['aprov' + n + '_decisao'] = aprovDecisao;
+        patch['aprov' + n + '_data']    = nowISO;
+        patch['aprov' + n + '_motivo']  = aprovou ? null : motivo;
+        patch['aprov' + n + '_por']     = assinante.nome;
+        patch['aprov' + n + '_email']   = assinante.email;
+        patch['aprov' + n + '_user_id'] = assinante.id;
+
+        await sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', patch);
+
+        // Espelhar no cache local e no item aberto
+        Object.keys(patch).forEach(function(k){ aprovItemSb[k] = patch[k]; });
+        var ci = sbPedidosCache.findIndex(function(x){ return x.id === aprovItemSb.id; });
+        if (ci >= 0) Object.keys(patch).forEach(function(k){ sbPedidosCache[ci][k] = patch[k]; });
+        if (aprovou) aprovEtapaAtual = n;
+
+        // ── Tela de sucesso ──
+        var prox = aprovCfg(n + 1);
+        document.getElementById('aprovSuccessIcon').innerHTML    = aprovou ? '&#9989;' : '&#10060;';
+        document.getElementById('aprovSuccessTitle').textContent = aprovou
+            ? (ehFinal ? 'Pedido Aprovado! (' + APROV_TOTAL + '/' + APROV_TOTAL + ')' : 'Assinado — ' + n + '/' + APROV_TOTAL)
+            : 'Pedido Reprovado na ' + n + '/' + APROV_TOTAL;
+        document.getElementById('aprovSuccessTitle').style.color = aprovou ? (ehFinal ? '#1b7a3e' : '#084298') : '#a01228';
+        document.getElementById('aprovSuccessSub').textContent   = aprovou
+            ? (ehFinal
+                ? 'Ciclo concluído. Status gravado no Bitrix e card movido no funil PEDIDOS.'
+                : 'Encaminhado para a ' + (n+1) + '/' + APROV_TOTAL + ' — ' + (prox.responsavel_nome || 'próximo responsável') + '.')
+            : 'Reprovação registrada no Bitrix e no Supabase. O card foi para PEDIDOS CANCELADOS.';
 
         showAprov('aprovSuccess');
         if (MODO_APROVACAO_LINK) {
-            // Aberto pelo link do Bitrix: nao ha lista de admin para recarregar
             var msgLink;
-            if (aprovDecisao === 'reprovado') {
-                msgLink = '<strong style="color:#a01228">Reprovação registrada.</strong><br><br>Você já pode fechar esta janela.';
+            if (!aprovou) {
+                msgLink = '<strong style="color:#a01228">Reprovação registrada na ' + n + '/' + APROV_TOTAL + '.</strong>' +
+                          '<br><br>Você já pode fechar esta janela.';
             } else if (!ehFinal) {
-                msgLink = '<strong style="color:#084298">Aprovação 1/2 registrada.</strong><br><br>' +
-                          'O pedido foi encaminhado para a <strong>aprovação final (2/2)</strong>. ' +
-                          'Você já pode fechar esta janela.';
+                msgLink = '<strong style="color:#084298">Assinatura ' + n + '/' + APROV_TOTAL + ' registrada.</strong><br><br>' +
+                          'Encaminhado para <strong>' + esc(prox.nome) + '</strong> (' +
+                          esc(prox.responsavel_nome || 'responsável') + '). Você já pode fechar esta janela.';
             } else {
-                msgLink = '<strong style="color:#1b7a3e">Aprovação final (2/2) concluída.</strong><br><br>' +
-                          'Você já pode fechar esta janela.';
+                msgLink = '<strong style="color:#1b7a3e">Aprovação final (' + APROV_TOTAL + '/' + APROV_TOTAL +
+                          ') concluída.</strong><br><br>Você já pode fechar esta janela.';
             }
             aprovLinkMsg(msgLink, false);
         } else {
@@ -3258,8 +3315,10 @@ async function aprovSalvarEdicao() {
             aprovacao_etapa: 0,
             aprov1_decisao: null, aprov1_data: null, aprov1_motivo: null,
             aprov1_por: null, aprov1_email: null, aprov1_user_id: null,
-            aprov2_data: null, aprov2_motivo: null,
+            aprov2_decisao: null, aprov2_data: null, aprov2_motivo: null,
             aprov2_por: null, aprov2_email: null, aprov2_user_id: null,
+            aprov3_decisao: null, aprov3_data: null, aprov3_motivo: null,
+            aprov3_por: null, aprov3_email: null, aprov3_user_id: null,
             historico: (aprovItemSb.historico || []).concat([{data: new Date().toISOString(), acao: 'editado via aprovacao — aprovação reiniciada (0/2)', versao: novaVersao, por: nomeVend || 'admin'}])
         });
         // Atualizar Bitrix
@@ -3340,21 +3399,26 @@ async function aprovSalvarEdicao() {
         aprovItemSb.aprov1_decisao = null; aprovItemSb.aprov1_data = null;
         aprovItemSb.aprov1_motivo  = null; aprovItemSb.aprov1_por  = null;
         aprovItemSb.aprov1_email   = null; aprovItemSb.aprov1_user_id = null;
+        aprovItemSb.aprov2_decisao = null;
         aprovItemSb.aprov2_data    = null; aprovItemSb.aprov2_motivo  = null;
         aprovItemSb.aprov2_por     = null; aprovItemSb.aprov2_email   = null;
         aprovItemSb.aprov2_user_id = null;
+        aprovItemSb.aprov3_decisao = null;
+        aprovItemSb.aprov3_data    = null; aprovItemSb.aprov3_motivo  = null;
+        aprovItemSb.aprov3_por     = null; aprovItemSb.aprov3_email   = null;
+        aprovItemSb.aprov3_user_id = null;
 
         document.getElementById('aprovVersao').textContent = 'v' + novaVersao;
         document.getElementById('aprovTitulo').textContent = 'Aprovação de Pedido #' + aprovDealIdAtual + ' v' + novaVersao;
         var contApE = document.getElementById('aprovEtapaCont');
-        contApE.textContent = '0/2'; contApE.className = 'aprov-etapa-cont e0';
-        document.getElementById('aprovEtapaFase').textContent = 'Aprovação 1/2';
+        contApE.textContent = '0/' + APROV_TOTAL; contApE.className = 'aprov-etapa-cont e0';
+        document.getElementById('aprovEtapaFase').textContent = aprovCfg(1).nome;
         document.getElementById('aprovEtapaDesc').textContent =
-            'A edição reiniciou o ciclo: o pedido voltou para a 1ª aprovação (0/2).';
+            'A edição reiniciou o ciclo: o pedido voltou para a 1ª aprovação (0/' + APROV_TOTAL + ').';
         aprovRenderTimeline(aprovItemSb);
         aprovAtualizarPainelLogin();
         document.getElementById('aprovEditPanel').classList.remove('open');
-        alert('Pedido atualizado para v' + novaVersao + '.\n\nO ciclo de aprovação foi reiniciado: agora este pedido precisa novamente da 1ª aprovação (1/2) e depois da aprovação final (2/2).');
+        alert('Pedido atualizado para v' + novaVersao + '.\n\nO ciclo de aprovação foi reiniciado: o pedido voltou para 0/' + APROV_TOTAL + ' e precisa das ' + APROV_TOTAL + ' assinaturas novamente.');
         btnS.textContent = 'Salvar alteracoes'; btnS.disabled = false;
     } catch(e) {
         btnS.textContent = 'Salvar alteracoes'; btnS.disabled = false;
