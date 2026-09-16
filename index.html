@@ -1151,6 +1151,51 @@ async function sbFetch(path, method, body) {
     return r.status === 204 ? null : r.json();
 }
 
+// ── CÓPIA DOS PDFs PARA O FUNIL ──
+// O mesmo arquivo que vai para o Bitrix sobe também para o bucket privado
+// `pedidos-pdf` e o caminho fica em pedidos.pdf_url / pedidos.pdf_cliente_url.
+// É isso que faz o ícone de PDF aparecer no card do funil (wendell-funis).
+// Falha aqui nunca interrompe o pedido: só registra aviso no console.
+function b64ParaBlob(b64, mime) {
+    var bin = atob(b64), n = bin.length, arr = new Uint8Array(n);
+    for (var i = 0; i < n; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime || 'application/pdf' });
+}
+
+async function enviarPdfFunil(base64, opts) {
+    opts = opts || {};
+    var tipo = opts.tipo === 'cliente' ? 'cliente' : 'comercial';
+    try {
+        if (!base64) return null;
+        var deal    = String(opts.dealId || 'sem-deal');
+        var versao  = opts.versao || 1;
+        var caminho = 'pedidos/' + deal + '-v' + versao + '-' + tipo + '.pdf';
+        var r = await fetch(SB_URL + '/storage/v1/object/pedidos-pdf/' + caminho, {
+            method: 'POST',
+            headers: {
+                'apikey': SB_KEY,
+                'Authorization': 'Bearer ' + SB_KEY,
+                'Content-Type': 'application/pdf',
+                'x-upsert': 'true'          // nova versão sobrescreve a anterior
+            },
+            body: b64ParaBlob(base64)
+        });
+        if (!r.ok) throw new Error(await r.text());
+
+        var campo = {};
+        campo[tipo === 'cliente' ? 'pdf_cliente_url' : 'pdf_url'] = caminho;
+        var filtro = opts.pedidoId
+            ? 'pedidos?id=eq.' + opts.pedidoId
+            : 'pedidos?bitrix_deal_id=eq.' + encodeURIComponent(deal);
+        await sbFetch(filtro, 'PATCH', campo);
+        console.log('[FUNIL] PDF ' + tipo + ' enviado:', caminho);
+        return caminho;
+    } catch (e) {
+        console.warn('[FUNIL] PDF ' + tipo + ' não enviado:', e.message);
+        return null;
+    }
+}
+
 async function gravarPedidoSupabase(dados, dealId, totalGeral) {
     try {
         var itens = [];
@@ -2046,6 +2091,10 @@ async function enviarPedido() {
         formDados.totalGeral = document.getElementById('totalGeral').textContent;
         await gravarPedidoSupabase(formDados, dealId, formDados.totalGeral);
 
+        // ---- 4a. Copia dos PDFs para o funil (alem do Bitrix) ----
+        await enviarPdfFunil(pdfBase64,        { tipo: 'comercial', dealId: dealId, versao: versaoPDF });
+        await enviarPdfFunil(pdfClienteBase64, { tipo: 'cliente',   dealId: dealId, versao: versaoPDF });
+
         document.getElementById('loadingText').textContent = 'Enviando PDFs para Bitrix24...';
         // nomePDFCliente definido acima com nome correto
         // Upload PDF Comercial
@@ -2635,6 +2684,14 @@ async function salvarEdicaoSb() {
                 });
                 console.log('[EDIT] Upload PDF Cliente OK');
             } catch(eCliEdit) { console.warn('[EDIT] PDF Cliente:', eCliEdit.message); }
+
+            // Copia dos PDFs da nova versao para o funil
+            await enviarPdfFunil(pdfBase64, {
+                tipo: 'comercial', dealId: sbPedidoAtual.bitrix_deal_id,
+                versao: novaVersaoSb, pedidoId: sbPedidoAtual.id });
+            await enviarPdfFunil(pdfClienteEditBase64, {
+                tipo: 'cliente', dealId: sbPedidoAtual.bitrix_deal_id,
+                versao: novaVersaoSb, pedidoId: sbPedidoAtual.id });
 
             // Capturar urlMachine e gravar no campo link
             try {
@@ -3367,6 +3424,11 @@ async function aprovSalvarEdicao() {
             await bxCall('crm.item.update', {entityTypeId:BX_TYPE_ID, id:parseInt(aprovDealIdAtual), fields:fUpd});
             var fCli = {}; fCli['ufCrm29_1781659138335'] = [[nomePDFClia, pdfCliB64]];
             await bxCall('crm.item.update', {entityTypeId:BX_TYPE_ID, id:parseInt(aprovDealIdAtual), fields:fCli});
+            // Copia dos PDFs da nova versao para o funil
+            await enviarPdfFunil(pdfComB64, {
+                tipo:'comercial', dealId: aprovDealIdAtual, versao: novaVersao, pedidoId: aprovItemSb.id });
+            await enviarPdfFunil(pdfCliB64, {
+                tipo:'cliente',   dealId: aprovDealIdAtual, versao: novaVersao, pedidoId: aprovItemSb.id });
         } catch(ePDF) { console.warn('[APROV EDIT] PDFs:', ePDF.message); }
         // ── Capturar urlMachine do PDF e gravar no campo link (igual ao fluxo de edicao do admin) ──
         try {
