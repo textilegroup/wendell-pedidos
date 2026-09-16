@@ -184,6 +184,7 @@
         .aprov-logado-mail { font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
         .aprov-logado-sair { background:none;border:none;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline;flex-shrink:0 }
         .aprov-bloqueio { background:#fff4e5;border:1px solid #ffd9a8;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;color:#8a5200;line-height:1.5 }
+        .aprov-bloqueio.aprov-aviso { background:#eef4fd;border-color:#c5d9f5;color:#204a7a }
         .aprov-btn-confirmar { width:100%;padding:14px;background:#a01228;color:white;border:none;border-radius:7px;font-size:16px;font-weight:700;cursor:pointer;transition:background .18s;margin-bottom:8px }
         .aprov-btn-confirmar:disabled { background:#ccc;cursor:not-allowed }
         .aprov-btn-editar { width:100%;padding:11px;background:#2d3748;color:white;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;transition:background .18s }
@@ -1091,18 +1092,20 @@ async function hubLogin(email, senha) {
     if (!u.ativo)  { hubLogout(); throw new Error('Seu usuário está inativo no Hub Wendell.'); }
 
     // Acesso à ferramenta 'pedidos'
-    var temAcesso = false;
+    var temAcesso = false, permissao = '';
     try {
         var ac = await sbFetchAuth('app_acessos?user_id=eq.' + d.user.id +
                                    '&ferramenta=eq.' + HUB_FERRAMENTA + '&select=permissao&limit=1');
         temAcesso = !!(ac && ac.length);
+        permissao = (ac && ac[0] && ac[0].permissao) || '';
     } catch(e) { temAcesso = false; }
     if (!temAcesso) {
         hubLogout();
         throw new Error('Seu usuário não tem acesso à ferramenta Pedidos. Peça liberação no Hub Wendell.');
     }
 
-    AUTH.user = { id: d.user.id, nome: u.nome, email: u.email || email, organizacao: u.organizacao };
+    AUTH.user = { id: d.user.id, nome: u.nome, email: u.email || email,
+                  organizacao: u.organizacao, nivel: u.nivel || '', permissao: permissao };
     return AUTH.user;
 }
 
@@ -1149,51 +1152,6 @@ async function sbFetch(path, method, body) {
     var r = await fetch(SB_URL + '/rest/v1/' + path, opts);
     if (!r.ok) { var e = await r.text(); throw new Error('Supabase: ' + e); }
     return r.status === 204 ? null : r.json();
-}
-
-// ── CÓPIA DOS PDFs PARA O FUNIL ──
-// O mesmo arquivo que vai para o Bitrix sobe também para o bucket privado
-// `pedidos-pdf` e o caminho fica em pedidos.pdf_url / pedidos.pdf_cliente_url.
-// É isso que faz o ícone de PDF aparecer no card do funil (wendell-funis).
-// Falha aqui nunca interrompe o pedido: só registra aviso no console.
-function b64ParaBlob(b64, mime) {
-    var bin = atob(b64), n = bin.length, arr = new Uint8Array(n);
-    for (var i = 0; i < n; i++) arr[i] = bin.charCodeAt(i);
-    return new Blob([arr], { type: mime || 'application/pdf' });
-}
-
-async function enviarPdfFunil(base64, opts) {
-    opts = opts || {};
-    var tipo = opts.tipo === 'cliente' ? 'cliente' : 'comercial';
-    try {
-        if (!base64) return null;
-        var deal    = String(opts.dealId || 'sem-deal');
-        var versao  = opts.versao || 1;
-        var caminho = 'pedidos/' + deal + '-v' + versao + '-' + tipo + '.pdf';
-        var r = await fetch(SB_URL + '/storage/v1/object/pedidos-pdf/' + caminho, {
-            method: 'POST',
-            headers: {
-                'apikey': SB_KEY,
-                'Authorization': 'Bearer ' + SB_KEY,
-                'Content-Type': 'application/pdf',
-                'x-upsert': 'true'          // nova versão sobrescreve a anterior
-            },
-            body: b64ParaBlob(base64)
-        });
-        if (!r.ok) throw new Error(await r.text());
-
-        var campo = {};
-        campo[tipo === 'cliente' ? 'pdf_cliente_url' : 'pdf_url'] = caminho;
-        var filtro = opts.pedidoId
-            ? 'pedidos?id=eq.' + opts.pedidoId
-            : 'pedidos?bitrix_deal_id=eq.' + encodeURIComponent(deal);
-        await sbFetch(filtro, 'PATCH', campo);
-        console.log('[FUNIL] PDF ' + tipo + ' enviado:', caminho);
-        return caminho;
-    } catch (e) {
-        console.warn('[FUNIL] PDF ' + tipo + ' não enviado:', e.message);
-        return null;
-    }
 }
 
 async function gravarPedidoSupabase(dados, dealId, totalGeral) {
@@ -2091,10 +2049,6 @@ async function enviarPedido() {
         formDados.totalGeral = document.getElementById('totalGeral').textContent;
         await gravarPedidoSupabase(formDados, dealId, formDados.totalGeral);
 
-        // ---- 4a. Copia dos PDFs para o funil (alem do Bitrix) ----
-        await enviarPdfFunil(pdfBase64,        { tipo: 'comercial', dealId: dealId, versao: versaoPDF });
-        await enviarPdfFunil(pdfClienteBase64, { tipo: 'cliente',   dealId: dealId, versao: versaoPDF });
-
         document.getElementById('loadingText').textContent = 'Enviando PDFs para Bitrix24...';
         // nomePDFCliente definido acima com nome correto
         // Upload PDF Comercial
@@ -2685,14 +2639,6 @@ async function salvarEdicaoSb() {
                 console.log('[EDIT] Upload PDF Cliente OK');
             } catch(eCliEdit) { console.warn('[EDIT] PDF Cliente:', eCliEdit.message); }
 
-            // Copia dos PDFs da nova versao para o funil
-            await enviarPdfFunil(pdfBase64, {
-                tipo: 'comercial', dealId: sbPedidoAtual.bitrix_deal_id,
-                versao: novaVersaoSb, pedidoId: sbPedidoAtual.id });
-            await enviarPdfFunil(pdfClienteEditBase64, {
-                tipo: 'cliente', dealId: sbPedidoAtual.bitrix_deal_id,
-                versao: novaVersaoSb, pedidoId: sbPedidoAtual.id });
-
             // Capturar urlMachine e gravar no campo link
             try {
                 var itemAtualizado = await bxCall('crm.item.get', { entityTypeId: BX_TYPE_ID, id: dealId });
@@ -2921,9 +2867,13 @@ function aprovRenderTimeline(p) {
         var reprovada = (p.status === 'reprovado' && n === etapa + 1);
 
         if (assinada) {
+            var noLugar = (cfg.responsavel_email && mail &&
+                           String(mail).toLowerCase() !== cfg.responsavel_email);
             itens.push({cls:'ok', icone:'&#10003;', fase:cfg.nome + ' — assinada',
                 quem:'<b>' + esc(quem || cfg.responsavel_nome || 'assinante não identificado') + '</b>' +
-                     (mail ? '<br><span style="color:#8a9199">' + esc(mail) + '</span>' : ''),
+                     (mail ? '<br><span style="color:#8a9199">' + esc(mail) + '</span>' : '') +
+                     (noLugar ? '<br><span style="color:#8a5200;font-size:11px">em nome de ' +
+                                esc(cfg.responsavel_nome || 'responsável designado') + '</span>' : ''),
                 quando:aprovData(dt)});
         } else if (reprovada) {
             itens.push({cls:'erro', icone:'&#10007;', fase:cfg.nome + ' — REPROVADA',
@@ -2935,8 +2885,8 @@ function aprovRenderTimeline(p) {
                 quem:'Não realizada — pedido reprovado antes', pendente:true});
         } else {
             itens.push({cls:'espera', icone:'', fase:cfg.nome,
-                quem:(n === etapa + 1 ? 'Aguardando assinatura de ' : 'Liberada depois — ') +
-                     (cfg.responsavel_nome || 'responsável não definido'),
+                quem:(n === etapa + 1 ? 'Aguardando assinatura · responsável: ' : 'Liberada depois · responsável: ') +
+                     (cfg.responsavel_nome || 'não definido'),
                 pendente:true});
         }
     }
@@ -2959,26 +2909,43 @@ function aprovRenderTimeline(p) {
 // ──────────────────────────────────────────────
 // Regra: cada etapa so pode ser assinada pelo responsavel definido no funil.
 // Devolve null quando pode assinar, ou o texto do impedimento.
+// Exigir assinantes diferentes em cada etapa do mesmo pedido?
+// false = qualquer admin autorizado assina 1, 2 e 3 (o log registra quem foi).
+// true  = segregacao de funcoes: ninguem assina duas etapas do mesmo pedido.
+var EXIGE_ASSINANTES_DISTINTOS = false;
+
 function aprovImpedimento() {
     if (!hubLogado() || !aprovItemSb) return null;
-    var prox = aprovEtapaAtual + 1;
-    var cfg  = aprovCfg(prox);
-    var meu  = String(AUTH.user.email || '').toLowerCase();
 
-    if (cfg.responsavel_email && meu !== cfg.responsavel_email) {
-        return '<strong>Esta etapa não é sua.</strong><br>' +
-               'A <strong>' + esc(cfg.nome) + '</strong> só pode ser assinada por <strong>' +
-               esc(cfg.responsavel_nome || cfg.responsavel_email) + '</strong> (' + esc(cfg.responsavel_email) + ').' +
-               '<br>Você está logado como ' + esc(AUTH.user.email) + '.';
+    // Assinar exige permissao de ADMIN na ferramenta Pedidos
+    var ehAdmin = (String(AUTH.user.permissao || '').toLowerCase() === 'admin') ||
+                  (String(AUTH.user.nivel || '').toLowerCase() === 'admin');
+    if (!ehAdmin) {
+        return '<strong>Permissão insuficiente.</strong><br>' +
+               'Assinar aprovações exige permissão de <strong>administrador</strong> na ferramenta Pedidos. ' +
+               'Seu acesso atual é "' + esc(AUTH.user.permissao || AUTH.user.nivel || 'sem permissão') + '".';
     }
-    // Rede de seguranca: ninguem assina duas etapas do mesmo pedido
-    var jaAssinou = [aprovItemSb.aprov1_user_id, aprovItemSb.aprov2_user_id, aprovItemSb.aprov3_user_id]
-                    .filter(Boolean).indexOf(AUTH.user.id) >= 0;
-    if (jaAssinou) {
-        return '<strong>Assinatura dupla bloqueada.</strong><br>' +
-               'Você já assinou uma etapa deste pedido. Cada etapa precisa de um assinante diferente.';
+
+    if (EXIGE_ASSINANTES_DISTINTOS) {
+        var jaAssinou = [aprovItemSb.aprov1_user_id, aprovItemSb.aprov2_user_id, aprovItemSb.aprov3_user_id]
+                        .filter(Boolean).indexOf(AUTH.user.id) >= 0;
+        if (jaAssinou) {
+            return '<strong>Assinatura dupla bloqueada.</strong><br>' +
+                   'Você já assinou uma etapa deste pedido. Cada etapa precisa de um assinante diferente.';
+        }
     }
     return null;
+}
+
+// Aviso (nao bloqueia): esta etapa tem outro responsavel designado no funil.
+function aprovAvisoResponsavel() {
+    if (!hubLogado() || !aprovItemSb) return '';
+    var cfg = aprovCfg(aprovEtapaAtual + 1);
+    var meu = String(AUTH.user.email || '').toLowerCase();
+    if (!cfg.responsavel_email || meu === cfg.responsavel_email) return '';
+    return 'O responsável designado por esta etapa é <strong>' +
+           esc(cfg.responsavel_nome || cfg.responsavel_email) + '</strong>. ' +
+           'Você pode assinar no lugar dele — a assinatura ficará registrada em seu nome no log do pedido.';
 }
 
 function aprovMesmoAssinante() { return aprovImpedimento() !== null; }
@@ -3002,8 +2969,20 @@ function aprovAtualizarPainelLogin() {
     }
     var bloq = document.getElementById('aprovBloqueio');
     var imp  = aprovImpedimento();
-    if (imp) { bloq.innerHTML = imp; bloq.style.display = 'block'; }
-    else     { bloq.style.display = 'none'; }
+    if (imp) {
+        bloq.className = 'aprov-bloqueio';
+        bloq.innerHTML = imp;
+        bloq.style.display = 'block';
+    } else {
+        var aviso = aprovAvisoResponsavel();
+        if (aviso) {
+            bloq.className = 'aprov-bloqueio aprov-aviso';
+            bloq.innerHTML = aviso;
+            bloq.style.display = 'block';
+        } else {
+            bloq.style.display = 'none';
+        }
+    }
     aprovAtualizarBotaoConfirmar();
 }
 
@@ -3281,7 +3260,11 @@ async function aprovConfirmarDecisao() {
                 data: nowISO,
                 acao: (aprovou ? 'aprovado' : 'reprovado') + ' na etapa ' + n + '/' + APROV_TOTAL + ' (' + cfg.nome + ')',
                 versao: aprovItemSb.versao || 1,
-                por: assinante.nome + ' <' + assinante.email + '>'
+                por: assinante.nome + ' <' + assinante.email + '>',
+                responsavel_designado: cfg.responsavel_nome || null,
+                em_nome_de: (cfg.responsavel_email &&
+                             String(assinante.email).toLowerCase() !== cfg.responsavel_email)
+                            ? cfg.responsavel_nome : null
             }])
         };
         patch['aprov' + n + '_decisao'] = aprovDecisao;
@@ -3424,11 +3407,6 @@ async function aprovSalvarEdicao() {
             await bxCall('crm.item.update', {entityTypeId:BX_TYPE_ID, id:parseInt(aprovDealIdAtual), fields:fUpd});
             var fCli = {}; fCli['ufCrm29_1781659138335'] = [[nomePDFClia, pdfCliB64]];
             await bxCall('crm.item.update', {entityTypeId:BX_TYPE_ID, id:parseInt(aprovDealIdAtual), fields:fCli});
-            // Copia dos PDFs da nova versao para o funil
-            await enviarPdfFunil(pdfComB64, {
-                tipo:'comercial', dealId: aprovDealIdAtual, versao: novaVersao, pedidoId: aprovItemSb.id });
-            await enviarPdfFunil(pdfCliB64, {
-                tipo:'cliente',   dealId: aprovDealIdAtual, versao: novaVersao, pedidoId: aprovItemSb.id });
         } catch(ePDF) { console.warn('[APROV EDIT] PDFs:', ePDF.message); }
         // ── Capturar urlMachine do PDF e gravar no campo link (igual ao fluxo de edicao do admin) ──
         try {
