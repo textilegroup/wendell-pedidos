@@ -1569,6 +1569,14 @@ function coletarDados() {
 // ============================================================
 // GERACAO DE PDF - usando jsPDF nativo sem html2canvas
 // ============================================================
+// Le numero vindo em pt-BR ("1.234,56") ou em formato simples ("1234.56")
+function numeroBR(s) {
+    s = String(s == null ? '' : s).trim();
+    if (!s) return 0;
+    if (s.indexOf(',') >= 0) return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+    return parseFloat(s) || 0;
+}
+
 function gerarPDFDados(dados, filename, opcoes) {
     opcoes = opcoes || {};
     var semComissao = opcoes.semComissao || false;
@@ -1797,6 +1805,28 @@ function gerarPDFDados(dados, filename, opcoes) {
         doc.text('TOTAL GERAL:', pageW - margin - 30, y + 6, {align: 'right'});
         doc.text('R$ ' + dados.totalGeral, pageW - margin - 2, y + 6, {align: 'right'});
         y += 10;
+
+        // ── TOTAL C/ IPI ──
+        // IPI de 3,25% incide apenas sobre itens com codigo iniciado em 7 ou 8
+        // (mesma regra usada na coluna IPI da tabela e no formulario).
+        // Se nenhum item do pedido tem IPI, a linha nao e impressa.
+        var ipiValor = 0;
+        dados.itens.forEach(function(it) {
+            var cod = String(it.codigo || '');
+            if (cod.charAt(0) === '7' || cod.charAt(0) === '8') {
+                ipiValor += numeroBR(it.total) * 0.0325;
+            }
+        });
+        if (ipiValor >= 0.005) {
+            var totalComIPI = numeroBR(dados.totalGeral) + ipiValor;
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text('TOTAL C/ IPI:', pageW - margin - 30, y + 6, {align: 'right'});
+            doc.text('R$ ' + totalComIPI.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+                     pageW - margin - 2, y + 6, {align: 'right'});
+            y += 10;
+        }
 
         y += 5;
     } else {
