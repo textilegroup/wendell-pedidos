@@ -1197,18 +1197,10 @@ async function gravarPedidoSupabase(dados, dealId, totalGeral) {
             total_geral: parseFloat((totalGeral || '0').toString().replace('.','').replace(',','.')) || 0,
             itens: itens,
             versao: 1,
-            // A assinatura 1/3 (Comercial Inicial) e dada no proprio Bitrix ao criar
-            // o pedido. O pedido ja nasce com ela concluida, e o link enviado por
-            // WhatsApp abre direto na 2/3.
-            aprovacao_etapa: 1,
-            aprov1_decisao: 'aprovado',
-            aprov1_data: new Date().toISOString(),
-            aprov1_por: 'Aprovada no Bitrix (criação do pedido)',
-            historico: [
-                { data: new Date().toISOString(), acao: 'criado', deal: dealId },
-                { data: new Date().toISOString(), acao: 'aprovado na etapa 1/3 (Aprovação Comercial Inicial 1/3)',
-                  versao: 1, por: 'Bitrix — criação do pedido' }
-            ]
+            // As 3 assinaturas sao dadas no modulo de aprovacao; cada uma marca
+            // seu campo APROVADO1/2/3 no Bitrix. O pedido nasce sem nenhuma.
+            aprovacao_etapa: 0,
+            historico: [{ data: new Date().toISOString(), acao: 'criado', deal: dealId }]
         };
         await sbFetch('pedidos', 'POST', rec);
         console.log('Pedido gravado no Supabase');
@@ -2572,12 +2564,10 @@ async function salvarEdicaoSb() {
             updated_at: new Date().toISOString(),
             versao: novaVersaoSb,
             // Edicao reinicia o ciclo de aprovacao do zero (volta para 0/2)
-            // A 1/3 e do Bitrix e permanece concedida; so as assinaturas
-            // feitas aqui (2/3 e 3/3) sao invalidadas pela edicao.
-            aprovacao_etapa: 1,
-            aprov1_decisao: 'aprovado', aprov1_data: new Date().toISOString(),
-            aprov1_motivo: null, aprov1_por: 'Aprovada no Bitrix (criação do pedido)',
-            aprov1_email: null, aprov1_user_id: null,
+            // A edicao invalida as TRES assinaturas e o ciclo recomeca em 0/3.
+            aprovacao_etapa: 0,
+            aprov1_decisao: null, aprov1_data: null, aprov1_motivo: null,
+            aprov1_por: null, aprov1_email: null, aprov1_user_id: null,
             aprov2_decisao: null, aprov2_data: null, aprov2_motivo: null,
             aprov2_por: null, aprov2_email: null, aprov2_user_id: null,
             aprov3_decisao: null, aprov3_data: null, aprov3_motivo: null,
@@ -2656,6 +2646,7 @@ async function salvarEdicaoSb() {
                     // Antes este caminho escrevia '... [vN]' e o outro nao, gerando nomes divergentes.
                     comments: linhas.join('\n'),
                     'ufCrm29_1773692249': null,
+                'ufCrm29_1789750742000': 'N',   // limpa assinatura 1/3
                 'ufCrm29_1789750757846': 'N',   // limpa assinatura 2/3
                 'ufCrm29_1789750773563': 'N',   // limpa assinatura 3/3
                     opportunity: dadosEdit.itens.reduce(function(s,it){
@@ -2819,13 +2810,45 @@ var CAMPO_DATA_APR_AP = 'ufCrm29_1780887933377';
 var CAMPO_PRE_PED_AP  = 'ufCrm29_1780621188016';
 var ID_APROVADO_AP    = '4185';
 var ID_REPROVADO_AP   = '4187';
-// Marcadores Y/N por etapa no Bitrix.
-// A etapa 1/3 e assinada no proprio Bitrix (pedido nasce com ela pronta),
-// por isso so as etapas 2 e 3 tem campo aqui.
+// ── Marcadores Y/N das 3 assinaturas no Bitrix ──
+// Estes IDs sao apenas o FALLBACK. Em tempo de execucao o codigo le
+// crm.item.fields e descobre o ID real de cada campo pelo TITULO
+// (APROVADO1 / APROVADO2 / APROVADO3), o que evita o erro silencioso
+// de gravar num campo que nao existe.
 var CAMPO_APROV_Y = {
-    2: 'ufCrm29_1789750757846',   // Aprovacao Cadastral 2/3 assinada
-    3: 'ufCrm29_1789750773563'    // Aprovacao Comercial Final 3/3 assinada
+    1: 'ufCrm29_1789750742000',   // APROVADO1 — fallback, resolvido pelo titulo
+    2: 'ufCrm29_1789750757846',   // APROVADO2 — fallback, resolvido pelo titulo
+    3: 'ufCrm29_1789750773563'    // APROVADO3 — fallback, resolvido pelo titulo
 };
+
+var _camposAprovResolvidos = null;
+
+// Descobre no proprio Bitrix qual e o ID de cada campo APROVADO1/2/3.
+// Roda uma vez por sessao e guarda em cache.
+async function resolverCamposAprovacao() {
+    if (_camposAprovResolvidos) return _camposAprovResolvidos;
+    var mapa = { 1: CAMPO_APROV_Y[1], 2: CAMPO_APROV_Y[2], 3: CAMPO_APROV_Y[3] };
+    try {
+        var r = await bxCall('crm.item.fields', { entityTypeId: BX_TYPE_ID });
+        var f = (r && r.fields) || r || {};
+        var achou = 0;
+        Object.keys(f).forEach(function(k) {
+            var t = String((f[k] && f[k].title) || '').toUpperCase().replace(/\s|_|-/g, '');
+            var m = t.match(/^APROVADO0?([123])$/);
+            if (m) { mapa[parseInt(m[1], 10)] = k; achou++; }
+        });
+        console.log('[APROV] campos APROVADO encontrados no Bitrix: ' + achou +
+                    ' → ' + JSON.stringify(mapa));
+        if (achou < 3) {
+            console.warn('[APROV] nem todos os campos APROVADO1/2/3 foram encontrados pelo título. ' +
+                         'Os não encontrados usam o ID de fallback e podem não gravar.');
+        }
+    } catch(e) {
+        console.warn('[APROV] falha ao ler crm.item.fields, usando IDs de fallback:', e.message);
+    }
+    _camposAprovResolvidos = mapa;
+    return mapa;
+}
 var aprovDealIdAtual  = null;
 var aprovDecisao      = null;
 var aprovItemSb       = null;
@@ -3312,12 +3335,36 @@ async function aprovConfirmarDecisao() {
             fields[CAMPO_DATA_APR_AP] = dataISO;
             if (!aprovou) fields[CAMPO_MOTIVO_AP] = '[' + cfg.nome + '] ' + motivo;
         }
-        if (CAMPO_APROV_Y[n]) fields[CAMPO_APROV_Y[n]] = aprovou ? 'Y' : 'N';
+        // Marcador da etapa assinada — ID descoberto no proprio Bitrix pelo titulo
+        var mapaCampos = await resolverCamposAprovacao();
+        var campoDaEtapa = mapaCampos[n];
+        if (campoDaEtapa) fields[campoDaEtapa] = aprovou ? 'Y' : 'N';
 
         if (Object.keys(fields).length) {
             console.log('[APROV] Bitrix update etapa ' + n + ':', JSON.stringify(fields));
             await bxCall('crm.item.update', {
                 entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual), fields: fields });
+
+            // Conferir que gravou de fato. O Bitrix aceita campo inexistente
+            // sem reclamar, entao sem esta checagem a falha passa despercebida.
+            if (campoDaEtapa) {
+                try {
+                    var conf = await bxCall('crm.item.get', {
+                        entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual) });
+                    var gravado = conf && conf.item ? conf.item[campoDaEtapa] : undefined;
+                    var esperado = aprovou ? 'Y' : 'N';
+                    if (String(gravado) !== esperado) {
+                        console.error('[APROV] campo ' + campoDaEtapa + ' não gravou. Valor lido:', gravado);
+                        alert('ATENÇÃO\n\nA assinatura ' + n + '/' + APROV_TOTAL +
+                              ' foi registrada normalmente, mas o campo do Bitrix não gravou.\n\n' +
+                              'Campo: ' + campoDaEtapa + '\nEsperado: ' + esperado +
+                              '\nLido: ' + (gravado === undefined ? '(campo não existe)' : gravado) +
+                              '\n\nAvise o responsável pelo sistema — o nome do campo precisa ser corrigido.');
+                    } else {
+                        console.log('[APROV] confirmado: ' + campoDaEtapa + ' = ' + gravado);
+                    }
+                } catch(eConf) { console.warn('[APROV] não consegui conferir a gravação:', eConf.message); }
+            }
         }
 
         // ── Supabase: assinatura da etapa n ──
@@ -3421,12 +3468,10 @@ async function aprovSalvarEdicao() {
             updated_at: new Date().toISOString(),
             versao: novaVersao,
             // Edicao reinicia o ciclo de aprovacao do zero (volta para 0/2)
-            // A 1/3 e do Bitrix e permanece concedida; so as assinaturas
-            // feitas aqui (2/3 e 3/3) sao invalidadas pela edicao.
-            aprovacao_etapa: 1,
-            aprov1_decisao: 'aprovado', aprov1_data: new Date().toISOString(),
-            aprov1_motivo: null, aprov1_por: 'Aprovada no Bitrix (criação do pedido)',
-            aprov1_email: null, aprov1_user_id: null,
+            // A edicao invalida as TRES assinaturas e o ciclo recomeca em 0/3.
+            aprovacao_etapa: 0,
+            aprov1_decisao: null, aprov1_data: null, aprov1_motivo: null,
+            aprov1_por: null, aprov1_email: null, aprov1_user_id: null,
             aprov2_decisao: null, aprov2_data: null, aprov2_motivo: null,
             aprov2_por: null, aprov2_email: null, aprov2_user_id: null,
             aprov3_decisao: null, aprov3_data: null, aprov3_motivo: null,
@@ -3445,6 +3490,7 @@ async function aprovSalvarEdicao() {
             fields: {
                 comments: linhas.join('\n'),
                 'ufCrm29_1773692249': null,
+                'ufCrm29_1789750742000': 'N',   // limpa assinatura 1/3
                 'ufCrm29_1789750757846': 'N',   // limpa assinatura 2/3
                 'ufCrm29_1789750773563': 'N',   // limpa assinatura 3/3
                 opportunity: itens.reduce(function(s,it){ return s+(parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0); }, 0)
@@ -3498,23 +3544,20 @@ async function aprovSalvarEdicao() {
             }
         } catch(eLinkAp) { console.warn('[APROV EDIT] urlMachine:', eLinkAp.message); }
 
-        // Atualizar cache e dados locais — a edicao devolve o pedido para 1/3
-        // (a assinatura 1/3 e do Bitrix e continua valida)
+        // Atualizar cache e dados locais — a edicao reinicia o ciclo em 0/3
         aprovItemSb.versao          = novaVersao;
-        aprovItemSb.aprovacao_etapa = 1;
+        aprovItemSb.aprovacao_etapa = 0;
         aprovItemSb.status          = 'pendente';
-        aprovEtapaAtual             = 1;
+        aprovEtapaAtual             = 0;
         var ciAp = sbPedidosCache.findIndex(function(x){ return x.id === aprovItemSb.id; });
         if (ciAp >= 0) {
             sbPedidosCache[ciAp].versao = novaVersao;
-            sbPedidosCache[ciAp].aprovacao_etapa = 1;
+            sbPedidosCache[ciAp].aprovacao_etapa = 0;
             sbPedidosCache[ciAp].status = 'pendente';
         }
-        // Edicao invalida so as assinaturas feitas aqui (2/3 e 3/3)
-        aprovItemSb.aprov1_decisao = 'aprovado';
-        aprovItemSb.aprov1_data    = new Date().toISOString();
-        aprovItemSb.aprov1_motivo  = null;
-        aprovItemSb.aprov1_por     = 'Aprovada no Bitrix (criação do pedido)';
+        // A edicao invalida as tres assinaturas
+        aprovItemSb.aprov1_decisao = null; aprovItemSb.aprov1_data = null;
+        aprovItemSb.aprov1_motivo  = null; aprovItemSb.aprov1_por  = null;
         aprovItemSb.aprov1_email   = null; aprovItemSb.aprov1_user_id = null;
         aprovItemSb.aprov2_decisao = null;
         aprovItemSb.aprov2_data    = null; aprovItemSb.aprov2_motivo  = null;
@@ -3528,14 +3571,14 @@ async function aprovSalvarEdicao() {
         document.getElementById('aprovVersao').textContent = 'v' + novaVersao;
         document.getElementById('aprovTitulo').textContent = 'Aprovação de Pedido #' + aprovDealIdAtual + ' v' + novaVersao;
         var contApE = document.getElementById('aprovEtapaCont');
-        contApE.textContent = '1/' + APROV_TOTAL; contApE.className = 'aprov-etapa-cont e1';
-        document.getElementById('aprovEtapaFase').textContent = aprovCfg(2).nome;
+        contApE.textContent = '0/' + APROV_TOTAL; contApE.className = 'aprov-etapa-cont e0';
+        document.getElementById('aprovEtapaFase').textContent = aprovCfg(1).nome;
         document.getElementById('aprovEtapaDesc').textContent =
-            'A edição invalidou as assinaturas 2/3 e 3/3. O pedido voltou para a Aprovação Cadastral 2/3.';
+            'A edição invalidou as assinaturas. O pedido voltou para 0/' + APROV_TOTAL + '.';
         aprovRenderTimeline(aprovItemSb);
         aprovAtualizarPainelLogin();
         document.getElementById('aprovEditPanel').classList.remove('open');
-        alert('Pedido atualizado para v' + novaVersao + '.\n\nAs assinaturas 2/3 e 3/3 foram invalidadas e os marcadores no Bitrix voltaram para N. O pedido está novamente em 1/3, aguardando a Aprovação Cadastral 2/3.');
+        alert('Pedido atualizado para v' + novaVersao + '.\n\nAs ' + APROV_TOTAL + ' assinaturas foram invalidadas e os campos APROVADO do Bitrix voltaram para N. O ciclo recomeça em 0/' + APROV_TOTAL + '.');
         btnS.textContent = 'Salvar alteracoes'; btnS.disabled = false;
     } catch(e) {
         btnS.textContent = 'Salvar alteracoes'; btnS.disabled = false;
