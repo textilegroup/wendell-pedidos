@@ -1227,7 +1227,7 @@ var documentosCarregados = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     // ── Modo aprovação por link: ?dealId=NNN vindo do card do Bitrix ──
-    aprovCarregarEtapas();   // responsaveis de cada assinatura, vindos do funil PEDIDOS
+    aprovEtapasProntas();   // responsaveis de cada assinatura, vindos do funil PEDIDOS
     var qsDeal = new URLSearchParams(location.search).get('dealId');
     if (qsDeal && /^\d+$/.test(qsDeal)) {
         carregarSelectsProdutos();   // necessario para o painel de edicao dentro da aprovacao
@@ -1275,6 +1275,7 @@ async function iniciarModoAprovacaoLink(dealId) {
     aprovLinkMsg('Carregando pedido <strong>#' + dealId + '</strong>...', false);
 
     try {
+        await aprovEtapasProntas();
         var res = await sbFetch('pedidos?bitrix_deal_id=eq.' + encodeURIComponent(dealId) + '&limit=1');
         if (!res || !res.length) {
             aprovLinkMsg('<strong style="color:#a01228">Pedido #' + dealId + ' não encontrado.</strong><br><br>' +
@@ -2311,6 +2312,11 @@ async function buscarPedidosSb() {
                 bxCall('crm.item.get', {entityTypeId: BX_TYPE_ID, id: parseInt(p.bitrix_deal_id)})
                     .then(function(res) {
                         if (!res || !res.item) return;
+                        // Espelhar a 1/3 dada pelo processo interno do Bitrix
+                        espelharAprov1DoBitrix(sbPedidosCache[idx], res.item)
+                            .then(function(ok){ if (ok) buscarPedidosSb(); })
+                            .catch(function(){});
+
                         var campoAprov = res.item[CAMPO_STATUS_AP];
                         var valAprov = Array.isArray(campoAprov) ? String(campoAprov[0] || '') : String(campoAprov || '');
                         var aprovado  = valAprov === ID_APROVADO_AP;
@@ -2833,8 +2839,10 @@ async function resolverCamposAprovacao() {
         var f = (r && r.fields) || r || {};
         var achou = 0;
         Object.keys(f).forEach(function(k) {
+            // Aceita APROVADO1, "Aprovado 1", APROVADO_1, "APROVADO 1/3"...
+            // O campo antigo chamado so "APROVADO" (sem numero) e ignorado.
             var t = String((f[k] && f[k].title) || '').toUpperCase().replace(/\s|_|-/g, '');
-            var m = t.match(/^APROVADO0?([123])$/);
+            var m = t.match(/^APROVADO0?([123])(\/[123])?$/);
             if (m) { mapa[parseInt(m[1], 10)] = k; achou++; }
         });
         console.log('[APROV] campos APROVADO encontrados no Bitrix: ' + achou +
@@ -2858,11 +2866,18 @@ var aprovEtapaAtual   = 0;   // assinaturas ja concluidas: 0, 1 ou 2 (vai assina
 // Carregada do banco em aprovCarregarEtapas(); o fallback abaixo vale se a
 // chamada falhar, para o modulo nunca ficar sem configuracao.
 var APROV_ETAPAS = [
-    {etapa:1, nome:'Aprovação Comercial Inicial 1/3', responsavel_nome:'Arthur Rodrigues', responsavel_email:'arthur@wendellservices.com'},
-    {etapa:2, nome:'Aprovação Cadastral 2/3',         responsavel_nome:'Isabella Stuque',  responsavel_email:'isabella@wendellservices.com'},
-    {etapa:3, nome:'Aprovação Comercial Final 3/3',   responsavel_nome:'Michael',          responsavel_email:'michael@wendellservices.com'}
+    {etapa:1, nome:'Aprovação Cadastral 1/3',       responsavel_nome:'Isabella Stuque',  responsavel_email:'isabella@wendellservices.com'},
+    {etapa:2, nome:'Aprovação Comercial 2/3',       responsavel_nome:'Arthur Rodrigues', responsavel_email:'arthur@wendellservices.com'},
+    {etapa:3, nome:'Aprovação Comercial Final 3/3', responsavel_nome:'Michael',          responsavel_email:'michael@wendellservices.com'}
 ];
 var APROV_TOTAL = 3;
+var _aprovEtapasPromise = null;
+
+// Garante que a configuracao das etapas ja chegou antes de desenhar a tela.
+function aprovEtapasProntas() {
+    if (!_aprovEtapasPromise) _aprovEtapasPromise = aprovCarregarEtapas();
+    return _aprovEtapasPromise;
+}
 
 async function aprovCarregarEtapas() {
     try {
@@ -3106,9 +3121,75 @@ function showAprov(id) {
     }
 }
 
+// Desenha titulo, contador, fase e linha do tempo a partir do estado atual
+function aprovDesenharCabecalho(p) {
+    var proxNum = aprovEtapaAtual + 1;
+    var cfgProx = aprovCfg(proxNum);
+    var ehFinal = (proxNum >= APROV_TOTAL);
+    document.getElementById('aprovTitulo').textContent =
+        'Aprovação de Pedido #' + aprovDealIdAtual + ' v' + (p.versao || 1);
+    var contEl = document.getElementById('aprovEtapaCont');
+    contEl.textContent = aprovEtapaAtual + '/' + APROV_TOTAL;
+    contEl.className = 'aprov-etapa-cont e' + (aprovEtapaAtual >= APROV_TOTAL ? 2 : (aprovEtapaAtual > 0 ? 1 : 0));
+    document.getElementById('aprovEtapaFase').textContent = cfgProx.nome;
+    document.getElementById('aprovEtapaDesc').textContent = ehFinal
+        ? 'Última assinatura. Ela grava o status no Bitrix e movimenta o card no funil PEDIDOS.'
+        : 'Esta assinatura libera o pedido para a etapa seguinte. Nada é gravado no Bitrix até a ' + APROV_TOTAL + '/' + APROV_TOTAL + '.';
+    aprovRenderTimeline(p);
+    aprovAtualizarPainelLogin();
+}
+
+// ──────────────────────────────────────────────
+// ESPELHAR A ASSINATURA 1/3 VINDA DO BITRIX
+// A 1/3 nao e assinada aqui: quem assina e o processo interno do Bitrix,
+// que marca APROVADO1 = Y. Quando isso acontece, registramos a assinatura
+// no Supabase em nome do responsavel da etapa 1 e o pedido segue para a 2/3.
+// ──────────────────────────────────────────────
+async function espelharAprov1DoBitrix(p, item) {
+    if (!p || (parseInt(p.aprovacao_etapa || 0) || 0) !== 0) return false;
+    if (p.status === 'reprovado') return false;
+    var mapa   = await resolverCamposAprovacao();
+    var campo1 = mapa[1];
+    if (!campo1) return false;
+    var val = item ? item[campo1] : undefined;
+    if (String(val == null ? '' : val).toUpperCase() !== 'Y') return false;
+
+    var cfg1   = aprovCfg(1);
+    var nowISO = new Date().toISOString();
+    var patch  = {
+        aprovacao_etapa: 1,
+        aprov1_decisao : 'aprovado',
+        aprov1_data    : nowISO,
+        aprov1_motivo  : null,
+        aprov1_por     : cfg1.responsavel_nome || 'Processo interno do Bitrix',
+        aprov1_email   : cfg1.responsavel_email || null,
+        updated_at     : nowISO,
+        historico: (p.historico || []).concat([{
+            data: nowISO,
+            acao: 'aprovado na etapa 1/' + APROV_TOTAL + ' (' + cfg1.nome + ')',
+            versao: p.versao || 1,
+            por: (cfg1.responsavel_nome || 'responsável da etapa 1') + ' — processo interno do Bitrix (APROVADO1 = Y)',
+            origem: 'bitrix'
+        }])
+    };
+    try {
+        await sbFetch('pedidos?id=eq.' + p.id, 'PATCH', patch);
+        Object.keys(patch).forEach(function(k){ p[k] = patch[k]; });
+        var ci = sbPedidosCache.findIndex(function(x){ return x.id === p.id; });
+        if (ci >= 0) Object.keys(patch).forEach(function(k){ sbPedidosCache[ci][k] = patch[k]; });
+        console.log('[APROV] 1/' + APROV_TOTAL + ' espelhada do Bitrix (' + campo1 + ' = Y)');
+        return true;
+    } catch(e) {
+        console.warn('[APROV] falha ao espelhar a 1/' + APROV_TOTAL + ':', e.message);
+        return false;
+    }
+}
+
 async function abrirAprovacaoAdmin(idx) {
     var p = sbPedidosCache[parseInt(idx)];
     if (!p) return;
+    // Sem isso a tela abre com os nomes/responsaveis de fallback
+    try { await aprovEtapasProntas(); } catch(e) {}
     aprovItemSb      = p;
     aprovDealIdAtual = p.bitrix_deal_id;
     aprovDecisao     = null;
@@ -3125,23 +3206,7 @@ async function abrirAprovacaoAdmin(idx) {
     document.getElementById('aprovBtnConfirmar').textContent = 'CONFIRMAR DECISAO';
     document.getElementById('aprovEditPanel').classList.remove('open');
 
-    // ── Barra de titulo: identifica o PEDIDO, nunca o status ──
-    var proxNum = aprovEtapaAtual + 1;
-    var cfgProx = aprovCfg(proxNum);
-    var ehFinal = (proxNum >= APROV_TOTAL);
-    document.getElementById('aprovTitulo').textContent =
-        'Aprovação de Pedido #' + aprovDealIdAtual + ' v' + (p.versao || 1);
-
-    // ── Contador: informacao principal do display ──
-    var contEl = document.getElementById('aprovEtapaCont');
-    contEl.textContent = aprovEtapaAtual + '/' + APROV_TOTAL;
-    contEl.className = 'aprov-etapa-cont e' + (aprovEtapaAtual >= APROV_TOTAL ? 2 : (aprovEtapaAtual > 0 ? 1 : 0));
-    document.getElementById('aprovEtapaFase').textContent = cfgProx.nome;
-    document.getElementById('aprovEtapaDesc').textContent = ehFinal
-        ? 'Última assinatura. Ela grava o status no Bitrix e movimenta o card no funil PEDIDOS.'
-        : 'Esta assinatura libera o pedido para a etapa seguinte. Nada é gravado no Bitrix até a ' + APROV_TOTAL + '/' + APROV_TOTAL + '.';
-    aprovRenderTimeline(p);
-    aprovAtualizarPainelLogin();
+    aprovDesenharCabecalho(p);
 
     document.getElementById('aprovOverlay').classList.add('active');
     showAprov('aprovLoading');
@@ -3174,6 +3239,28 @@ async function abrirAprovacaoAdmin(idx) {
                     : { status: 'reprovado', updated_at: new Date().toISOString() };
                 sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', patchSync).catch(function(){});
             }
+            return;
+        }
+
+        // ── A 1/3 vem do Bitrix, nao daqui ──
+        // Se o processo interno ja marcou APROVADO1 = Y, registramos a assinatura
+        // e seguimos para a 2/3. Se ainda nao marcou, ninguem assina nada aqui.
+        if (await espelharAprov1DoBitrix(aprovItemSb, item)) {
+            aprovEtapaAtual = 1;
+            aprovDesenharCabecalho(aprovItemSb);
+        }
+        if (aprovEtapaAtual === 0 && aprovItemSb.status !== 'reprovado') {
+            var cfgE1 = aprovCfg(1);
+            document.getElementById('aprovAlreadyIcon').innerHTML    = '&#9203;';
+            document.getElementById('aprovAlreadyTitle').textContent = 'Aguardando a 1/' + APROV_TOTAL + ' no Bitrix';
+            document.getElementById('aprovAlreadyTitle').style.color = '#8a5200';
+            document.getElementById('aprovAlreadySub').innerHTML =
+                'A primeira aprovação (<strong>' + esc(cfgE1.nome) + '</strong>) é feita pelo processo interno do Bitrix, ' +
+                'por <strong>' + esc(cfgE1.responsavel_nome || 'responsável da etapa 1') + '</strong> — não é assinada por aqui.' +
+                '<br><br>Assim que o campo <strong>APROVADO1</strong> do Deal virar <strong>Y</strong>, esta tela já abre na ' +
+                '<strong>' + esc(aprovCfg(2).nome) + '</strong>.' +
+                '<br><br>Se a aprovação já foi dada no Bitrix, recarregue esta página.';
+            showAprov('aprovAlready');
             return;
         }
 
