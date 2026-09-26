@@ -113,9 +113,21 @@
         .aprov-overlay { display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:20000;justify-content:center;align-items:flex-start;padding:20px;overflow-y:auto }
         .aprov-overlay.active { display:flex }
         .aprov-card { background:white;border-radius:12px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25);overflow:hidden;margin:auto }
-        .aprov-header { background:#a01228;color:white;padding:14px 18px;display:flex;justify-content:space-between;align-items:center }
-        .aprov-header h3 { font-size:15px;font-weight:700;margin:0 }
-        .aprov-close { background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;padding:0 4px }
+        .aprov-header { background:#8c1020;color:white;padding:13px 16px;display:flex;justify-content:space-between;
+                        align-items:center;gap:10px }
+        .aprov-header-txt { min-width:0 }
+        .aprov-header h3 { font-size:14px;font-weight:700;margin:0;letter-spacing:.2px }
+        .aprov-header-sub { display:block;font-size:10.5px;opacity:.72;margin-top:2px;letter-spacing:.4px;
+                            text-transform:uppercase }
+        .aprov-header-acoes { display:flex;align-items:center;gap:4px;flex:0 0 auto }
+        .aprov-lang { background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;font-size:10px;
+                      font-weight:700;letter-spacing:.6px;padding:3px 7px;border-radius:4px;cursor:pointer;
+                      line-height:1.4 }
+        .aprov-lang.on { background:#fff;color:#8c1020;border-color:#fff }
+        .aprov-close { background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;
+                       padding:0 2px 0 6px;opacity:.85 }
+        .aprov-close:hover { opacity:1 }
+
         .aprov-body { padding:18px }
         .aprov-info { border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:14px }
         .aprov-info-title { background:#f4f4f4;padding:7px 12px;font-size:11px;font-weight:700;color:#a01228;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #e0e0e0 }
@@ -141,13 +153,44 @@
         .aprov-motivo label { font-size:12px;font-weight:700;color:#a01228;text-transform:uppercase;display:block;margin-bottom:5px }
         .aprov-motivo textarea { width:100%;padding:9px 11px;border:2px solid #a01228;border-radius:7px;font-family:inherit;font-size:13px;resize:vertical;min-height:80px;outline:none }
         /* ── Contador de etapa: informacao PRINCIPAL do display ── */
-        .aprov-etapa-bar { text-align:center;background:#f4f6f8;border:1px solid #e0e0e0;border-radius:10px;padding:16px 12px 14px;margin-bottom:12px }
-        .aprov-etapa-label { display:block;font-size:11px;font-weight:700;color:#8a9199;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px }
-        .aprov-etapa-cont { display:inline-block;font-size:34px;font-weight:800;line-height:1;letter-spacing:-1px;color:#495057 }
+        /* ── Painel de status: o que ja foi assinado e o que esta pendente ── */
+        .aprov-etapa-bar { background:#fff;border:1px solid #d7dbe0;border-radius:8px;margin-bottom:12px;overflow:hidden }
+        .aprov-st-linha { display:flex;align-items:center;gap:12px;padding:12px 14px }
+        .aprov-st-linha + .aprov-st-linha { border-top:1px solid #edeff1 }
+        .aprov-st-linha.atual { background:#fbfcfd }
+        .aprov-st-rot { flex:0 0 118px;font-size:10px;font-weight:700;color:#8a9199;
+                        text-transform:uppercase;letter-spacing:.7px;line-height:1.3 }
+        .aprov-st-val { flex:1;min-width:0 }
+        .aprov-etapa-cont { display:inline-block;font-size:26px;font-weight:800;line-height:1;
+                            letter-spacing:-.5px;color:#495057;font-variant-numeric:tabular-nums }
         .aprov-etapa-cont.e1 { color:#084298 }
         .aprov-etapa-cont.e2 { color:#1b7a3e }
-        .aprov-etapa-fase { display:block;margin-top:7px;font-size:13px;font-weight:700;color:#a01228 }
-        .aprov-etapa-desc { font-size:11px;color:#6b7280;margin:-6px 0 12px;line-height:1.4;text-align:center }
+        .aprov-st-de { font-size:12px;color:#8a9199;margin-left:6px }
+        .aprov-st-prox { font-size:14px;font-weight:700;color:#a01228;line-height:1.3 }
+        .aprov-st-quem { font-size:11px;color:#6b7280;margin-top:3px }
+        .aprov-st-tag { display:inline-block;font-size:9px;font-weight:700;letter-spacing:.6px;
+                        text-transform:uppercase;padding:2px 6px;border-radius:3px;vertical-align:1px;
+                        border:1px solid currentColor;margin-left:6px }
+        .aprov-st-tag.bitrix { color:#8a5200 }
+        .aprov-st-tag.aqui   { color:#1b7a3e }
+        .aprov-nota { border:1px solid #e0e0e0;border-left:3px solid #8a9199;background:#fafbfc;
+                      border-radius:6px;padding:12px 14px;margin-bottom:14px }
+        .aprov-nota.espera    { border-left-color:#c58b00;background:#fffcf3 }
+        .aprov-nota.aprovado  { border-left-color:#1b7a3e;background:#f4fbf6 }
+        .aprov-nota.reprovado { border-left-color:#a01228;background:#fdf5f6 }
+        .aprov-nota-tit { font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:6px }
+        .aprov-nota.espera    .aprov-nota-tit { color:#8a5200 }
+        .aprov-nota.aprovado  .aprov-nota-tit { color:#1b7a3e }
+        .aprov-nota.reprovado .aprov-nota-tit { color:#a01228 }
+        .aprov-nota-txt { font-size:12.5px;color:#4b5563;line-height:1.55 }
+        .aprov-nota-txt p { margin:0 0 7px }
+        .aprov-nota-txt p:last-child { margin-bottom:0 }
+        .aprov-diag { margin-top:9px;padding-top:8px;border-top:1px dashed #d9dce0;font-size:10.5px;
+                      color:#8a9199;font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.5;
+                      word-break:break-all }
+        .aprov-diag code { background:#eef0f2;padding:1px 4px;border-radius:3px;color:#5a6169 }
+        .aprov-etapa-desc { font-size:11px;color:#6b7280;margin:-4px 0 12px;line-height:1.45;text-align:left;
+                            padding-left:2px }
 
         /* ── Linha do tempo de assinaturas ── */
         .aprov-tl { border:1px solid #e0e0e0;border-radius:8px;padding:13px 14px 4px;margin-bottom:14px;background:#fff }
@@ -240,6 +283,25 @@
         @media (min-width: 800px) {
             .item-fields { grid-template-columns: repeat(6, 1fr); }
             .item-field.full-width { grid-column: span 2; }
+        }
+    
+        /* ── Celular (fica no fim para vencer as regras acima) ── */
+        @media (max-width:560px) {
+            .aprov-overlay { padding:0;align-items:stretch }
+            .aprov-card { border-radius:0;max-width:none;min-height:100% }
+            .aprov-header { position:sticky;top:0;z-index:5;padding:11px 13px }
+            .aprov-header h3 { font-size:13.5px }
+            .aprov-header-sub { display:none }
+            .aprov-body { padding:13px }
+            .aprov-st-linha { display:block;padding:10px 12px }
+            .aprov-st-rot { flex:none;width:auto;margin-bottom:4px;text-align:left }
+            .aprov-st-val { display:block }
+            .aprov-btn-group { flex-direction:column }
+            .aprov-btn-ap,.aprov-btn-rp { padding:15px;font-size:15px }
+            .aprov-info-row { flex-direction:column;align-items:flex-start;gap:1px;padding:7px 11px }
+            .aprov-info-value { text-align:left }
+            .aprov-edit-grid { grid-template-columns:1fr }
+            .aprov-tl-quem, .aprov-nota-txt { font-size:12px }
         }
     </style>
 </head>
@@ -828,13 +890,20 @@
 <div class="aprov-overlay" id="aprovOverlay">
     <div class="aprov-card">
         <div class="aprov-header">
-            <h3 id="aprovTitulo">Aprovação de Pedido</h3>
-            <button class="aprov-close" onclick="fecharAprovacao()">&#10005;</button>
+            <div class="aprov-header-txt">
+                <h3 id="aprovTitulo">Aprovação de Pedido</h3>
+                <span class="aprov-header-sub" id="aprovSubtitulo"></span>
+            </div>
+            <div class="aprov-header-acoes">
+                <button class="aprov-lang" id="aprovLangPT" onclick="aprovIdioma('pt')">PT</button>
+                <button class="aprov-lang" id="aprovLangEN" onclick="aprovIdioma('en')">EN</button>
+                <button class="aprov-close" onclick="fecharAprovacao()">&#10005;</button>
+            </div>
         </div>
         <div class="aprov-body">
             <div class="aprov-state active" id="aprovLoading">
                 <div style="width:40px;height:40px;border:4px solid #eee;border-top:4px solid #a01228;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px"></div>
-                <p style="color:#999;font-size:13px">Carregando pedido...</p>
+                <p style="color:#999;font-size:13px" data-ti="carregando">Carregando pedido...</p>
             </div>
             <div class="aprov-state" id="aprovAlready">
                 <div class="aprov-state-icon" id="aprovAlreadyIcon">&#128274;</div>
@@ -850,29 +919,46 @@
                 <div class="aprov-state-icon" id="aprovSuccessIcon">&#9989;</div>
                 <div class="aprov-state-title" id="aprovSuccessTitle">Resposta Enviada!</div>
                 <p class="aprov-state-sub" id="aprovSuccessSub"></p>
-                <button class="aprov-btn-editar" style="margin-top:14px" onclick="fecharAprovacao()">Fechar</button>
+                <button class="aprov-btn-editar" style="margin-top:14px" onclick="fecharAprovacao()" data-ti="fechar">Fechar</button>
             </div>
             <div id="aprovForm" style="display:none">
                 <div class="aprov-etapa-bar">
-                    <span class="aprov-etapa-label">Status da aprovação</span>
-                    <span class="aprov-etapa-cont" id="aprovEtapaCont">0/2</span>
-                    <span class="aprov-etapa-fase" id="aprovEtapaFase">Aprovação Comercial Inicial 1/3</span>
+                    <div class="aprov-st-linha">
+                        <div class="aprov-st-rot" data-ti="statusAtual">Status atual</div>
+                        <div class="aprov-st-val">
+                            <span class="aprov-etapa-cont" id="aprovEtapaCont">0/3</span>
+                            <span class="aprov-st-de" id="aprovEtapaConcl">assinaturas concluídas</span>
+                        </div>
+                    </div>
+                    <div class="aprov-st-linha atual">
+                        <div class="aprov-st-rot" id="aprovEtapaRot">Aguardando assinatura</div>
+                        <div class="aprov-st-val">
+                            <div class="aprov-st-prox" id="aprovEtapaFase">—</div>
+                            <div class="aprov-st-quem" id="aprovEtapaQuem"></div>
+                        </div>
+                    </div>
                 </div>
                 <p class="aprov-etapa-desc" id="aprovEtapaDesc"></p>
 
                 <!-- LINHA DO TEMPO DAS ASSINATURAS -->
                 <div class="aprov-tl" id="aprovTimeline"></div>
 
+                <!-- MODO LEITURA: ciclo completo, reprovado, ou 1/3 pendente no Bitrix -->
+                <div class="aprov-nota" id="aprovNota" style="display:none">
+                    <div class="aprov-nota-tit" id="aprovNotaTit"></div>
+                    <div class="aprov-nota-txt" id="aprovNotaTxt"></div>
+                </div>
+
                 <!-- LOGIN DO HUB WENDELL -->
                 <div class="aprov-login" id="aprovLoginArea">
-                    <div class="aprov-login-tit">Identifique-se para assinar</div>
-                    <div class="aprov-login-sub">Use seu e-mail e senha do Hub Wendell. Sua assinatura fica registrada no pedido.</div>
-                    <label>E-mail</label>
+                    <div class="aprov-login-tit" data-ti="loginTit">Identifique-se para assinar</div>
+                    <div class="aprov-login-sub" data-ti="loginSub">Use seu e-mail e senha do Hub Wendell. Sua assinatura fica registrada no pedido.</div>
+                    <label data-ti="email">E-mail</label>
                     <input type="email" id="aprovLoginEmail" placeholder="nome@wendellservices.com" autocomplete="username">
-                    <label>Senha</label>
-                    <input type="password" id="aprovLoginSenha" placeholder="Sua senha do hub" autocomplete="current-password"
+                    <label data-ti="senha">Senha</label>
+                    <input type="password" id="aprovLoginSenha" data-ti-ph="senhaPh" placeholder="Sua senha do hub" autocomplete="current-password"
                            onkeypress="if(event.key==='Enter')aprovFazerLogin()">
-                    <button class="aprov-btn-login" id="aprovBtnLogin" onclick="aprovFazerLogin()">ENTRAR</button>
+                    <button class="aprov-btn-login" id="aprovBtnLogin" onclick="aprovFazerLogin()" data-ti="entrar">ENTRAR</button>
                     <p class="err" id="aprovLoginErro"></p>
                 </div>
                 <div class="aprov-logado" id="aprovLogadoArea" style="display:none">
@@ -881,29 +967,29 @@
                         <div class="aprov-logado-nome" id="aprovLogadoNome">-</div>
                         <div class="aprov-logado-mail" id="aprovLogadoMail">-</div>
                     </div>
-                    <button class="aprov-logado-sair" onclick="hubLogout(true)">sair</button>
+                    <button class="aprov-logado-sair" onclick="hubLogout(true)" data-ti="sair">sair</button>
                 </div>
                 <div class="aprov-bloqueio" id="aprovBloqueio" style="display:none"></div>
 
                 <div class="aprov-info">
-                    <div class="aprov-info-title">Dados do Pedido</div>
+                    <div class="aprov-info-title" data-ti="dadosPedido">Dados do Pedido</div>
                     <div class="aprov-info-row"><span class="aprov-info-label">ID Bitrix</span><span class="aprov-info-value id" id="aprovDealId">-</span></div>
-                    <div class="aprov-info-row"><span class="aprov-info-label">Cliente</span><span class="aprov-info-value" id="aprovCliente">-</span></div>
-                    <div class="aprov-info-row"><span class="aprov-info-label">Total</span><span class="aprov-info-value" id="aprovTotal">-</span></div>
-                    <div class="aprov-info-row"><span class="aprov-info-label">Versao</span><span class="aprov-info-value" id="aprovVersao">-</span></div>
-                    <div class="aprov-info-row"><span class="aprov-info-label">Etapa Bitrix</span><span class="aprov-info-value" id="aprovEtapa" style="font-size:12px;color:#555">-</span></div>
+                    <div class="aprov-info-row"><span class="aprov-info-label" data-ti="cliente">Cliente</span><span class="aprov-info-value" id="aprovCliente">-</span></div>
+                    <div class="aprov-info-row"><span class="aprov-info-label" data-ti="total">Total</span><span class="aprov-info-value" id="aprovTotal">-</span></div>
+                    <div class="aprov-info-row"><span class="aprov-info-label" data-ti="versao">Versao</span><span class="aprov-info-value" id="aprovVersao">-</span></div>
+                    <div class="aprov-info-row"><span class="aprov-info-label" data-ti="etapaBitrix">Etapa Bitrix</span><span class="aprov-info-value" id="aprovEtapa" style="font-size:12px;color:#555">-</span></div>
                 </div>
-                <a id="aprovPdfBtn" href="#" target="_blank" class="aprov-pdf-btn" style="display:none">&#128196; VER PDF DO PEDIDO</a>
-                <div class="aprov-btn-group">
-                    <button class="aprov-btn-ap" id="aprovBtnAp" onclick="aprovSelecionarDecisao('aprovado')">&#10003; APROVADO</button>
-                    <button class="aprov-btn-rp" id="aprovBtnRp" onclick="aprovSelecionarDecisao('reprovado')">&#10007; REPROVADO</button>
+                <a id="aprovPdfBtn" href="#" target="_blank" class="aprov-pdf-btn" style="display:none" data-ti="verPdf">&#128196; VER PDF DO PEDIDO</a>
+                <div class="aprov-btn-group" id="aprovBtnGroup">
+                    <button class="aprov-btn-ap" id="aprovBtnAp" onclick="aprovSelecionarDecisao('aprovado')" data-ti="btAprovado">&#10003; APROVADO</button>
+                    <button class="aprov-btn-rp" id="aprovBtnRp" onclick="aprovSelecionarDecisao('reprovado')" data-ti="btReprovado">&#10007; REPROVADO</button>
                 </div>
                 <div class="aprov-motivo" id="aprovMotivoArea">
-                    <label>Motivo da Reprovacao *</label>
-                    <textarea id="aprovMotivoTexto" placeholder="Descreva o motivo..."></textarea>
+                    <label data-ti="motivoLbl">Motivo da Reprovacao *</label>
+                    <textarea id="aprovMotivoTexto" data-ti-ph="motivoPh" placeholder="Descreva o motivo..."></textarea>
                 </div>
-                <button class="aprov-btn-confirmar" id="aprovBtnConfirmar" onclick="aprovConfirmarDecisao()" disabled>CONFIRMAR DECISAO</button>
-                <button class="aprov-btn-editar" style="margin-top:8px" onclick="aprovAbrirEdicao()">&#9998; Editar pedido antes de decidir</button>
+                <button class="aprov-btn-confirmar" id="aprovBtnConfirmar" onclick="aprovConfirmarDecisao()" data-ti="confirmar" disabled>CONFIRMAR DECISAO</button>
+                <button class="aprov-btn-editar" style="margin-top:8px" id="aprovBtnEditar" onclick="aprovAbrirEdicao()" data-ti="editarPedido">&#9998; Editar pedido antes de decidir</button>
                 <div class="aprov-edit-panel" id="aprovEditPanel">
                     <div class="aprov-edit-title">&#9998; Editar Pedido</div>
                     <div class="aprov-edit-grid">
@@ -2894,10 +2980,167 @@ var aprovEtapaAtual   = 0;   // assinaturas ja concluidas: 0, 1 ou 2 (vai assina
 // ── Configuracao das 3 etapas (espelha o funil PEDIDOS do Wendell Pipelines) ──
 // Carregada do banco em aprovCarregarEtapas(); o fallback abaixo vale se a
 // chamada falhar, para o modulo nunca ficar sem configuracao.
+// ──────────────────────────────────────────────
+// IDIOMA DO MODULO DE APROVACAO (pt / en)
+// O aprovador estrangeiro recebe o mesmo link; o idioma e escolhido na tela
+// e fica lembrado no navegador dele.
+// ──────────────────────────────────────────────
+var APROV_LANG = 'pt';
+var APROV_TXT = {
+pt: {
+  marca:'Wendell Global Interlining · Aprovação de pedido',
+  carregando:'Carregando pedido...',
+  fechar:'Fechar',
+  statusAtual:'Status atual',
+  aguardando:'Aguardando assinatura',
+  concl1:'assinatura concluída', conclN:'assinaturas concluídas',
+  noBitrix:'no Bitrix', nestaTela:'nesta tela',
+  responsavel:'Responsável', semResp:'Sem responsável definido no cadastro de assinaturas.',
+  descFinal:'Última assinatura do ciclo. Grava APROVADO{t} no Deal e movimenta o card no funil PEDIDOS.',
+  descMeio:'Esta assinatura grava APROVADO{n} no Deal e libera a etapa seguinte.',
+  titulo:'Aprovação de Pedido #{id} v{v}',
+  loginTit:'Identifique-se para assinar',
+  loginSub:'Use seu e-mail e senha do Hub Wendell. Sua assinatura fica registrada no pedido.',
+  email:'E-mail', senha:'Senha', senhaPh:'Sua senha do hub', entrar:'ENTRAR', sair:'sair',
+  dadosPedido:'Dados do Pedido', cliente:'Cliente', total:'Total', versao:'Versão', etapaBitrix:'Etapa Bitrix',
+  verPdf:'\u{1F4C4} VER PDF DO PEDIDO',
+  btAprovado:'\u2713 APROVADO', btReprovado:'\u2717 REPROVADO',
+  motivoLbl:'Motivo da reprovação *', motivoPh:'Descreva o motivo...',
+  confirmar:'CONFIRMAR DECISÃO', editarPedido:'\u270E Editar pedido antes de decidir',
+  impDuplaT:'Assinatura dupla bloqueada.',
+  impDuplaD:'Você já assinou uma etapa deste pedido. Cada etapa precisa de um assinante diferente.',
+  impPermT:'Permissão insuficiente.',
+  impPermD:'Assinar aprovações exige permissão de <strong>administrador</strong> na ferramenta Pedidos. Seu acesso atual é "{p}".',
+  impSemRespT:'Etapa sem assinador.',
+  impSemRespD:'A etapa <strong>{et}</strong> não tem assinador definido no cadastro de assinaturas do Hub Wendell. Defina o responsável por lá para que ela possa ser assinada.',
+  impInvalidaT:'Assinatura não habilitada.',
+  impInvalidaD:'{nome} está designado para esta etapa, mas a assinatura dele não está válida no cadastro do Hub Wendell.',
+  impOutroT:'Você não é o assinador desta etapa.',
+  impOutroD:'A etapa <strong>{et}</strong> só pode ser assinada por {nome}, conforme o cadastro de assinaturas do Hub Wendell. Você está identificado como {voce}.',
+  espTit:'Aguardando a 1/{t} no Bitrix',
+  espP1:'A primeira aprovação (<strong>{et}</strong>) é dada pelo processo interno do Bitrix, por <strong>{nome}</strong> — não é assinada aqui.',
+  espP2:'Assim que o campo <strong>APROVADO1</strong> do Deal for marcado, esta tela abre direto na <strong>{prox}</strong>.',
+  espP3:'Se a aprovação já foi dada no Bitrix, recarregue a página.',
+  espLido:'Leitura atual do Deal:',
+  espSemCampo:'nenhum campo com título APROVADO1 foi encontrado neste Deal',
+  espAusente:'o campo <code>{c}</code> não veio no retorno do Deal',
+  espAssinadoSeria:'assinado seria',
+  cicloTit:'Pedido aprovado ({t}/{t})',
+  cicloSub:'As {t} assinaturas foram registradas.',
+  repTit:'Pedido reprovado na {n}/{t}',
+  repSub:'Este pedido foi reprovado e não seguiu no ciclo de aprovação.',
+  repMotivo:'Motivo:',
+  repEdite:'Edite o pedido para reiniciar o ciclo de aprovação.',
+  tlTitulo:'Linha do tempo', tlCriado:'Pedido criado', tlVendedor:'Vendedor',
+  tlEditado:'Pedido editado', tlPor:'Por', tlAssinada:'assinada', tlReprovada:'REPROVADA',
+  tlSemNome:'assinante não identificado', tlEmNomeDe:'em nome de',
+  tlNaoRealizada:'Não realizada — pedido reprovado antes',
+  tlAguardando:'Aguardando assinatura', tlDepois:'Liberada depois',
+  okTit:'Assinado — {n}/{t}', okFinalTit:'Pedido aprovado!', okRepTit:'Pedido reprovado na {n}/{t}',
+  okFinalSub:'Ciclo concluído. APROVADO{t} gravado no Deal e card movido no funil PEDIDOS.',
+  okProxSub:'Encaminhado para a {n}/{t} — {nome}.',
+  okRepSub:'Reprovação registrada no Bitrix e no Supabase. O card foi para PEDIDOS CANCELADOS.'
+},
+en: {
+  marca:'Wendell Global Interlining · Order approval',
+  carregando:'Loading order...',
+  fechar:'Close',
+  statusAtual:'Current status',
+  aguardando:'Awaiting signature',
+  concl1:'signature completed', conclN:'signatures completed',
+  noBitrix:'in Bitrix', nestaTela:'on this screen',
+  responsavel:'Assigned to', semResp:'No signer assigned in the signature registry.',
+  descFinal:'Final signature of the cycle. It writes APROVADO{t} on the Deal and moves the card in the PEDIDOS pipeline.',
+  descMeio:'This signature writes APROVADO{n} on the Deal and releases the next step.',
+  titulo:'Order Approval #{id} v{v}',
+  loginTit:'Identify yourself to sign',
+  loginSub:'Use your Wendell Hub e-mail and password. Your signature is recorded on the order.',
+  email:'E-mail', senha:'Password', senhaPh:'Your hub password', entrar:'SIGN IN', sair:'sign out',
+  dadosPedido:'Order details', cliente:'Customer', total:'Total', versao:'Version', etapaBitrix:'Bitrix stage',
+  verPdf:'\u{1F4C4} VIEW ORDER PDF',
+  btAprovado:'\u2713 APPROVE', btReprovado:'\u2717 REJECT',
+  motivoLbl:'Reason for rejection *', motivoPh:'Describe the reason...',
+  confirmar:'CONFIRM DECISION', editarPedido:'\u270E Edit order before deciding',
+  impDuplaT:'Duplicate signature blocked.',
+  impDuplaD:'You have already signed a step of this order. Each step needs a different signer.',
+  impPermT:'Insufficient permission.',
+  impPermD:'Signing approvals requires <strong>administrator</strong> permission on the Pedidos tool. Your current access is "{p}".',
+  impSemRespT:'Step has no signer.',
+  impSemRespD:'Step <strong>{et}</strong> has no signer assigned in the Wendell Hub signature registry. Assign one there so it can be signed.',
+  impInvalidaT:'Signature not enabled.',
+  impInvalidaD:'{nome} is assigned to this step, but their signature is not valid in the Wendell Hub registry.',
+  impOutroT:'You are not the signer for this step.',
+  impOutroD:'Step <strong>{et}</strong> can only be signed by {nome}, per the Wendell Hub signature registry. You are identified as {voce}.',
+  espTit:'Awaiting 1/{t} in Bitrix',
+  espP1:'The first approval (<strong>{et}</strong>) is given by the internal Bitrix process, by <strong>{nome}</strong> — it is not signed here.',
+  espP2:'As soon as the Deal field <strong>APROVADO1</strong> is set, this screen opens directly on <strong>{prox}</strong>.',
+  espP3:'If the approval was already given in Bitrix, reload this page.',
+  espLido:'Current Deal reading:',
+  espSemCampo:'no field titled APROVADO1 was found on this Deal',
+  espAusente:'field <code>{c}</code> was not returned by the Deal',
+  espAssinadoSeria:'signed would be',
+  cicloTit:'Order approved ({t}/{t})',
+  cicloSub:'All {t} signatures are recorded.',
+  repTit:'Order rejected at {n}/{t}',
+  repSub:'This order was rejected and did not continue in the approval cycle.',
+  repMotivo:'Reason:',
+  repEdite:'Edit the order to restart the approval cycle.',
+  tlTitulo:'Timeline', tlCriado:'Order created', tlVendedor:'Sales rep',
+  tlEditado:'Order edited', tlPor:'By', tlAssinada:'signed', tlReprovada:'REJECTED',
+  tlSemNome:'signer not identified', tlEmNomeDe:'on behalf of',
+  tlNaoRealizada:'Not performed — order rejected earlier',
+  tlAguardando:'Awaiting signature', tlDepois:'Released later',
+  okTit:'Signed — {n}/{t}', okFinalTit:'Order approved!', okRepTit:'Order rejected at {n}/{t}',
+  okFinalSub:'Cycle complete. APROVADO{t} written on the Deal and card moved in the PEDIDOS pipeline.',
+  okProxSub:'Forwarded to {n}/{t} — {nome}.',
+  okRepSub:'Rejection recorded in Bitrix and Supabase. The card moved to PEDIDOS CANCELADOS.'
+}};
+
+function T(chave) {
+    var d = APROV_TXT[APROV_LANG] || APROV_TXT.pt;
+    return (d[chave] != null ? d[chave] : (APROV_TXT.pt[chave] != null ? APROV_TXT.pt[chave] : chave));
+}
+
+// Troca o idioma e redesenha tudo que ja esta na tela
+function aprovIdioma(lang) {
+    APROV_LANG = (lang === 'en') ? 'en' : 'pt';
+    try { localStorage.setItem('wgi_aprov_lang', APROV_LANG); } catch(e) {}
+    aprovAplicarIdioma();
+    if (aprovItemSb) {
+        aprovDesenharCabecalho(aprovItemSb);
+        if (typeof aprovRedesenharEstado === 'function') aprovRedesenharEstado();
+    }
+}
+
+// Aplica o dicionario na marcacao estatica (data-ti / data-ti-ph)
+function aprovAplicarIdioma() {
+    document.querySelectorAll('[data-ti]').forEach(function(el){
+        el.innerHTML = T(el.getAttribute('data-ti'));
+    });
+    document.querySelectorAll('[data-ti-ph]').forEach(function(el){
+        el.placeholder = T(el.getAttribute('data-ti-ph'));
+    });
+    var sub = document.getElementById('aprovSubtitulo');
+    if (sub) sub.textContent = T('marca');
+    var bpt = document.getElementById('aprovLangPT'), ben = document.getElementById('aprovLangEN');
+    if (bpt) bpt.className = 'aprov-lang' + (APROV_LANG === 'pt' ? ' on' : '');
+    if (ben) ben.className = 'aprov-lang' + (APROV_LANG === 'en' ? ' on' : '');
+    document.documentElement.lang = (APROV_LANG === 'en' ? 'en' : 'pt-BR');
+}
+
+(function(){
+    try {
+        var salvo = localStorage.getItem('wgi_aprov_lang');
+        if (salvo === 'en' || salvo === 'pt') { APROV_LANG = salvo; return; }
+    } catch(e) {}
+    // Sem deducao pelo idioma do navegador: o padrao e PT e quem precisa
+    // troca no botao. Assim a tela nunca abre em ingles por engano.
+})();
+
 var APROV_ETAPAS = [
-    {etapa:1, nome:'Aprovação Cadastral 1/3',       responsavel_nome:'Isabella Stuque',  responsavel_email:'isabella@wendellservices.com'},
-    {etapa:2, nome:'Aprovação Comercial 2/3',       responsavel_nome:'Arthur Rodrigues', responsavel_email:'arthur@wendellservices.com'},
-    {etapa:3, nome:'Aprovação Comercial Final 3/3', responsavel_nome:'Michael',          responsavel_email:'michael@wendellservices.com'}
+    {etapa:1, nome:'Aprovação Cadastral 1/3',       responsavel_nome:'Isabella Stuque',  responsavel_email:'isabella@wendellservices.com', assinada_em:'bitrix', assinatura_valida:true},
+    {etapa:2, nome:'Aprovação Comercial 2/3',       responsavel_nome:'Arthur Rodrigues', responsavel_email:'arthur@wendellservices.com',   assinada_em:'html',   assinatura_valida:true},
+    {etapa:3, nome:'Aprovação Comercial Final 3/3', responsavel_nome:'Michael',          responsavel_email:'michael@wendellservices.com',  assinada_em:'html',   assinatura_valida:true}
 ];
 var APROV_TOTAL = 3;
 var _aprovEtapasPromise = null;
@@ -2917,11 +3160,19 @@ async function aprovCarregarEtapas() {
         });
         if (!r.ok) return;
         var d = await r.json();
-        if (Array.isArray(d) && d.length === 3 && d.every(function(x){ return x.etapa && x.responsavel_email; })) {
+        if (Array.isArray(d) && d.length === 3 && d.every(function(x){ return x.etapa; })) {
             APROV_ETAPAS = d.map(function(x){
-                return {etapa:x.etapa, nome:aprovNomeCurto(x.nome),
-                        responsavel_nome:x.responsavel_nome, responsavel_email:String(x.responsavel_email||'').toLowerCase()};
+                return {etapa: x.etapa,
+                        nome: aprovNomeCurto(x.nome),
+                        responsavel_nome: x.responsavel_nome || '',
+                        responsavel_email: String(x.responsavel_email||'').toLowerCase(),
+                        assinada_em: x.assinada_em || 'html',
+                        assinatura_valida: x.assinatura_valida !== false};
             });
+            console.log('[APROV] etapas do serviço de assinaturas:',
+                        APROV_ETAPAS.map(function(e){
+                            return e.etapa + ') ' + e.nome + ' · ' + (e.responsavel_email || 'SEM ASSINANTE') +
+                                   (e.assinatura_valida ? '' : ' (assinatura inválida)'); }).join(' | '));
         }
     } catch(e) { console.warn('[APROV] etapas do funil:', e.message); }
 }
@@ -2934,7 +3185,8 @@ function aprovNomeCurto(n) {
 
 function aprovCfg(etapaNum) {
     for (var i=0;i<APROV_ETAPAS.length;i++) if (APROV_ETAPAS[i].etapa === etapaNum) return APROV_ETAPAS[i];
-    return {etapa:etapaNum, nome:'Aprovação ' + etapaNum + '/' + APROV_TOTAL, responsavel_nome:'', responsavel_email:''};
+    return {etapa:etapaNum, nome:'Aprovação ' + etapaNum + '/' + APROV_TOTAL, responsavel_nome:'',
+            responsavel_email:'', assinada_em:'html', assinatura_valida:false};
 }
 
 // Rotulo de status considerando a etapa de aprovacao (0/3 .. 3/3)
@@ -2966,8 +3218,8 @@ function aprovRenderTimeline(p) {
 
     // 1. Criacao
     itens.push({
-        cls:'info', icone:'&#9679;', fase:'Pedido criado' + (p.versao > 1 ? ' (v1)' : ''),
-        quem: p.vendedor_nome ? ('Vendedor: ' + p.vendedor_nome) : '',
+        cls:'info', icone:'&#9679;', fase:T('tlCriado') + (p.versao > 1 ? ' (v1)' : ''),
+        quem: p.vendedor_nome ? (T('tlVendedor') + ': ' + p.vendedor_nome) : '',
         quando: aprovData(p.data_pedido || p.created_at)
     });
 
@@ -2978,8 +3230,8 @@ function aprovRenderTimeline(p) {
         if (String(h.acao).indexOf('aprovado') === 0 || String(h.acao).indexOf('reprovado') === 0) return;
         itens.push({
             cls:'info', icone:'&#9998;',
-            fase:'Pedido editado' + (h.versao ? ' — v' + h.versao : ''),
-            quem: h.por ? ('Por: ' + h.por) : '',
+            fase:T('tlEditado') + (h.versao ? ' — v' + h.versao : ''),
+            quem: h.por ? (T('tlPor') + ': ' + h.por) : '',
             quando: aprovData(h.data)
         });
     });
@@ -2998,37 +3250,37 @@ function aprovRenderTimeline(p) {
         if (assinada) {
             var noLugar = (cfg.responsavel_email && mail &&
                            String(mail).toLowerCase() !== cfg.responsavel_email);
-            itens.push({cls:'ok', icone:'&#10003;', fase:cfg.nome + ' — assinada',
-                quem:'<b>' + esc(quem || cfg.responsavel_nome || 'assinante não identificado') + '</b>' +
+            itens.push({cls:'ok', icone:'&#10003;', fase:cfg.nome + ' — ' + T('tlAssinada'),
+                quem:'<b>' + esc(quem || cfg.responsavel_nome || T('tlSemNome')) + '</b>' +
                      (mail ? '<br><span style="color:#8a9199">' + esc(mail) + '</span>' : '') +
-                     (noLugar ? '<br><span style="color:#8a5200;font-size:11px">em nome de ' +
-                                esc(cfg.responsavel_nome || 'responsável designado') + '</span>' : ''),
+                     (noLugar ? '<br><span style="color:#8a5200;font-size:11px">' + T('tlEmNomeDe') + ' ' +
+                                esc(cfg.responsavel_nome || '—') + '</span>' : ''),
                 quando:aprovData(dt)});
         } else if (reprovada) {
-            itens.push({cls:'erro', icone:'&#10007;', fase:cfg.nome + ' — REPROVADA',
-                quem:'<b style="color:#a01228">' + esc(quem || 'assinante não identificado') + '</b>' +
+            itens.push({cls:'erro', icone:'&#10007;', fase:cfg.nome + ' — ' + T('tlReprovada'),
+                quem:'<b style="color:#a01228">' + esc(quem || T('tlSemNome')) + '</b>' +
                      (mail ? '<br><span style="color:#8a9199">' + esc(mail) + '</span>' : ''),
                 quando:aprovData(dt), motivo:mot});
         } else if (p.status === 'reprovado') {
             itens.push({cls:'espera', icone:'', fase:cfg.nome,
-                quem:'Não realizada — pedido reprovado antes', pendente:true});
+                quem:T('tlNaoRealizada'), pendente:true});
         } else {
             itens.push({cls:'espera', icone:'', fase:cfg.nome,
-                quem:(n === etapa + 1 ? 'Aguardando assinatura · responsável: ' : 'Liberada depois · responsável: ') +
-                     (cfg.responsavel_nome || 'não definido'),
+                quem:(n === etapa + 1 ? T('tlAguardando') : T('tlDepois')) + ' · ' + T('responsavel') + ': ' +
+                     (cfg.responsavel_nome || '—'),
                 pendente:true});
         }
     }
 
     document.getElementById('aprovTimeline').innerHTML =
-        '<div class="aprov-tl-titulo">Linha do tempo</div>' +
+        '<div class="aprov-tl-titulo">' + T('tlTitulo') + '</div>' +
         itens.map(function(i) {
             return '<div class="aprov-tl-item' + (i.pendente ? ' pend' : '') + '">' +
                 '<div class="aprov-tl-dot ' + i.cls + '">' + (i.icone || '') + '</div>' +
                 '<div class="aprov-tl-fase">' + i.fase + '</div>' +
                 (i.quem   ? '<div class="aprov-tl-quem">' + i.quem + '</div>' : '') +
                 (i.quando ? '<div class="aprov-tl-quando">' + i.quando + '</div>' : '') +
-                (i.motivo ? '<div class="aprov-tl-motivo"><strong>Motivo:</strong> ' + esc(i.motivo) + '</div>' : '') +
+                (i.motivo ? '<div class="aprov-tl-motivo"><strong>' + T('repMotivo') + '</strong> ' + esc(i.motivo) + '</div>' : '') +
                 '</div>';
         }).join('');
 }
@@ -3050,32 +3302,44 @@ function aprovImpedimento() {
     var ehAdmin = (String(AUTH.user.permissao || '').toLowerCase() === 'admin') ||
                   (String(AUTH.user.nivel || '').toLowerCase() === 'admin');
     if (!ehAdmin) {
-        return '<strong>Permissão insuficiente.</strong><br>' +
-               'Assinar aprovações exige permissão de <strong>administrador</strong> na ferramenta Pedidos. ' +
-               'Seu acesso atual é "' + esc(AUTH.user.permissao || AUTH.user.nivel || 'sem permissão') + '".';
+        return '<strong>' + T('impPermT') + '</strong><br>' +
+               T('impPermD').replace('{p}', esc(AUTH.user.permissao || AUTH.user.nivel || '—'));
     }
 
     if (EXIGE_ASSINANTES_DISTINTOS) {
         var jaAssinou = [aprovItemSb.aprov1_user_id, aprovItemSb.aprov2_user_id, aprovItemSb.aprov3_user_id]
                         .filter(Boolean).indexOf(AUTH.user.id) >= 0;
         if (jaAssinou) {
-            return '<strong>Assinatura dupla bloqueada.</strong><br>' +
-                   'Você já assinou uma etapa deste pedido. Cada etapa precisa de um assinante diferente.';
+            return '<strong>' + T('impDuplaT') + '</strong><br>' + T('impDuplaD');
         }
+    }
+
+    // Quem assina cada etapa e definido no cadastro de assinaturas do hub.
+    // Esta tela nao decide nada: so aceita quem esta habilitado la.
+    var cfg = aprovCfg(aprovEtapaAtual + 1);
+    var meu = String(AUTH.user.email || '').toLowerCase();
+
+    if (!cfg.responsavel_email) {
+        return '<strong>' + T('impSemRespT') + '</strong><br>' +
+               T('impSemRespD').replace('{et}', esc(cfg.nome));
+    }
+    if (!cfg.assinatura_valida) {
+        return '<strong>' + T('impInvalidaT') + '</strong><br>' +
+               T('impInvalidaD').replace('{nome}', '<strong>' + esc(cfg.responsavel_nome || cfg.responsavel_email) + '</strong>');
+    }
+    if (meu !== cfg.responsavel_email) {
+        return '<strong>' + T('impOutroT') + '</strong><br>' +
+               T('impOutroD')
+                 .replace('{et}',   esc(cfg.nome))
+                 .replace('{nome}', '<strong>' + esc(cfg.responsavel_nome || cfg.responsavel_email) + '</strong>')
+                 .replace('{voce}', esc(AUTH.user.email || ''));
     }
     return null;
 }
 
-// Aviso (nao bloqueia): esta etapa tem outro responsavel designado no funil.
-function aprovAvisoResponsavel() {
-    if (!hubLogado() || !aprovItemSb) return '';
-    var cfg = aprovCfg(aprovEtapaAtual + 1);
-    var meu = String(AUTH.user.email || '').toLowerCase();
-    if (!cfg.responsavel_email || meu === cfg.responsavel_email) return '';
-    return 'O responsável designado por esta etapa é <strong>' +
-           esc(cfg.responsavel_nome || cfg.responsavel_email) + '</strong>. ' +
-           'Você pode assinar no lugar dele — a assinatura ficará registrada em seu nome no log do pedido.';
-}
+// Nao ha mais aviso de "assinar no lugar de": quem nao e o assinador da etapa
+// e bloqueado em aprovImpedimento(). Mantido para nao quebrar chamadas antigas.
+function aprovAvisoResponsavel() { return ''; }
 
 function aprovMesmoAssinante() { return aprovImpedimento() !== null; }
 
@@ -3156,14 +3420,27 @@ function aprovDesenharCabecalho(p) {
     var cfgProx = aprovCfg(proxNum);
     var ehFinal = (proxNum >= APROV_TOTAL);
     document.getElementById('aprovTitulo').textContent =
-        'Aprovação de Pedido #' + aprovDealIdAtual + ' v' + (p.versao || 1);
+        T('titulo').replace('{id}', aprovDealIdAtual).replace('{v}', (p.versao || 1));
+    aprovAplicarIdioma();
     var contEl = document.getElementById('aprovEtapaCont');
     contEl.textContent = aprovEtapaAtual + '/' + APROV_TOTAL;
     contEl.className = 'aprov-etapa-cont e' + (aprovEtapaAtual >= APROV_TOTAL ? 2 : (aprovEtapaAtual > 0 ? 1 : 0));
-    document.getElementById('aprovEtapaFase').textContent = cfgProx.nome;
+    document.getElementById('aprovEtapaConcl').textContent =
+        T(aprovEtapaAtual === 1 ? 'concl1' : 'conclN');
+
+    var noBitrix = (cfgProx.assinada_em === 'bitrix');
+    document.getElementById('aprovEtapaRot').innerHTML = T('aguardando');
+    document.getElementById('aprovEtapaFase').innerHTML =
+        esc(cfgProx.nome) +
+        '<span class="aprov-st-tag ' + (noBitrix ? 'bitrix">' + T('noBitrix') : 'aqui">' + T('nestaTela')) + '</span>';
+    document.getElementById('aprovEtapaQuem').innerHTML = cfgProx.responsavel_nome
+        ? T('responsavel') + ': <strong>' + esc(cfgProx.responsavel_nome) + '</strong>' +
+          (cfgProx.responsavel_email ? ' · ' + esc(cfgProx.responsavel_email) : '')
+        : T('semResp');
+
     document.getElementById('aprovEtapaDesc').textContent = ehFinal
-        ? 'Última assinatura. Ela grava o status no Bitrix e movimenta o card no funil PEDIDOS.'
-        : 'Esta assinatura libera o pedido para a etapa seguinte. Nada é gravado no Bitrix até a ' + APROV_TOTAL + '/' + APROV_TOTAL + '.';
+        ? T('descFinal').replace('{t}', APROV_TOTAL)
+        : T('descMeio').replace('{n}', proxNum);
     aprovRenderTimeline(p);
     aprovAtualizarPainelLogin();
 }
@@ -3208,15 +3485,16 @@ function aprovDiagnosticoEtapa1() {
     if (!d) return '';
     var motivo;
     if (!d.campo) {
-        motivo = 'nenhum campo com título APROVADO1 foi encontrado neste Deal';
+        motivo = T('espSemCampo');
     } else if (!d.existe) {
-        motivo = 'o campo <code>' + esc(d.campo) + '</code> não veio no retorno do Deal';
+        motivo = T('espAusente').replace('{c}', esc(d.campo));
     } else {
-        var alvo = d.info && d.info.idY ? ' — assinado seria <code>' + esc(String(d.info.idY)) + '</code>' : '';
+        var alvo = d.info && d.info.idY
+            ? ' — ' + T('espAssinadoSeria') + ' <code>' + esc(String(d.info.idY)) + '</code>' : '';
         motivo = '<code>' + esc(d.campo) + '</code> = <code>' +
-                 esc(d.valor === '' || d.valor == null ? '(vazio)' : String(d.valor)) + '</code>' + alvo;
+                 esc(d.valor === '' || d.valor == null ? '—' : String(d.valor)) + '</code>' + alvo;
     }
-    return '<br><br><span style="font-size:11px;color:#8a8a8a;">Lido agora no Bitrix: ' + motivo + '</span>';
+    return '<div class="aprov-diag">' + T('espLido') + ' ' + motivo + '</div>';
 }
 
 async function espelharAprov1DoBitrix(p, item) {
@@ -3259,6 +3537,58 @@ async function espelharAprov1DoBitrix(p, item) {
         console.warn('[APROV] falha ao espelhar a 1/' + APROV_TOTAL + ':', e.message);
         return false;
     }
+}
+
+// Preenche o cartao "Dados do Pedido". Serve tanto para a tela de assinatura
+// quanto para os estados de leitura (espera / aprovado / reprovado).
+function aprovPreencherDados(p) {
+    document.getElementById('aprovDealId').textContent  = '#' + aprovDealIdAtual;
+    document.getElementById('aprovCliente').textContent = p.cliente_nome || '—';
+    document.getElementById('aprovTotal').textContent   =
+        'R$ ' + (p.total_geral || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('aprovVersao').textContent  = 'v' + (p.versao || 1);
+    var et = document.getElementById('aprovEtapa');
+    et.textContent = p._stageName || '—';
+}
+
+// Guarda o estado de leitura atual, para redesenhar ao trocar de idioma
+var _aprovEstadoLeitura = null;
+
+// Mostra o MESMO layout da tela de assinatura (status + linha do tempo +
+// dados do pedido), trocando a area de decisao por uma nota explicativa.
+function aprovModoLeitura(tom, obter) {
+    _aprovEstadoLeitura = { tom: tom, obter: obter };
+    var nota = document.getElementById('aprovNota');
+    nota.className = 'aprov-nota ' + tom;
+    nota.style.display = 'block';
+    document.getElementById('aprovNotaTit').innerHTML = obter().titulo;
+    document.getElementById('aprovNotaTxt').innerHTML = obter().corpo;
+    ['aprovLoginArea','aprovLogadoArea','aprovBloqueio','aprovBtnGroup',
+     'aprovMotivoArea','aprovBtnConfirmar'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    document.getElementById('aprovEtapaDesc').style.display = 'none';
+    var ed = document.getElementById('aprovBtnEditar');
+    if (ed) ed.style.display = (tom === 'reprovado') ? 'block' : 'none';
+    showAprov('form');
+}
+
+// Volta o modal para o estado de assinatura normal
+function aprovModoAssinatura() {
+    _aprovEstadoLeitura = null;
+    document.getElementById('aprovNota').style.display = 'none';
+    document.getElementById('aprovEtapaDesc').style.display = '';
+    document.getElementById('aprovBtnGroup').style.display = '';
+    document.getElementById('aprovBtnConfirmar').style.display = '';
+    var ed = document.getElementById('aprovBtnEditar'); if (ed) ed.style.display = '';
+    aprovAtualizarPainelLogin();
+}
+
+// Redesenha a nota quando o idioma muda
+function aprovRedesenharEstado() {
+    if (!_aprovEstadoLeitura) return;
+    document.getElementById('aprovNotaTit').innerHTML = _aprovEstadoLeitura.obter().titulo;
+    document.getElementById('aprovNotaTxt').innerHTML = _aprovEstadoLeitura.obter().corpo;
 }
 
 async function abrirAprovacaoAdmin(idx) {
@@ -3305,56 +3635,52 @@ async function abrirAprovacaoAdmin(idx) {
             aprovDesenharCabecalho(aprovItemSb);
         }
         if (aprovEtapaAtual === 0 && aprovItemSb.status !== 'reprovado') {
-            var cfgE1 = aprovCfg(1);
-            document.getElementById('aprovAlreadyIcon').innerHTML    = '&#9203;';
-            document.getElementById('aprovAlreadyTitle').textContent = 'Aguardando a 1/' + APROV_TOTAL + ' no Bitrix';
-            document.getElementById('aprovAlreadyTitle').style.color = '#8a5200';
-            document.getElementById('aprovAlreadySub').innerHTML =
-                'A primeira aprovação (<strong>' + esc(cfgE1.nome) + '</strong>) é feita pelo processo interno do Bitrix, ' +
-                'por <strong>' + esc(cfgE1.responsavel_nome || 'responsável da etapa 1') + '</strong> — não é assinada por aqui.' +
-                '<br><br>Assim que o campo <strong>APROVADO1</strong> do Deal virar <strong>Y</strong>, esta tela já abre na ' +
-                '<strong>' + esc(aprovCfg(2).nome) + '</strong>.' +
-                '<br><br>Se a aprovação já foi dada no Bitrix, recarregue esta página.' +
-                aprovDiagnosticoEtapa1();
-            showAprov('aprovAlready');
+            aprovPreencherDados(p);
+            aprovModoLeitura('espera', function(){
+                var c1 = aprovCfg(1);
+                return {
+                    titulo: T('espTit').replace('{t}', APROV_TOTAL),
+                    corpo:
+                      '<p>' + T('espP1').replace('{et}', esc(c1.nome))
+                                        .replace('{nome}', esc(c1.responsavel_nome || '—')) + '</p>' +
+                      '<p>' + T('espP2').replace('{prox}', esc(aprovCfg(2).nome)) + '</p>' +
+                      '<p>' + T('espP3') + '</p>' + aprovDiagnosticoEtapa1()
+                };
+            });
             return;
         }
 
         // Ciclo ja completo: as 3 assinaturas existem no Supabase
         if (aprovEtapaAtual >= APROV_TOTAL) {
-            document.getElementById('aprovAlreadyIcon').innerHTML    = '&#9989;';
-            document.getElementById('aprovAlreadyTitle').textContent = 'Pedido Aprovado (' + APROV_TOTAL + '/' + APROV_TOTAL + ')';
-            document.getElementById('aprovAlreadyTitle').style.color = '#1b7a3e';
-            document.getElementById('aprovAlreadySub').innerHTML =
-                'As ' + APROV_TOTAL + ' assinaturas já foram registradas.<br><br>' +
-                [1,2,3].map(function(nn){
-                    return '<strong>' + esc(aprovCfg(nn).nome) + '</strong><br>' +
-                           esc(aprovItemSb['aprov'+nn+'_por'] || '—') +
-                           (aprovItemSb['aprov'+nn+'_data'] ? ' &middot; ' + aprovData(aprovItemSb['aprov'+nn+'_data']) : '');
-                }).join('<br><br>');
-            showAprov('aprovAlready');
+            aprovPreencherDados(p);
+            aprovModoLeitura('aprovado', function(){
+                return {
+                    titulo: T('cicloTit').replace(/\{t\}/g, APROV_TOTAL),
+                    corpo : '<p>' + T('cicloSub').replace('{t}', APROV_TOTAL) + '</p>'
+                };
+            });
             return;
         }
 
         // Pedido reprovado em alguma etapa (registro vive no Supabase)
         if (aprovItemSb.status === 'reprovado') {
-            document.getElementById('aprovAlreadyIcon').innerHTML   = '&#10060;';
-            document.getElementById('aprovAlreadyTitle').textContent =
-                'Pedido Reprovado na ' + Math.min(aprovEtapaAtual + 1, APROV_TOTAL) + '/' + APROV_TOTAL;
-            document.getElementById('aprovAlreadyTitle').style.color = '#a01228';
-            document.getElementById('aprovAlreadySub').innerHTML = 'Este pedido foi REPROVADO e não seguiu no ciclo de aprovação.' +
-                (aprovMotivoReprovacao(aprovItemSb) ? '<br><br><strong>Motivo:</strong> ' + esc(aprovMotivoReprovacao(aprovItemSb)) : '') +
-                '<br><br>Edite o pedido para reiniciar o ciclo de aprovação.';
-            showAprov('aprovAlready');
+            aprovPreencherDados(p);
+            aprovModoLeitura('reprovado', function(){
+                var mot = aprovMotivoReprovacao(aprovItemSb);
+                return {
+                    titulo: T('repTit').replace('{n}', Math.min(aprovEtapaAtual + 1, APROV_TOTAL))
+                                       .replace('{t}', APROV_TOTAL),
+                    corpo : '<p>' + T('repSub') + '</p>' +
+                            (mot ? '<p><strong>' + T('repMotivo') + '</strong> ' + esc(mot) + '</p>' : '') +
+                            '<p>' + T('repEdite') + '</p>'
+                };
+            });
             return;
         }
 
         // Preencher dados
-        document.getElementById('aprovDealId').textContent = '#' + aprovDealIdAtual;
-        document.getElementById('aprovCliente').textContent = p.cliente_nome || '-';
-        document.getElementById('aprovTotal').textContent = 'R$ ' + (p.total_geral || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
-        document.getElementById('aprovVersao').textContent = 'v' + (p.versao || 1);
-        document.getElementById('aprovEtapa').textContent = p._stageName || 'Carregando...';
+        aprovPreencherDados(p);
+        aprovModoAssinatura();
 
         // Botão PDF
         var linkPDF = p.bitrix_deal_id ? '' : '';
@@ -3546,14 +3872,15 @@ async function aprovConfirmarDecisao() {
         var prox = aprovCfg(n + 1);
         document.getElementById('aprovSuccessIcon').innerHTML    = aprovou ? '&#9989;' : '&#10060;';
         document.getElementById('aprovSuccessTitle').textContent = aprovou
-            ? (ehFinal ? 'Pedido Aprovado! (' + APROV_TOTAL + '/' + APROV_TOTAL + ')' : 'Assinado — ' + n + '/' + APROV_TOTAL)
-            : 'Pedido Reprovado na ' + n + '/' + APROV_TOTAL;
+            ? (ehFinal ? T('okFinalTit') : T('okTit').replace('{n}', n).replace('{t}', APROV_TOTAL))
+            : T('okRepTit').replace('{n}', n).replace('{t}', APROV_TOTAL);
         document.getElementById('aprovSuccessTitle').style.color = aprovou ? (ehFinal ? '#1b7a3e' : '#084298') : '#a01228';
-        document.getElementById('aprovSuccessSub').textContent   = aprovou
+        document.getElementById('aprovSuccessSub').innerHTML = aprovou
             ? (ehFinal
-                ? 'Ciclo concluído. Status gravado no Bitrix e card movido no funil PEDIDOS.'
-                : 'Encaminhado para a ' + (n+1) + '/' + APROV_TOTAL + ' — ' + (prox.responsavel_nome || 'próximo responsável') + '.')
-            : 'Reprovação registrada no Bitrix e no Supabase. O card foi para PEDIDOS CANCELADOS.';
+                ? T('okFinalSub').replace('{t}', APROV_TOTAL)
+                : T('okProxSub').replace('{n}', n+1).replace('{t}', APROV_TOTAL)
+                                .replace('{nome}', esc(prox.responsavel_nome || '—')))
+            : T('okRepSub');
 
         showAprov('aprovSuccess');
         if (MODO_APROVACAO_LINK) {
