@@ -2317,42 +2317,10 @@ async function buscarPedidosSb() {
                             .then(function(ok){ if (ok) buscarPedidosSb(); })
                             .catch(function(){});
 
-                        var campoAprov = res.item[CAMPO_STATUS_AP];
-                        var valAprov = Array.isArray(campoAprov) ? String(campoAprov[0] || '') : String(campoAprov || '');
-                        var aprovado  = valAprov === ID_APROVADO_AP;
-                        var reprovado = valAprov === ID_REPROVADO_AP;
-                        if (!aprovado && !reprovado) return;
-                        // Nao importar "aprovado" do Bitrix sem as 3 assinaturas registradas
-                        if (aprovado && !aprovTemTodasAssinaturas(sbPedidosCache[idx])) {
-                            console.warn('[APROV] Deal ' + p.bitrix_deal_id +
-                                ' está aprovado no Bitrix sem as ' + APROV_TOTAL + ' assinaturas — ignorado na sincronização.');
-                            return;
-                        }
-
-                        var patch = aprovado
-                            ? { status: 'aprovado',  aprovacao_etapa: APROV_TOTAL, updated_at: new Date().toISOString() }
-                            : { status: 'reprovado', updated_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString() };
-
-                        sbFetch('pedidos?id=eq.' + p.id, 'PATCH', patch)
-                            .then(function() {
-                                sbPedidosCache[idx].status = patch.status;
-                                if (aprovado) sbPedidosCache[idx].aprovacao_etapa = APROV_TOTAL;
-                                // Atualizar badges do card sem recarregar tudo
-                                var card = document.getElementById('sbcard-' + idx);
-                                if (card) {
-                                    var statusEl = card.querySelector('.sb-status');
-                                    if (statusEl) {
-                                        statusEl.className = 'sb-status sb-status-' + patch.status;
-                                        statusEl.textContent = aprovado ? 'Aprovado' : 'Reprovado';
-                                    }
-                                    var etEl = card.querySelector('.sb-etapa');
-                                    if (etEl && aprovado) {
-                                        etEl.className = 'sb-etapa sb-etapa-2';
-                                        etEl.textContent = 'Aprovação ' + APROV_TOTAL + '/' + APROV_TOTAL + '';
-                                    }
-                                }
-                            }).catch(function(){});
+                        // O campo antigo de status (ufCrm29_1773692249) NAO e mais
+                        // consultado: quem manda sao APROVADO1/2/3 e o registro das
+                        // assinaturas. Ele vinha marcado em pedidos novos e fazia o
+                        // sistema achar que estavam aprovados sem ninguem ter assinado.
                     }).catch(function(){});
             }
         });
@@ -2649,22 +2617,18 @@ async function salvarEdicaoSb() {
             var novaVersao = novaVersaoSb; // mesma variável, evitar duplicata
 
             // Passo 1: zerar aprovação e atualizar dados (SEM mudar versão ainda)
+            // NAO gravamos mais o title aqui: a automacao do Bitrix e a unica
+            // responsavel pelo nome do card (mesmo criterio do fluxo de aprovacao).
+            // Antes este caminho escrevia '... [vN]' e o outro nao, gerando nomes divergentes.
+            var fieldsEdit = await camposLimpaAssinaturas();
+            fieldsEdit.comments = linhas.join('\n');
+            fieldsEdit.opportunity = dadosEdit.itens.reduce(function(s,it){
+                return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
+            }, 0);
             await bxCall('crm.item.update', {
                 entityTypeId: BX_TYPE_ID,
                 id: dealId,
-                fields: {
-                    // NAO gravamos mais o title aqui: a automacao do Bitrix e a unica
-                    // responsavel pelo nome do card (mesmo criterio do fluxo de aprovacao).
-                    // Antes este caminho escrevia '... [vN]' e o outro nao, gerando nomes divergentes.
-                    comments: linhas.join('\n'),
-                    'ufCrm29_1773692249': null,
-                'ufCrm29_1789750742000': 'N',   // limpa assinatura 1/3
-                'ufCrm29_1789750757846': 'N',   // limpa assinatura 2/3
-                'ufCrm29_1789750773563': 'N',   // limpa assinatura 3/3
-                    opportunity: dadosEdit.itens.reduce(function(s,it){
-                        return s + (parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0);
-                    }, 0)
-                }
+                fields: fieldsEdit
             });
             // Passo 2: incrementar versão (dispara automação UMA VEZ, aprovação já está zerada)
             var resUpd = await bxCall('crm.item.update', {
@@ -2816,12 +2780,13 @@ function gerarPDFSb() {
 // ──────────────────────────────────────────────
 // MÓDULO APROVAÇÃO INLINE
 // ──────────────────────────────────────────────
-var CAMPO_STATUS_AP   = 'ufCrm29_1773692249';
+// O campo antigo 'APROVADO' (ufCrm29_1773692249, lista 4185/4187) foi
+// APOSENTADO: nao e lido nem gravado por este HTML. Ele vinha preenchido
+// em pedidos novos e fazia o sistema achar que ja estavam aprovados.
+// Quem manda agora sao APROVADO1 / APROVADO2 / APROVADO3 (Y/N).
 var CAMPO_MOTIVO_AP   = 'ufCrm29_1770778401663';
 var CAMPO_DATA_APR_AP = 'ufCrm29_1780887933377';
 var CAMPO_PRE_PED_AP  = 'ufCrm29_1780621188016';
-var ID_APROVADO_AP    = '4185';
-var ID_REPROVADO_AP   = '4187';
 // ── Marcadores Y/N das 3 assinaturas no Bitrix ──
 // Estes IDs sao apenas o FALLBACK. Em tempo de execucao o codigo le
 // crm.item.fields e descobre o ID real de cada campo pelo TITULO
@@ -2862,6 +2827,18 @@ async function resolverCamposAprovacao() {
     }
     _camposAprovResolvidos = mapa;
     return mapa;
+}
+
+// Zera as 3 assinaturas no Bitrix (usado quando o pedido e editado ou
+// reenviado: a versao nova comeca sem nenhuma aprovacao).
+// Usa os IDs resolvidos pelo titulo, nao os hardcoded.
+async function camposLimpaAssinaturas() {
+    var mapa = await resolverCamposAprovacao();
+    var out = {};
+    for (var n = 1; n <= APROV_TOTAL; n++) {
+        if (mapa[n]) out[mapa[n]] = 'N';
+    }
+    return out;
 }
 var aprovDealIdAtual  = null;
 var aprovDecisao      = null;
@@ -3127,17 +3104,6 @@ function showAprov(id) {
     }
 }
 
-// As 3 assinaturas existem de fato no Supabase?
-// Serve para nao aceitar um "aprovado" que apareca no Bitrix sem assinatura
-// nenhuma registrada aqui (ex.: alguem usando o app de aprovacao antigo).
-function aprovTemTodasAssinaturas(p) {
-    if (!p) return false;
-    for (var n = 1; n <= APROV_TOTAL; n++) {
-        if (p['aprov' + n + '_decisao'] !== 'aprovado') return false;
-    }
-    return true;
-}
-
 // Desenha titulo, contador, fase e linha do tempo a partir do estado atual
 function aprovDesenharCabecalho(p) {
     var proxNum = aprovEtapaAtual + 1;
@@ -3234,50 +3200,9 @@ async function abrirAprovacaoAdmin(idx) {
         var item = result && result.item;
         if (!item) throw new Error('Pedido #' + aprovDealIdAtual + ' nao encontrado');
 
-        // Decisao FINAL vive no Bitrix — se ja existe, o ciclo esta encerrado
-        // (cobre inclusive votos dados pelo app externo de aprovacao).
-        var statusAtual = item[CAMPO_STATUS_AP];
-        var valAtual = Array.isArray(statusAtual) ? String(statusAtual[0] || '') : String(statusAtual == null ? '' : statusAtual);
-        var jaVotou = valAtual !== '' && valAtual !== '0' && valAtual !== 'null';
-
-        if (jaVotou) {
-            var foiAprovado = (valAtual === ID_APROVADO_AP);
-
-            // Aprovado no Bitrix sem as 3 assinaturas registradas aqui = inconsistencia.
-            // Nao marcamos o pedido como aprovado; avisamos na tela.
-            if (foiAprovado && !aprovTemTodasAssinaturas(aprovItemSb)) {
-                var faltando = [];
-                for (var nn = 1; nn <= APROV_TOTAL; nn++) {
-                    if (aprovItemSb['aprov' + nn + '_decisao'] !== 'aprovado') faltando.push(nn + '/' + APROV_TOTAL);
-                }
-                document.getElementById('aprovAlreadyIcon').innerHTML    = '&#9888;&#65039;';
-                document.getElementById('aprovAlreadyTitle').textContent = 'Aprovação inconsistente';
-                document.getElementById('aprovAlreadyTitle').style.color = '#8a5200';
-                document.getElementById('aprovAlreadySub').innerHTML =
-                    'O Bitrix marca este pedido como <strong>APROVADO</strong>, mas aqui não há registro das ' +
-                    APROV_TOTAL + ' assinaturas.<br><br>Faltam: <strong>' + faltando.join(', ') + '</strong>.' +
-                    '<br><br>Isso normalmente indica aprovação feita pelo <strong>app antigo</strong> de aprovação, ' +
-                    'que foi desativado. O pedido NÃO foi marcado como aprovado aqui — procure o responsável pelo sistema.';
-                showAprov('aprovAlready');
-                console.warn('[APROV] Deal ' + aprovDealIdAtual + ' aprovado no Bitrix sem assinaturas: faltam ' + faltando.join(', '));
-                return;
-            }
-            document.getElementById('aprovAlreadyIcon').innerHTML   = foiAprovado ? '&#9989;' : '&#10060;';
-            document.getElementById('aprovAlreadyTitle').textContent = foiAprovado ? 'Pedido Liberado (' + APROV_TOTAL + '/' + APROV_TOTAL + ')' : 'Pedido Reprovado';
-            document.getElementById('aprovAlreadyTitle').style.color = foiAprovado ? '#1b7a3e' : '#a01228';
-            var motivo = item[CAMPO_MOTIVO_AP] || '';
-            document.getElementById('aprovAlreadySub').innerHTML = (foiAprovado ? 'Este pedido ja foi APROVADO na etapa final (' + APROV_TOTAL + '/' + APROV_TOTAL + ').' : 'Este pedido foi REPROVADO.') +
-                (motivo ? '<br><br><strong>Motivo:</strong> ' + motivo : '');
-            showAprov('aprovAlready');
-            // Manter o Supabase alinhado com a decisao final do Bitrix
-            if (aprovItemSb && aprovItemSb.id) {
-                var patchSync = foiAprovado
-                    ? { status: 'aprovado', aprovacao_etapa: APROV_TOTAL, updated_at: new Date().toISOString() }
-                    : { status: 'reprovado', updated_at: new Date().toISOString() };
-                sbFetch('pedidos?id=eq.' + aprovItemSb.id, 'PATCH', patchSync).catch(function(){});
-            }
-            return;
-        }
+        // O estado do ciclo vem das assinaturas registradas, nao do campo
+        // antigo de status do Bitrix. Aquele campo aparece preenchido em
+        // pedidos novos e nao diz nada sobre quem assinou o que.
 
         // ── A 1/3 vem do Bitrix, nao daqui ──
         // Se o processo interno ja marcou APROVADO1 = Y, registramos a assinatura
@@ -3446,16 +3371,15 @@ async function aprovConfirmarDecisao() {
         var nowISO = agora.toISOString();
 
         // ── Bitrix ──
-        // Cada etapa marca seu proprio campo Y/N. O status geral da aprovacao
-        // (4185/4187) so e gravado na ULTIMA assinatura ou em qualquer reprovacao,
-        // para o Deal nao ficar aberto esperando uma decisao que nao vem.
+        // Cada etapa marca SOMENTE o seu proprio campo APROVADO1/2/3 (Y ou N).
+        // O campo antigo de status geral nao e mais tocado. Data e motivo
+        // continuam sendo gravados no fechamento do ciclo ou na reprovacao.
         var fields = {};
         if (ehFinal || !aprovou) {
             var dataISO = agora.getFullYear() + '-' + String(agora.getMonth()+1).padStart(2,'0') + '-' +
                           String(agora.getDate()).padStart(2,'0') + 'T' +
                           String(agora.getHours()).padStart(2,'0') + ':' +
                           String(agora.getMinutes()).padStart(2,'0') + ':00+00:00';
-            fields[CAMPO_STATUS_AP]   = aprovou ? ID_APROVADO_AP : ID_REPROVADO_AP;
             fields[CAMPO_DATA_APR_AP] = dataISO;
             if (!aprovou) fields[CAMPO_MOTIVO_AP] = '[' + cfg.nome + '] ' + motivo;
         }
@@ -3609,16 +3533,12 @@ async function aprovSalvarEdicao() {
         if (obs) linhas.push('OBS: ' + obs);
         itens.forEach(function(it){ linhas.push('- ' + it.codigo + ' | Qtd: ' + it.quantidade + ' | R$ ' + it.preco); });
         // Passo 1: zerar aprovação e dados (sem versão)
+        var fieldsReset = await camposLimpaAssinaturas();
+        fieldsReset.comments = linhas.join('\n');
+        fieldsReset.opportunity = itens.reduce(function(s,it){ return s+(parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0); }, 0);
         await bxCall('crm.item.update', {
             entityTypeId: BX_TYPE_ID, id: parseInt(aprovDealIdAtual),
-            fields: {
-                comments: linhas.join('\n'),
-                'ufCrm29_1773692249': null,
-                'ufCrm29_1789750742000': 'N',   // limpa assinatura 1/3
-                'ufCrm29_1789750757846': 'N',   // limpa assinatura 2/3
-                'ufCrm29_1789750773563': 'N',   // limpa assinatura 3/3
-                opportunity: itens.reduce(function(s,it){ return s+(parseFloat(it.quantidade)||0)*(parseFloat((it.preco||'').replace(',','.'))||0); }, 0)
-            }
+            fields: fieldsReset
         });
         // Passo 2: versão (dispara automação)
         await bxCall('crm.item.update', {
