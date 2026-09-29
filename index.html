@@ -155,24 +155,33 @@
         /* ── Contador de etapa: informacao PRINCIPAL do display ── */
         /* ── Painel de status: o que ja foi assinado e o que esta pendente ── */
         .aprov-etapa-bar { background:#fff;border:1px solid #d7dbe0;border-radius:8px;margin-bottom:12px;overflow:hidden }
-        .aprov-st-linha { display:flex;align-items:center;gap:12px;padding:12px 14px }
+        .aprov-st-linha { padding:11px 14px }
         .aprov-st-linha + .aprov-st-linha { border-top:1px solid #edeff1 }
-        .aprov-st-linha.atual { background:#fbfcfd }
-        .aprov-st-rot { flex:0 0 118px;font-size:10px;font-weight:700;color:#8a9199;
-                        text-transform:uppercase;letter-spacing:.7px;line-height:1.3 }
-        .aprov-st-val { flex:1;min-width:0 }
-        .aprov-etapa-cont { display:inline-block;font-size:26px;font-weight:800;line-height:1;
-                            letter-spacing:-.5px;color:#495057;font-variant-numeric:tabular-nums }
+        .aprov-st-linha.atual { background:#fafbfc }
+        .aprov-st-rot { font-size:9.5px;font-weight:700;color:#98a0a8;text-transform:uppercase;
+                        letter-spacing:.9px;line-height:1;margin-bottom:6px }
+        .aprov-st-val { min-width:0 }
+        .aprov-st-num { display:flex;align-items:baseline;gap:7px }
+        .aprov-etapa-cont { font-size:28px;font-weight:800;line-height:1;letter-spacing:-.8px;
+                            color:#495057;font-variant-numeric:tabular-nums }
         .aprov-etapa-cont.e1 { color:#084298 }
         .aprov-etapa-cont.e2 { color:#1b7a3e }
-        .aprov-st-de { font-size:12px;color:#8a9199;margin-left:6px }
-        .aprov-st-prox { font-size:14px;font-weight:700;color:#a01228;line-height:1.3 }
-        .aprov-st-quem { font-size:11px;color:#6b7280;margin-top:3px }
+        .aprov-st-de { font-size:11.5px;color:#8a9199 }
+        .aprov-st-prox { font-size:14.5px;font-weight:700;color:#a01228;line-height:1.35;
+                         display:flex;align-items:center;gap:7px;flex-wrap:wrap }
+        .aprov-st-quem { font-size:11.5px;color:#4b5563;margin-top:5px;line-height:1.45 }
+        .aprov-st-mail { color:#8a9199;font-size:10.5px;display:block;margin-top:1px;
+                         font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all }
+        .aprov-st-sup { font-size:10.5px;color:#98a0a8;margin-top:6px;padding-top:6px;
+                        border-top:1px dotted #e4e7ea;line-height:1.45 }
+        .aprov-st-sup b { color:#7a828a;font-weight:600 }
         .aprov-st-tag { display:inline-block;font-size:9px;font-weight:700;letter-spacing:.6px;
-                        text-transform:uppercase;padding:2px 6px;border-radius:3px;vertical-align:1px;
-                        border:1px solid currentColor;margin-left:6px }
+                        text-transform:uppercase;padding:2px 6px;border-radius:3px;
+                        border:1px solid currentColor;white-space:nowrap }
         .aprov-st-tag.bitrix { color:#8a5200 }
         .aprov-st-tag.aqui   { color:#1b7a3e }
+        .aprov-build { text-align:center;font-size:9.5px;color:#c2c7cc;margin-top:12px;
+                       letter-spacing:.4px;font-family:ui-monospace,Menlo,Consolas,monospace }
         .aprov-nota { border:1px solid #e0e0e0;border-left:3px solid #8a9199;background:#fafbfc;
                       border-radius:6px;padding:12px 14px;margin-bottom:14px }
         .aprov-nota.espera    { border-left-color:#c58b00;background:#fffcf3 }
@@ -925,7 +934,7 @@
                 <div class="aprov-etapa-bar">
                     <div class="aprov-st-linha">
                         <div class="aprov-st-rot" data-ti="statusAtual">Status atual</div>
-                        <div class="aprov-st-val">
+                        <div class="aprov-st-val aprov-st-num">
                             <span class="aprov-etapa-cont" id="aprovEtapaCont">0/3</span>
                             <span class="aprov-st-de" id="aprovEtapaConcl">assinaturas concluídas</span>
                         </div>
@@ -935,6 +944,7 @@
                         <div class="aprov-st-val">
                             <div class="aprov-st-prox" id="aprovEtapaFase">—</div>
                             <div class="aprov-st-quem" id="aprovEtapaQuem"></div>
+                            <div class="aprov-st-sup" id="aprovEtapaSup" style="display:none"></div>
                         </div>
                     </div>
                 </div>
@@ -990,6 +1000,7 @@
                 </div>
                 <button class="aprov-btn-confirmar" id="aprovBtnConfirmar" onclick="aprovConfirmarDecisao()" data-ti="confirmar" disabled>CONFIRMAR DECISAO</button>
                 <button class="aprov-btn-editar" style="margin-top:8px" id="aprovBtnEditar" onclick="aprovAbrirEdicao()" data-ti="editarPedido">&#9998; Editar pedido antes de decidir</button>
+                <div class="aprov-build" id="aprovBuild"></div>
                 <div class="aprov-edit-panel" id="aprovEditPanel">
                     <div class="aprov-edit-title">&#9998; Editar Pedido</div>
                     <div class="aprov-edit-grid">
@@ -2985,6 +2996,10 @@ var aprovEtapaAtual   = 0;   // assinaturas ja concluidas: 0, 1 ou 2 (vai assina
 // O aprovador estrangeiro recebe o mesmo link; o idioma e escolhido na tela
 // e fica lembrado no navegador dele.
 // ──────────────────────────────────────────────
+// Carimbo da versao publicada. Aparece no rodape do modal e no console.
+// Serve para saber, olhando a tela, se o arquivo no ar e o mais novo.
+var APROV_BUILD = '2026-09-29 · suplentes';
+
 var APROV_LANG = 'pt';
 var APROV_TXT = {
 pt: {
@@ -3036,6 +3051,9 @@ pt: {
   tlSemNome:'assinante não identificado', tlEmNomeDe:'em nome de',
   tlNaoRealizada:'Não realizada — pedido reprovado antes',
   tlAguardando:'Aguardando assinatura', tlDepois:'Liberada depois',
+  suplentes:'Suplentes', semSuplente:'nenhum cadastrado',
+  impSuplentes:'Também podem assinar como suplentes: {lista}.',
+  tlComoSuplente:'como suplente',
   okTit:'Assinado — {n}/{t}', okFinalTit:'Pedido aprovado!', okRepTit:'Pedido reprovado na {n}/{t}',
   okFinalSub:'Ciclo concluído. APROVADO{t} gravado no Deal e card movido no funil PEDIDOS.',
   okProxSub:'Encaminhado para a {n}/{t} — {nome}.',
@@ -3090,6 +3108,9 @@ en: {
   tlSemNome:'signer not identified', tlEmNomeDe:'on behalf of',
   tlNaoRealizada:'Not performed — order rejected earlier',
   tlAguardando:'Awaiting signature', tlDepois:'Released later',
+  suplentes:'Alternates', semSuplente:'none registered',
+  impSuplentes:'These alternates may also sign: {lista}.',
+  tlComoSuplente:'as alternate',
   okTit:'Signed — {n}/{t}', okFinalTit:'Order approved!', okRepTit:'Order rejected at {n}/{t}',
   okFinalSub:'Cycle complete. APROVADO{t} written on the Deal and card moved in the PEDIDOS pipeline.',
   okProxSub:'Forwarded to {n}/{t} — {nome}.',
@@ -3138,9 +3159,9 @@ function aprovAplicarIdioma() {
 })();
 
 var APROV_ETAPAS = [
-    {etapa:1, nome:'Aprovação Cadastral 1/3',       responsavel_nome:'Isabella Stuque',  responsavel_email:'isabella@wendellservices.com', assinada_em:'bitrix', assinatura_valida:true},
-    {etapa:2, nome:'Aprovação Comercial 2/3',       responsavel_nome:'Arthur Rodrigues', responsavel_email:'arthur@wendellservices.com',   assinada_em:'html',   assinatura_valida:true},
-    {etapa:3, nome:'Aprovação Comercial Final 3/3', responsavel_nome:'Michael',          responsavel_email:'michael@wendellservices.com',  assinada_em:'html',   assinatura_valida:true}
+    {etapa:1, nome:'Aprovação Cadastral 1/3',       responsavel_nome:'Isabella Stuque',  responsavel_email:'isabella@wendellservices.com', assinada_em:'bitrix', assinatura_valida:true, suplentes:[]},
+    {etapa:2, nome:'Aprovação Comercial 2/3',       responsavel_nome:'Arthur Rodrigues', responsavel_email:'arthur@wendellservices.com',   assinada_em:'html',   assinatura_valida:true, suplentes:[]},
+    {etapa:3, nome:'Aprovação Comercial Final 3/3', responsavel_nome:'Michael',          responsavel_email:'michael@wendellservices.com',  assinada_em:'html',   assinatura_valida:true, suplentes:[]}
 ];
 var APROV_TOTAL = 3;
 var _aprovEtapasPromise = null;
@@ -3152,6 +3173,7 @@ function aprovEtapasProntas() {
 }
 
 async function aprovCarregarEtapas() {
+    console.log('[APROV] build ' + APROV_BUILD);
     try {
         var r = await fetch(SB_URL + '/rest/v1/rpc/fn_pedidos_etapas_aprovacao', {
             method:'POST',
@@ -3167,7 +3189,8 @@ async function aprovCarregarEtapas() {
                         responsavel_nome: x.responsavel_nome || '',
                         responsavel_email: String(x.responsavel_email||'').toLowerCase(),
                         assinada_em: x.assinada_em || 'html',
-                        assinatura_valida: x.assinatura_valida !== false};
+                        assinatura_valida: x.assinatura_valida !== false,
+                        suplentes: x.suplentes || []};
             });
             console.log('[APROV] etapas do serviço de assinaturas:',
                         APROV_ETAPAS.map(function(e){
@@ -3183,10 +3206,27 @@ function aprovNomeCurto(n) {
                         .replace(/(\d)\/(\d)/, '$1/$2');
 }
 
+// Lista de suplentes validos de uma etapa (vem da RPC, ja filtrada no banco)
+function aprovSuplentes(cfg) {
+    var l = (cfg && cfg.suplentes) || [];
+    if (!Array.isArray(l)) { try { l = JSON.parse(l) || []; } catch(e) { l = []; } }
+    return l.filter(function(x){ return x && (x.email || x.nome); });
+}
+
+// O e-mail informado pode assinar esta etapa? Titular ou suplente.
+function aprovPapelNaEtapa(cfg, email) {
+    email = String(email || '').toLowerCase();
+    if (!email) return null;
+    if (cfg.responsavel_email && email === cfg.responsavel_email) return 'titular';
+    var achou = aprovSuplentes(cfg).some(function(x){
+        return String(x.email || '').toLowerCase() === email; });
+    return achou ? 'suplente' : null;
+}
+
 function aprovCfg(etapaNum) {
     for (var i=0;i<APROV_ETAPAS.length;i++) if (APROV_ETAPAS[i].etapa === etapaNum) return APROV_ETAPAS[i];
     return {etapa:etapaNum, nome:'Aprovação ' + etapaNum + '/' + APROV_TOTAL, responsavel_nome:'',
-            responsavel_email:'', assinada_em:'html', assinatura_valida:false};
+            responsavel_email:'', assinada_em:'html', assinatura_valida:false, suplentes:[]};
 }
 
 // Rotulo de status considerando a etapa de aprovacao (0/3 .. 3/3)
@@ -3248,13 +3288,19 @@ function aprovRenderTimeline(p) {
         var reprovada = (p.status === 'reprovado' && n === etapa + 1);
 
         if (assinada) {
-            var noLugar = (cfg.responsavel_email && mail &&
-                           String(mail).toLowerCase() !== cfg.responsavel_email);
+            // Assinou o titular, um suplente, ou alguem no lugar deles?
+            var papelAss = mail ? aprovPapelNaEtapa(cfg, mail) : 'titular';
+            var selo = '';
+            if (papelAss === 'suplente') {
+                selo = '<br><span style="color:#5a6169;font-size:11px">' + T('tlComoSuplente') + '</span>';
+            } else if (!papelAss && cfg.responsavel_email && mail) {
+                selo = '<br><span style="color:#8a5200;font-size:11px">' + T('tlEmNomeDe') + ' ' +
+                       esc(cfg.responsavel_nome || '—') + '</span>';
+            }
             itens.push({cls:'ok', icone:'&#10003;', fase:cfg.nome + ' — ' + T('tlAssinada'),
                 quem:'<b>' + esc(quem || cfg.responsavel_nome || T('tlSemNome')) + '</b>' +
                      (mail ? '<br><span style="color:#8a9199">' + esc(mail) + '</span>' : '') +
-                     (noLugar ? '<br><span style="color:#8a5200;font-size:11px">' + T('tlEmNomeDe') + ' ' +
-                                esc(cfg.responsavel_nome || '—') + '</span>' : ''),
+                     selo,
                 quando:aprovData(dt)});
         } else if (reprovada) {
             itens.push({cls:'erro', icone:'&#10007;', fase:cfg.nome + ' — ' + T('tlReprovada'),
@@ -3327,12 +3373,16 @@ function aprovImpedimento() {
         return '<strong>' + T('impInvalidaT') + '</strong><br>' +
                T('impInvalidaD').replace('{nome}', '<strong>' + esc(cfg.responsavel_nome || cfg.responsavel_email) + '</strong>');
     }
-    if (meu !== cfg.responsavel_email) {
+    var papel = aprovPapelNaEtapa(cfg, meu);
+    if (!papel) {
+        var sups = aprovSuplentes(cfg);
         return '<strong>' + T('impOutroT') + '</strong><br>' +
                T('impOutroD')
                  .replace('{et}',   esc(cfg.nome))
                  .replace('{nome}', '<strong>' + esc(cfg.responsavel_nome || cfg.responsavel_email) + '</strong>')
-                 .replace('{voce}', esc(AUTH.user.email || ''));
+                 .replace('{voce}', esc(AUTH.user.email || '')) +
+               (sups.length ? '<br>' + T('impSuplentes').replace('{lista}',
+                    sups.map(function(x){ return esc(x.nome || x.email); }).join(', ')) : '');
     }
     return null;
 }
@@ -3422,6 +3472,8 @@ function aprovDesenharCabecalho(p) {
     document.getElementById('aprovTitulo').textContent =
         T('titulo').replace('{id}', aprovDealIdAtual).replace('{v}', (p.versao || 1));
     aprovAplicarIdioma();
+    var bd = document.getElementById('aprovBuild');
+    if (bd) bd.textContent = 'build ' + APROV_BUILD;
     var contEl = document.getElementById('aprovEtapaCont');
     contEl.textContent = aprovEtapaAtual + '/' + APROV_TOTAL;
     contEl.className = 'aprov-etapa-cont e' + (aprovEtapaAtual >= APROV_TOTAL ? 2 : (aprovEtapaAtual > 0 ? 1 : 0));
@@ -3431,12 +3483,24 @@ function aprovDesenharCabecalho(p) {
     var noBitrix = (cfgProx.assinada_em === 'bitrix');
     document.getElementById('aprovEtapaRot').innerHTML = T('aguardando');
     document.getElementById('aprovEtapaFase').innerHTML =
-        esc(cfgProx.nome) +
+        '<span>' + esc(cfgProx.nome) + '</span>' +
         '<span class="aprov-st-tag ' + (noBitrix ? 'bitrix">' + T('noBitrix') : 'aqui">' + T('nestaTela')) + '</span>';
     document.getElementById('aprovEtapaQuem').innerHTML = cfgProx.responsavel_nome
         ? T('responsavel') + ': <strong>' + esc(cfgProx.responsavel_nome) + '</strong>' +
-          (cfgProx.responsavel_email ? ' · ' + esc(cfgProx.responsavel_email) : '')
+          (cfgProx.responsavel_email ? '<span class="aprov-st-mail">' + esc(cfgProx.responsavel_email) + '</span>' : '')
         : T('semResp');
+
+    // Suplentes: quem mais pode assinar esta etapa, em enfase menor
+    var elSup = document.getElementById('aprovEtapaSup');
+    var sups  = aprovSuplentes(cfgProx);
+    if (sups.length) {
+        elSup.innerHTML = '<b>' + T('suplentes') + ':</b> ' +
+            sups.map(function(x){ return esc(x.nome || x.email); }).join(' · ');
+        elSup.style.display = 'block';
+    } else {
+        elSup.innerHTML = '<b>' + T('suplentes') + ':</b> ' + T('semSuplente');
+        elSup.style.display = 'block';
+    }
 
     document.getElementById('aprovEtapaDesc').textContent = ehFinal
         ? T('descFinal').replace('{t}', APROV_TOTAL)
