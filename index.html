@@ -24,6 +24,17 @@
         .form-row { display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; }
         .form-group { flex: 1; min-width: 100%; }
         .form-group.half { min-width: calc(50% - 10px); }
+        .header-dir { display:flex; flex-direction:column; align-items:flex-end; gap:7px }
+        .bandeiras { display:flex; gap:5px }
+        .bandeira { background:none; border:2px solid rgba(255,255,255,.35); border-radius:4px;
+                    padding:0; line-height:0; cursor:pointer; opacity:.55; transition:all .18s }
+        .bandeira:hover { opacity:.9 }
+        .bandeira.on { opacity:1; border-color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.25) }
+        .bandeira svg { display:block; border-radius:2px }
+        @media (max-width:560px) {
+            .header-dir { gap:5px }
+            .bandeira svg { width:24px; height:17px }
+        }
         .check-linha { display:flex !important; align-items:center; gap:7px; margin-top:7px;
                        font-size:12px !important; color:#444 !important; text-transform:none !important;
                        font-weight:500 !important; cursor:pointer }
@@ -326,18 +337,18 @@
 <body>
 <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
-    <div class="loading-text" id="loadingText">Gerando PDF...</div>
+    <div class="loading-text" id="loadingText" data-ti="pgGerandoPdf">Gerando PDF...</div>
 </div>
 <!-- TELA DE FUNDO DO MODO APROVACAO POR LINK (?dealId=NNN) -->
 <div id="telaAprovLink" style="display:none;min-height:100vh;background:#f2f3f5;padding:28px 16px;text-align:center;font-family:inherit">
     <div style="max-width:480px;margin:0 auto">
-        <h1 style="font-size:19px;color:#a01228;margin:0 0 6px;letter-spacing:.5px">APROVAÇÃO DE PEDIDO</h1>
+        <h1 style="font-size:19px;color:#a01228;margin:0 0 6px;letter-spacing:.5px" data-ti="lkTitulo">APROVAÇÃO DE PEDIDO</h1>
         <p style="font-size:13px;color:#6b7280;margin:0 0 22px">Wendell Global Interlining</p>
         <div id="telaAprovLinkMsg" style="background:white;border-radius:10px;padding:22px 18px;box-shadow:0 2px 10px rgba(0,0,0,.08);font-size:14px;color:#555;line-height:1.6">
             Carregando pedido...
         </div>
         <button id="telaAprovLinkBtn" onclick="reabrirAprovacaoLink()" style="display:none;margin-top:14px;padding:11px 20px;background:#a01228;color:white;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer">
-            Reabrir aprovação
+            <span data-ti="lkReabrir">Reabrir aprovação</span>
         </button>
     </div>
 </div>
@@ -349,64 +360,95 @@
                 <img id="logoHeaderWGI" alt="WGI">
             </div>
             <div class="header-title">
-                <h1>FORMULARIO DE PEDIDO</h1>
+                <h1 data-ti="pgTitulo">FORMULARIO DE PEDIDO</h1>
                 <span class="header-subtitle">Wendell Global Interlining</span>
             </div>
         </div>
-        <div class="pedido-numero" id="numeroPedido" style="font-size:13px;letter-spacing:0.5px">—</div>
+        <div class="header-dir">
+            <div class="bandeiras">
+                <button type="button" class="bandeira" id="bandPT" onclick="aprovIdioma('pt')"
+                        title="Português" aria-label="Português">
+                    <svg viewBox="0 0 28 20" width="28" height="20" aria-hidden="true">
+                        <rect width="28" height="20" fill="#009b3a"/>
+                        <path d="M14 2.2 26.2 10 14 17.8 1.8 10Z" fill="#fedf00"/>
+                        <circle cx="14" cy="10" r="4.4" fill="#002776"/>
+                        <path d="M9.9 8.3a9.5 9.5 0 0 1 8.3 2.4" stroke="#fff" stroke-width="1.1" fill="none"/>
+                    </svg>
+                </button>
+                <button type="button" class="bandeira" id="bandEN" onclick="aprovIdioma('en')"
+                        title="English" aria-label="English">
+                    <svg viewBox="0 0 28 20" width="28" height="20" aria-hidden="true">
+                        <rect width="28" height="20" fill="#b22234"/>
+                        <g fill="#fff">
+                            <rect y="1.54" width="28" height="1.54"/><rect y="4.62" width="28" height="1.54"/>
+                            <rect y="7.69" width="28" height="1.54"/><rect y="10.77" width="28" height="1.54"/>
+                            <rect y="13.85" width="28" height="1.54"/><rect y="16.92" width="28" height="1.54"/>
+                        </g>
+                        <rect width="12" height="10.77" fill="#3c3b6e"/>
+                        <g fill="#fff">
+                            <circle cx="2.4" cy="2.2" r=".7"/><circle cx="6" cy="2.2" r=".7"/><circle cx="9.6" cy="2.2" r=".7"/>
+                            <circle cx="4.2" cy="4.4" r=".7"/><circle cx="7.8" cy="4.4" r=".7"/>
+                            <circle cx="2.4" cy="6.6" r=".7"/><circle cx="6" cy="6.6" r=".7"/><circle cx="9.6" cy="6.6" r=".7"/>
+                            <circle cx="4.2" cy="8.8" r=".7"/><circle cx="7.8" cy="8.8" r=".7"/>
+                        </g>
+                    </svg>
+                </button>
+            </div>
+            <div class="pedido-numero" id="numeroPedido" style="font-size:13px;letter-spacing:0.5px">—</div>
+        </div>
     </div>
     <form id="formPedido">
         <div class="form-section">
-            <div class="section-title">Dados do Representante / Vendedor</div>
+            <div class="section-title" data-ti="pgSecVend">Dados do Representante / Vendedor</div>
             <div class="form-row">
                 <div class="form-group half">
-                    <label class="req">CODIGO</label>
-                    <input type="text" id="codigoVendedor" name="codigoVendedor" placeholder="Digite o código">
+                    <label class="req" data-ti="pgCodVend">CODIGO</label>
+                    <input type="text" id="codigoVendedor" name="codigoVendedor" data-ti-ph="pgCodVendPh" placeholder="Digite o código">
                 </div>
                 <div class="form-group half">
-                    <label class="req">NOME</label>
-                    <input type="text" id="nomeVendedor" name="nomeVendedor" placeholder="Digite o nome">
+                    <label class="req" data-ti="pgNome">NOME</label>
+                    <input type="text" id="nomeVendedor" name="nomeVendedor" data-ti-ph="pgNomePh" placeholder="Digite o nome">
                 </div>
             </div>
         </div>
         <div class="form-section">
-            <div class="section-title">Dados do Cliente</div>
+            <div class="section-title" data-ti="pgSecCli">Dados do Cliente</div>
             <div class="form-row">
                 <div class="form-group">
-                    <label class="req">NOME</label>
+                    <label class="req" data-ti="pgNome">NOME</label>
                     <input type="text" id="nomeCliente" name="nomeCliente">
                     <div class="hint">*Apenas nome curto, nao precisa ser razao social completa.</div>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group half">
-                    <label class="req">CNPJ</label>
+                    <label class="req" data-ti="pgCnpj">CNPJ</label>
                     <input type="text" id="cnpjCliente" name="cnpjCliente" placeholder="00.000.000/0000-00" maxlength="18" oninput="mascaraCNPJ(this)">
                 </div>
             </div>
         </div>
         <div class="form-section">
-            <div class="section-title">Dados do Pedido</div>
+            <div class="section-title" data-ti="pgSecPed">Dados do Pedido</div>
             <!-- DATA DE ENTREGA do pedido foi removida: cada item tem a sua propria -->
             <div class="form-row">
                 <div class="form-group">
-                    <label class="req">PRAZO DE PAGAMENTO</label>
-                    <input type="text" id="prazoPagamento" name="prazoPagamento" placeholder="Ex: 30/60/90 dias">
+                    <label class="req" data-ti="pgPrazo">PRAZO DE PAGAMENTO</label>
+                    <input type="text" id="prazoPagamento" name="prazoPagamento" data-ti-ph="pgPrazoPh" placeholder="Ex: 30/60/90 dias">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group half">
-                    <label class="req">TIPO DE FRETE</label>
+                    <label class="req" data-ti="pgFrete">TIPO DE FRETE</label>
                     <select id="tipoFrete" name="tipoFrete">
-                        <option value="">Selecione...</option>
+                        <option value="" data-ti="pgSelecione">Selecione...</option>
                         <option value="CIF">CIF (Frete por conta do vendedor)</option>
                         <option value="FOB">FOB (Frete por conta do comprador)</option>
                     </select>
                 </div>
                 <div class="form-group half">
-                    <label class="req">FATURAMENTO</label>
+                    <label class="req" data-ti="pgFatur">FATURAMENTO</label>
                     <select id="faturamento" name="faturamento">
-                        <option value="">Selecione...</option>
+                        <option value="" data-ti="pgSelecione">Selecione...</option>
                         <option value="Faturamento e entrega por SP">Faturamento e entrega por SP</option>
                         <option value="Faturamento e entrega por SC">Faturamento e entrega por SC</option>
                     </select>
@@ -414,50 +456,50 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label class="req">ENDERECO DE ENTREGA</label>
-                    <input type="text" id="enderecoEntrega" name="enderecoEntrega" placeholder="Rua, numero, bairro, cidade/UF">
+                    <label class="req" data-ti="pgEnd">ENDERECO DE ENTREGA</label>
+                    <input type="text" id="enderecoEntrega" name="enderecoEntrega" data-ti-ph="pgEndPh" placeholder="Rua, numero, bairro, cidade/UF">
                     <label class="check-linha" for="enderecoDoCadastro">
                         <input type="checkbox" id="enderecoDoCadastro" onchange="alternarEnderecoCadastro()">
-                        <span>Repetir endereço do cadastro</span>
+                        <span data-ti="pgEndCad">Repetir endereço do cadastro</span>
                     </label>
-                    <div class="hint">Escreva o endereço ou marque a caixa acima</div>
+                    <div class="hint" data-ti="pgEndHint">Escreva o endereço ou marque a caixa acima</div>
                 </div>
             </div>
         </div>
         <div class="form-section">
-            <div class="section-title">Itens do Pedido</div>
+            <div class="section-title" data-ti="pgSecItens">Itens do Pedido</div>
             <div class="itens-container" id="itensContainer">
                 
                 <div class="item-pedido" id="item1">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #1</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #1</span>
                         
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto1_cod" onchange="buscarDescricaoProduto(1)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto1_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto1_qtd" min="0" step="any" oninput="calcularTotalItem(1)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto1_preco" oninput="calcularTotalItem(1)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto1_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem1Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -465,41 +507,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem1">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem1">0,00</span></div>
                     <div class="item-ipi" id="ipiItem1" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct1">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item2">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #2</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #2</span>
                         <button type="button" class="btn-remove" onclick="removerItem(2)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto2_cod" onchange="buscarDescricaoProduto(2)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto2_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto2_qtd" min="0" step="any" oninput="calcularTotalItem(2)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto2_preco" oninput="calcularTotalItem(2)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto2_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem2Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -507,41 +549,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem2">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem2">0,00</span></div>
                     <div class="item-ipi" id="ipiItem2" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct2">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item3">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #3</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #3</span>
                         <button type="button" class="btn-remove" onclick="removerItem(3)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto3_cod" onchange="buscarDescricaoProduto(3)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto3_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto3_qtd" min="0" step="any" oninput="calcularTotalItem(3)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto3_preco" oninput="calcularTotalItem(3)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto3_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem3Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -549,41 +591,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem3">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem3">0,00</span></div>
                     <div class="item-ipi" id="ipiItem3" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct3">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item4">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #4</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #4</span>
                         <button type="button" class="btn-remove" onclick="removerItem(4)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto4_cod" onchange="buscarDescricaoProduto(4)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto4_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto4_qtd" min="0" step="any" oninput="calcularTotalItem(4)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto4_preco" oninput="calcularTotalItem(4)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto4_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem4Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -591,41 +633,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem4">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem4">0,00</span></div>
                     <div class="item-ipi" id="ipiItem4" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct4">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item5">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #5</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #5</span>
                         <button type="button" class="btn-remove" onclick="removerItem(5)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto5_cod" onchange="buscarDescricaoProduto(5)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto5_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto5_qtd" min="0" step="any" oninput="calcularTotalItem(5)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto5_preco" oninput="calcularTotalItem(5)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto5_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem5Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -633,41 +675,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem5">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem5">0,00</span></div>
                     <div class="item-ipi" id="ipiItem5" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct5">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item6">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #6</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #6</span>
                         <button type="button" class="btn-remove" onclick="removerItem(6)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto6_cod" onchange="buscarDescricaoProduto(6)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto6_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto6_qtd" min="0" step="any" oninput="calcularTotalItem(6)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto6_preco" oninput="calcularTotalItem(6)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto6_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem6Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -675,41 +717,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem6">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem6">0,00</span></div>
                     <div class="item-ipi" id="ipiItem6" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct6">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item7">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #7</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #7</span>
                         <button type="button" class="btn-remove" onclick="removerItem(7)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto7_cod" onchange="buscarDescricaoProduto(7)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto7_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto7_qtd" min="0" step="any" oninput="calcularTotalItem(7)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto7_preco" oninput="calcularTotalItem(7)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto7_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem7Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -717,41 +759,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem7">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem7">0,00</span></div>
                     <div class="item-ipi" id="ipiItem7" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct7">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item8">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #8</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #8</span>
                         <button type="button" class="btn-remove" onclick="removerItem(8)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto8_cod" onchange="buscarDescricaoProduto(8)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto8_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto8_qtd" min="0" step="any" oninput="calcularTotalItem(8)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto8_preco" oninput="calcularTotalItem(8)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto8_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem8Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -759,41 +801,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem8">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem8">0,00</span></div>
                     <div class="item-ipi" id="ipiItem8" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct8">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item9">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #9</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #9</span>
                         <button type="button" class="btn-remove" onclick="removerItem(9)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto9_cod" onchange="buscarDescricaoProduto(9)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto9_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto9_qtd" min="0" step="any" oninput="calcularTotalItem(9)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto9_preco" oninput="calcularTotalItem(9)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto9_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem9Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -801,41 +843,41 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem9">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem9">0,00</span></div>
                     <div class="item-ipi" id="ipiItem9" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct9">0%</span>
                     </div>
                 </div>
                 <div class="item-pedido hidden" id="item10">
                     <div class="item-header">
-                        <span class="item-numero">PRODUTO #10</span>
+                        <span class="item-numero"><span data-ti="pgProduto">PRODUTO</span> #10</span>
                         <button type="button" class="btn-remove" onclick="removerItem(10)">&#10005; Remover</button>
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label class="req">C&oacute;digo</label>
+                            <label class="req" data-ti="pgItCod">C&oacute;digo</label>
                             <select name="produto10_cod" onchange="buscarDescricaoProduto(10)">
-                                <option value="">Selecione...</option>
+                                <option value="" data-ti="pgSelecione">Selecione...</option>
                             </select>
                         </div>
                         <div class="item-field full-width">
-                            <label>Cor</label>
+                            <label data-ti="pgItCor">Cor</label>
                             <input type="text" name="produto10_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label class="req">Qtd (M/L)</label>
+                            <label class="req" data-ti="pgItQtd">Qtd (M/L)</label>
                             <input type="number" name="produto10_qtd" min="0" step="any" oninput="calcularTotalItem(10)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Pre&ccedil;o (R$)</label>
+                            <label class="req" data-ti="pgItPreco">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto10_preco" oninput="calcularTotalItem(10)">
                         </div>
                         <div class="item-field">
-                            <label class="req">Comiss&atilde;o (%)</label>
+                            <label class="req" data-ti="pgItCom">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto10_comissao">
                         </div>
                         <div class="item-field">
-                            <label class="req">Data Entrega</label>
+                            <label class="req" data-ti="pgItData">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem10Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -843,58 +885,58 @@
                         </div>
                         </div>
                     </div>
-                    <div class="item-total">Total Item: R$ <span id="totalItem10">0,00</span></div>
+                    <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem10">0,00</span></div>
                     <div class="item-ipi" id="ipiItem10" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct10">0%</span>
                     </div>
                 </div>
-                <button type="button" class="btn-add-item" onclick="adicionarItem()">+ Adicionar Produto</button>
+                <button type="button" class="btn-add-item" onclick="adicionarItem()" data-ti="pgAddItem">+ Adicionar Produto</button>
                 <div class="total-geral">
-                    <span>TOTAL GERAL:</span>
+                    <span data-ti="pgTotalGeral">TOTAL GERAL:</span>
                     <span>R$ <span id="totalGeral">0,00</span></span>
                 </div>
 
             </div>
         </div>
         <div class="form-section">
-            <div class="section-title">Observacoes</div>
+            <div class="section-title" data-ti="pgSecObs">Observacoes</div>
             <div class="form-group">
-                <textarea id="observacoes" name="observacoes" placeholder="Digite observacoes adicionais..." rows="3"></textarea>
+                <textarea id="observacoes" name="observacoes" data-ti-ph="pgObsPh" placeholder="Digite observacoes adicionais..." rows="3"></textarea>
             </div>
         </div>
         <div class="form-section">
-            <div class="section-title">Documentos</div>
+            <div class="section-title" data-ti="pgSecDocs">Documentos</div>
             <div class="form-group">
                 <input type="file" id="inputDocumentos" multiple accept="*/*" onchange="adicionarDocumentos(this)">
-                <div class="hint">*Maximo de 10 arquivos. Formatos: PDF, imagens, documentos.</div>
+                <div class="hint" data-ti="pgDocsHint">*Maximo de 10 arquivos. Formatos: PDF, imagens, documentos.</div>
                 <div class="contador-docs" id="contadorDocs">0/10 arquivos</div>
             </div>
             <div class="documentos-lista" id="documentosLista"></div>
         </div>
-        <div class="aviso-pdf">
+        <div class="aviso-pdf" data-ti="pgAviso">
             <strong>IMPORTANTE:</strong>&nbsp; Ao clicar em ENVIAR, o pedido será enviado ao sistema Bitrix com todos os documentos anexados. O PDF do pedido será gerado após o lançamento — use o botão GERAR PDF.
         </div>
         <div class="actions">
             <button type="button" class="btn btn-admin" onclick="abrirModalAdmin()">ADMIN</button>
-            <button type="button" class="btn btn-limpar" onclick="limparFormulario()">LIMPAR</button>
-            <button type="button" class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" style="display:none">GERAR PDF</button>
-            <button type="button" class="btn btn-enviar" onclick="enviarPedido()">ENVIAR</button>
+            <button type="button" class="btn btn-limpar" onclick="limparFormulario()" data-ti="pgLimpar">LIMPAR</button>
+            <button type="button" class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" style="display:none" data-ti="pgGerarPdf">GERAR PDF</button>
+            <button type="button" class="btn btn-enviar" onclick="enviarPedido()" data-ti="pgEnviar">ENVIAR</button>
         </div>
     </form>
 </div>
 
 <div class="modal" id="modalConfirmacao">
     <div class="modal-content">
-        <h2 style="color:#a01228">✅ Pedido Enviado ao Bitrix!</h2>
-        <p>O pedido <strong><span id="pedidoSalvo"></span></strong> foi enviado ao Bitrix com sucesso.</p>
+        <h2 style="color:#a01228" data-ti="pgEnviadoTit">✅ Pedido Enviado ao Bitrix!</h2>
+        <p id="pgEnviadoSub">O pedido <strong><span id="pedidoSalvo"></span></strong> foi enviado ao Bitrix com sucesso.</p>
         <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
             <a id="btnDownloadPDFModal" href="#" download="pedido.pdf"
                style="display:inline-block;padding:10px 18px;background:#a01228;color:white;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none">
-                📄 PDF Comercial
+                <span data-ti="pgPdfCom">📄 PDF Comercial</span>
             </a>
             <a id="btnDownloadPDFClienteModal" href="#" download="pedido_cliente.pdf"
                style="display:inline-block;padding:10px 18px;background:#1565c0;color:white;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none">
-                📄 PDF Cliente
+                <span data-ti="pgPdfCli">📄 PDF Cliente</span>
             </a>
         </div>
         <button class="btn btn-enviar" onclick="fecharModal('modalConfirmacao')" style="margin-top:14px">OK</button>
@@ -1375,21 +1417,20 @@ async function iniciarModoAprovacaoLink(dealId) {
     var cont = document.querySelector('.container');
     if (cont) cont.style.display = 'none';
     document.getElementById('telaAprovLink').style.display = 'block';
-    aprovLinkMsg('Carregando pedido <strong>#' + dealId + '</strong>...', false);
+    aprovLinkMsg(T('lkCarregando').replace('{id}', dealId), false);
 
     try {
         await aprovEtapasProntas();
         var res = await sbFetch('pedidos?bitrix_deal_id=eq.' + encodeURIComponent(dealId) + '&limit=1');
         if (!res || !res.length) {
-            aprovLinkMsg('<strong style="color:#a01228">Pedido #' + dealId + ' não encontrado.</strong><br><br>' +
-                         'Verifique o link ou procure o pedido pela Área do Administrador.', false);
+            aprovLinkMsg(T('lkNaoAchou').replace('{id}', dealId), false);
             return;
         }
         sbPedidosCache = res;                 // indice 0 = o pedido do link
-        aprovLinkMsg('Pedido <strong>#' + dealId + '</strong> carregado.', true);
+        aprovLinkMsg(T('lkCarregado').replace('{id}', dealId), true);
         await abrirAprovacaoAdmin(0);
     } catch(e) {
-        aprovLinkMsg('<strong style="color:#a01228">Erro ao carregar o pedido.</strong><br><br>' + e.message, true);
+        aprovLinkMsg(T('lkErro') + esc(e.message), true);
     }
 }
 
@@ -1421,7 +1462,7 @@ function sincronizarDatasItens() {}
 function carregarSelectsProdutos() {
     var selects = document.querySelectorAll('[name^="produto"][name$="_cod"]');
     selects.forEach(function(select) {
-        select.innerHTML = '<option value="">Selecione...</option>';
+        select.innerHTML = '<option value="" data-ti="pgSelecione">Selecione...</option>';
         Object.keys(produtos).forEach(function(cod) {
             var opt = document.createElement('option');
             opt.value = cod;
@@ -1585,7 +1626,7 @@ function removerDocumento(idx) {
 }
 
 function limparFormulario() {
-    if (!confirm('Deseja realmente limpar todos os campos?')) return;
+    if (!confirm(T('pgLimparConf'))) return;
     document.getElementById('formPedido').reset();
     document.getElementById('nomeVendedor').value = '';
     document.getElementById('statusVendedor').innerHTML = '';
@@ -2052,6 +2093,11 @@ async function bxCall(method, params) {
 // Um dos dois precisa estar preenchido — nunca os dois, nunca nenhum.
 var ENDERECO_DO_CADASTRO = 'Mesmo do cadastro';
 
+// Aplica o idioma guardado assim que a pagina abre
+document.addEventListener('DOMContentLoaded', function() {
+    try { aprovAplicarIdioma(); } catch(e) { console.warn('[IDIOMA]', e.message); }
+});
+
 function alternarEnderecoCadastro() {
     var chk = document.getElementById('enderecoDoCadastro');
     var txt = document.getElementById('enderecoEntrega');
@@ -2064,7 +2110,7 @@ function alternarEnderecoCadastro() {
         txt.classList.remove('campo-erro');
     } else {
         txt.disabled = false;
-        txt.placeholder = 'Rua, numero, bairro, cidade/UF';
+        txt.placeholder = T('pgEndPh');
         if (txt.dataset.guardado) { txt.value = txt.dataset.guardado; delete txt.dataset.guardado; }
     }
 }
@@ -2085,23 +2131,23 @@ function valorEnderecoEntrega() {
 // que tiver QUALQUER campo preenchido precisa ter TODOS.
 // ──────────────────────────────────────────────
 var CAMPOS_OBRIG_PEDIDO = [
-    { id:'codigoVendedor',  rotulo:'Código do vendedor' },
-    { id:'nomeVendedor',    rotulo:'Nome do vendedor' },
-    { id:'nomeCliente',     rotulo:'Nome do cliente' },
-    { id:'cnpjCliente',     rotulo:'CNPJ do cliente' },
-    { id:'tipoFrete',       rotulo:'Tipo de frete' },
-    { id:'faturamento',     rotulo:'Faturamento' },
-    { id:'prazoPagamento',  rotulo:'Prazo de pagamento' }
+    { id:'codigoVendedor',  chave:'vCodVend' },
+    { id:'nomeVendedor',    chave:'vNomeVend' },
+    { id:'nomeCliente',     chave:'vNomeCli' },
+    { id:'cnpjCliente',     chave:'vCnpjCli' },
+    { id:'tipoFrete',       chave:'vFrete' },
+    { id:'faturamento',     chave:'vFatur' },
+    { id:'prazoPagamento',  chave:'vPrazo' }
 ];
 
 // Campos de cada linha de item. 'Cor' fica de fora: e preenchida
 // sozinha a partir do codigo.
 var CAMPOS_OBRIG_ITEM = [
-    { suf:'_cod',      rotulo:'Código' },
-    { suf:'_qtd',      rotulo:'Quantidade' },
-    { suf:'_preco',    rotulo:'Preço' },
-    { suf:'_comissao', rotulo:'Comissão' },
-    { suf:'_data',     rotulo:'Data de entrega' }
+    { suf:'_cod',      chave:'vCodigo' },
+    { suf:'_qtd',      chave:'vQuantidade' },
+    { suf:'_preco',    chave:'vPreco' },
+    { suf:'_comissao', chave:'vComissao' },
+    { suf:'_data',     chave:'vDataEnt' }
 ];
 
 function _valCampo(el) {
@@ -2161,20 +2207,20 @@ function validarPedido() {
 
     CAMPOS_OBRIG_PEDIDO.forEach(function(c) {
         var el = document.getElementById(c.id);
-        if (!_valCampo(el)) registrar(el, c.rotulo);
+        if (!_valCampo(el)) registrar(el, T(c.chave));
     });
 
     // Endereço: ou o texto, ou a caixa "repetir do cadastro"
     var elEnd = document.getElementById('enderecoEntrega');
     var chkEnd = document.getElementById('enderecoDoCadastro');
     if (!_valCampo(elEnd) && !(chkEnd && chkEnd.checked)) {
-        registrar(elEnd, 'Endereço de entrega (ou marque "repetir endereço do cadastro")');
+        registrar(elEnd, T('vEndereco'));
     }
 
     // CNPJ precisa estar completo, nao so preenchido
     var elCnpj = document.getElementById('cnpjCliente');
     var cnpj   = _valCampo(elCnpj).replace(/\D/g, '');
-    if (cnpj && cnpj.length !== 14) registrar(elCnpj, 'CNPJ incompleto');
+    if (cnpj && cnpj.length !== 14) registrar(elCnpj, T('vCnpjIncompleto'));
 
     // ── Itens ──
     // So entram na conta as linhas VISIVEIS (as escondidas nem foram abertas).
@@ -2199,18 +2245,18 @@ function validarPedido() {
             var el = (c.suf === '_data')
                 ? (document.getElementById('dataItem' + i + 'Text') || _campoItem(i, c.suf))
                 : _campoItem(i, c.suf);
-            registrar(el, 'Item ' + i + ' — ' + c.rotulo);
+            registrar(el, T('vItem').replace('{n}', i) + ' ' + T(c.chave));
             falhasDaLinha++;
         });
         // quantidade e preco precisam ser numeros maiores que zero
         var qtd = parseFloat(String(valores[1]).replace(',', '.'));
         if (valores[1] !== '' && !(qtd > 0)) {
-            registrar(_campoItem(i, '_qtd'), 'Item ' + i + ' — quantidade deve ser maior que zero');
+            registrar(_campoItem(i, '_qtd'), T('vItem').replace('{n}', i) + ' ' + T('vQtdZero'));
             falhasDaLinha++;
         }
         var prc = parseFloat(String(valores[2]).replace(/\./g, '').replace(',', '.'));
         if (valores[2] !== '' && !(prc > 0)) {
-            registrar(_campoItem(i, '_preco'), 'Item ' + i + ' — preço deve ser maior que zero');
+            registrar(_campoItem(i, '_preco'), T('vItem').replace('{n}', i) + ' ' + T('vPrecoZero'));
             falhasDaLinha++;
         }
         if (falhasDaLinha) {
@@ -2222,8 +2268,9 @@ function validarPedido() {
     }
 
     // Nenhum item completo e nenhuma falha apontada: reforca a exigencia
-    if (completos === 0 && !faltando.some(function(f){ return f.indexOf('Item ') === 0; })) {
-        registrar(_campoItem(1, '_cod'), 'Pelo menos um item do pedido');
+    var prefItem = T('vItem').replace('{n}', '').trim().split(' ')[0];
+    if (completos === 0 && !faltando.some(function(f){ return f.indexOf(prefItem) === 0; })) {
+        registrar(_campoItem(1, '_cod'), T('vUmItem'));
         var l1 = document.getElementById('item1');
         if (l1) l1.classList.add('item-erro');
     }
@@ -2236,9 +2283,8 @@ function validarPedido() {
     }
 
     var lista = faltando.slice(0, 12).map(function(f){ return '• ' + f; }).join('\n');
-    if (faltando.length > 12) lista += '\n• ... e mais ' + (faltando.length - 12);
-    alert('Faltam campos obrigatórios:\n\n' + lista +
-          '\n\nOs campos em falta estão marcados em vermelho no formulário.');
+    if (faltando.length > 12) lista += '\n• ' + T('pgEMais').replace('{n}', faltando.length - 12);
+    alert(T('pgFaltam') + '\n\n' + lista + '\n\n' + T('pgMarcados'));
     return false;
 }
 
@@ -2285,7 +2331,7 @@ async function enviarPedido() {
     }
 
     try {
-        document.getElementById('loadingText').textContent = 'Enviando pedido...';
+        document.getElementById('loadingText').textContent = T('pgEnviando');
         document.getElementById('loadingOverlay').classList.add('active');
 
         // ---- 0. Coletar dados do formulário (antes de limpar) ----
@@ -2472,6 +2518,9 @@ async function enviarPedido() {
             btnDLCli.href = ultimoPdfClienteUri;
             btnDLCli.download = nomePDFCliente;
         }
+        var subEnv = document.getElementById('pgEnviadoSub');
+        if (subEnv) subEnv.innerHTML = T('pgEnviadoSub').replace('{id}',
+            esc(document.getElementById('pedidoSalvo').textContent || ''));
         document.getElementById('modalConfirmacao').classList.add('active');
         dispararFogos();
         // Mostrar botão GERAR PDF
@@ -2767,7 +2816,7 @@ function abrirEditSb(p) {
     while (itens.length < 10) itens.push({codigo:'',cor:'',quantidade:'',preco:'',comissao:'',data_entrega:''});
 
     // Opções de produtos para selects
-    var optsSelect = '<option value="">Selecione...</option>' +
+    var optsSelect = '<option value="" data-ti="pgSelecione">Selecione...</option>' +
         Object.keys(produtos).map(function(cod){ return '<option value="' + cod + '">' + cod + '</option>'; }).join('');
 
     var body = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
@@ -3215,7 +3264,7 @@ var aprovEtapaAtual   = 0;   // assinaturas ja concluidas: 0, 1 ou 2 (vai assina
 // ──────────────────────────────────────────────
 // Carimbo da versao publicada. Aparece no rodape do modal e no console.
 // Serve para saber, olhando a tela, se o arquivo no ar e o mais novo.
-var APROV_BUILD = '2026-11-10 · campos obrigatórios';
+var APROV_BUILD = '2026-11-10 · PT/EN na página';
 
 var APROV_LANG = 'pt';
 var APROV_TXT = {
@@ -3274,7 +3323,42 @@ pt: {
   okTit:'Assinado — {n}/{t}', okFinalTit:'Pedido aprovado!', okRepTit:'Pedido reprovado na {n}/{t}',
   okFinalSub:'Ciclo concluído. APROVADO{t} gravado no Deal e card movido no funil PEDIDOS.',
   okProxSub:'Encaminhado para a {n}/{t} — {nome}.',
-  okRepSub:'Reprovação registrada no Bitrix e no Supabase. O card foi para PEDIDOS CANCELADOS.'
+  okRepSub:'Reprovação registrada no Bitrix e no Supabase. O card foi para PEDIDOS CANCELADOS.',
+  pgTitulo:'Formulário de Pedido',
+  pgSecVend:'Dados do Representante / Vendedor', pgSecCli:'Dados do Cliente',
+  pgSecPed:'Dados do Pedido', pgSecItens:'Itens do Pedido',
+  pgSecObs:'Observações', pgSecDocs:'Documentos',
+  pgCodVend:'Código', pgCodVendPh:'Digite o código', pgNome:'Nome', pgNomePh:'Digite o nome',
+  pgCnpj:'CNPJ', pgPrazo:'Prazo de pagamento', pgPrazoPh:'Ex: 30/60/90 dias',
+  pgFrete:'Tipo de frete', pgFatur:'Faturamento', pgEnd:'Endereço de entrega',
+  pgEndCad:'Repetir endereço do cadastro', pgEndPh:'Rua, número, bairro, cidade/UF', pgEndHint:'Escreva o endereço ou marque a caixa acima',
+  pgItCod:'Código', pgItCor:'Cor', pgItQtd:'Qtd (m/l)', pgItPreco:'Preço (R$)',
+  pgItCom:'Comissão (%)', pgItData:'Data de entrega', pgTotalItem:'Total do item:',
+  pgAddItem:'+ Adicionar produto', pgProduto:'PRODUTO', pgSelecione:'Selecione...', pgTotalGeral:'TOTAL GERAL:',
+  pgObsPh:'Digite observações adicionais...',
+  pgDocsHint:'*Máximo de 10 arquivos. Formatos: PDF, imagens, documentos.',
+  pgAviso:'<strong>IMPORTANTE:</strong>&nbsp; Ao clicar em ENVIAR, o pedido será enviado ao Bitrix com todos os documentos anexados. O PDF será gerado após o lançamento — use o botão GERAR PDF.',
+  pgLimpar:'LIMPAR', pgGerarPdf:'GERAR PDF', pgEnviar:'ENVIAR',
+  pgFaltam:'Faltam campos obrigatórios:',
+  pgMarcados:'Os campos em falta estão marcados em vermelho no formulário.',
+  pgEMais:'... e mais {n}',
+  vCodVend:'Código do vendedor', vNomeVend:'Nome do vendedor', vNomeCli:'Nome do cliente',
+  vCnpjCli:'CNPJ do cliente', vPrazo:'Prazo de pagamento', vFrete:'Tipo de frete',
+  vFatur:'Faturamento', vCnpjIncompleto:'CNPJ incompleto',
+  vEndereco:'Endereço de entrega (ou marque "repetir endereço do cadastro")',
+  vItem:'Item {n} —', vQtdZero:'quantidade deve ser maior que zero',
+  vPrecoZero:'preço deve ser maior que zero', vUmItem:'Pelo menos um item do pedido',
+  vCodigo:'Código', vQuantidade:'Quantidade', vPreco:'Preço', vComissao:'Comissão',
+  vDataEnt:'Data de entrega',
+  pgLimparConf:'Deseja realmente limpar todos os campos?',
+  pgEnviando:'Enviando pedido...',
+  pgEnviadoTit:'✅ Pedido enviado ao Bitrix!',
+  pgEnviadoSub:'O pedido <strong>{id}</strong> foi enviado com sucesso.',
+  pgPdfCom:'📄 PDF Comercial', pgPdfCli:'📄 PDF Cliente',
+  pgGerandoPdf:'Gerando PDF...', lkTitulo:'APROVAÇÃO DE PEDIDO', lkReabrir:'Reabrir aprovação',
+  lkCarregando:'Carregando pedido <strong>#{id}</strong>...', lkCarregado:'Pedido <strong>#{id}</strong> carregado.',
+  lkNaoAchou:'<strong style="color:#a01228">Pedido #{id} não encontrado.</strong><br><br>Verifique o link ou procure o pedido pela Área do Administrador.',
+  lkErro:'<strong style="color:#a01228">Erro ao carregar o pedido.</strong><br><br>'
 },
 en: {
   marca:'Wendell Global Interlining · Order approval',
@@ -3331,7 +3415,42 @@ en: {
   okTit:'Signed — {n}/{t}', okFinalTit:'Order approved!', okRepTit:'Order rejected at {n}/{t}',
   okFinalSub:'Cycle complete. APROVADO{t} written on the Deal and card moved in the PEDIDOS pipeline.',
   okProxSub:'Forwarded to {n}/{t} — {nome}.',
-  okRepSub:'Rejection recorded in Bitrix and Supabase. The card moved to PEDIDOS CANCELADOS.'
+  okRepSub:'Rejection recorded in Bitrix and Supabase. The card moved to PEDIDOS CANCELADOS.',
+  pgTitulo:'Order Form',
+  pgSecVend:'Sales Representative', pgSecCli:'Customer Details',
+  pgSecPed:'Order Details', pgSecItens:'Order Items',
+  pgSecObs:'Notes', pgSecDocs:'Documents',
+  pgCodVend:'Code', pgCodVendPh:'Enter the code', pgNome:'Name', pgNomePh:'Enter the name',
+  pgCnpj:'Tax ID (CNPJ)', pgPrazo:'Payment terms', pgPrazoPh:'e.g. 30/60/90 days',
+  pgFrete:'Freight terms', pgFatur:'Invoicing', pgEnd:'Delivery address',
+  pgEndCad:'Use the registered address', pgEndPh:'Street, number, district, city/state', pgEndHint:'Type the address or tick the box above',
+  pgItCod:'Code', pgItCor:'Color', pgItQtd:'Qty (m/l)', pgItPreco:'Price (R$)',
+  pgItCom:'Commission (%)', pgItData:'Delivery date', pgTotalItem:'Item total:',
+  pgAddItem:'+ Add product', pgProduto:'PRODUCT', pgSelecione:'Select...', pgTotalGeral:'GRAND TOTAL:',
+  pgObsPh:'Type any additional notes...',
+  pgDocsHint:'*Up to 10 files. Formats: PDF, images, documents.',
+  pgAviso:'<strong>IMPORTANT:</strong>&nbsp; Clicking SUBMIT sends the order to Bitrix with every attached document. The PDF is generated after submission — use the GENERATE PDF button.',
+  pgLimpar:'CLEAR', pgGerarPdf:'GENERATE PDF', pgEnviar:'SUBMIT',
+  pgFaltam:'Required fields are missing:',
+  pgMarcados:'The missing fields are highlighted in red on the form.',
+  pgEMais:'... and {n} more',
+  vCodVend:'Sales rep code', vNomeVend:'Sales rep name', vNomeCli:'Customer name',
+  vCnpjCli:'Customer tax ID', vPrazo:'Payment terms', vFrete:'Freight terms',
+  vFatur:'Invoicing', vCnpjIncompleto:'Incomplete tax ID',
+  vEndereco:'Delivery address (or tick "use the registered address")',
+  vItem:'Item {n} —', vQtdZero:'quantity must be greater than zero',
+  vPrecoZero:'price must be greater than zero', vUmItem:'At least one order item',
+  vCodigo:'Code', vQuantidade:'Quantity', vPreco:'Price', vComissao:'Commission',
+  vDataEnt:'Delivery date',
+  pgLimparConf:'Clear every field?',
+  pgEnviando:'Submitting order...',
+  pgEnviadoTit:'✅ Order sent to Bitrix!',
+  pgEnviadoSub:'Order <strong>{id}</strong> was submitted successfully.',
+  pgPdfCom:'📄 Commercial PDF', pgPdfCli:'📄 Customer PDF',
+  pgGerandoPdf:'Generating PDF...', lkTitulo:'ORDER APPROVAL', lkReabrir:'Reopen approval',
+  lkCarregando:'Loading order <strong>#{id}</strong>...', lkCarregado:'Order <strong>#{id}</strong> loaded.',
+  lkNaoAchou:'<strong style="color:#a01228">Order #{id} not found.</strong><br><br>Check the link or look the order up in the Admin area.',
+  lkErro:'<strong style="color:#a01228">Could not load the order.</strong><br><br>'
 }};
 
 function T(chave) {
@@ -3363,7 +3482,12 @@ function aprovAplicarIdioma() {
     var bpt = document.getElementById('aprovLangPT'), ben = document.getElementById('aprovLangEN');
     if (bpt) bpt.className = 'aprov-lang' + (APROV_LANG === 'pt' ? ' on' : '');
     if (ben) ben.className = 'aprov-lang' + (APROV_LANG === 'en' ? ' on' : '');
+    // bandeiras do topo da pagina
+    var fpt = document.getElementById('bandPT'), fen = document.getElementById('bandEN');
+    if (fpt) fpt.className = 'bandeira' + (APROV_LANG === 'pt' ? ' on' : '');
+    if (fen) fen.className = 'bandeira' + (APROV_LANG === 'en' ? ' on' : '');
     document.documentElement.lang = (APROV_LANG === 'en' ? 'en' : 'pt-BR');
+    document.title = T('pgTitulo') + ' - Wendell Global Interlining';
 }
 
 (function(){
