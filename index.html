@@ -24,6 +24,10 @@
         .form-row { display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; }
         .form-group { flex: 1; min-width: 100%; }
         .form-group.half { min-width: calc(50% - 10px); }
+        .form-group label.req::after { content:' *'; color:#a01228; font-weight:700 }
+        .campo-erro, .campo-erro:focus { border-color:#a01228 !important;
+            box-shadow:0 0 0 2px rgba(160,18,40,.18) !important; background:#fffafb }
+        .item-pedido.item-erro { border-color:#a01228 !important; background:#fffafb }
         .form-group label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; transition: border-color 0.3s; font-family: inherit; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #a01228; box-shadow: 0 0 0 2px rgba(160,18,40,0.1); }
@@ -351,11 +355,11 @@
             <div class="section-title">Dados do Representante / Vendedor</div>
             <div class="form-row">
                 <div class="form-group half">
-                    <label>CODIGO</label>
+                    <label class="req">CODIGO</label>
                     <input type="text" id="codigoVendedor" name="codigoVendedor" placeholder="Digite o código">
                 </div>
                 <div class="form-group half">
-                    <label>NOME</label>
+                    <label class="req">NOME</label>
                     <input type="text" id="nomeVendedor" name="nomeVendedor" placeholder="Digite o nome">
                 </div>
             </div>
@@ -364,37 +368,30 @@
             <div class="section-title">Dados do Cliente</div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>NOME</label>
+                    <label class="req">NOME</label>
                     <input type="text" id="nomeCliente" name="nomeCliente">
                     <div class="hint">*Apenas nome curto, nao precisa ser razao social completa.</div>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group half">
-                    <label>CNPJ</label>
+                    <label class="req">CNPJ</label>
                     <input type="text" id="cnpjCliente" name="cnpjCliente" placeholder="00.000.000/0000-00" maxlength="18" oninput="mascaraCNPJ(this)">
                 </div>
             </div>
         </div>
         <div class="form-section">
             <div class="section-title">Dados do Pedido</div>
+            <!-- DATA DE ENTREGA do pedido foi removida: cada item tem a sua propria -->
             <div class="form-row">
-                <div class="form-group half">
-                    <label>DATA DE ENTREGA</label>
-                    <div class="date-picker-wrap">
-                    <input type="text" id="dataEntregaText" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;font-size:14px;font-family:inherit">
-                    <span class="cal-icon">📅</span>
-                    <input type="date" id="dataEntrega" name="dataEntrega" onchange="dateSelecionada('dataEntrega','dataEntregaText')">
-                </div>
-                </div>
-                <div class="form-group half">
+                <div class="form-group">
                     <label>PRAZO DE PAGAMENTO</label>
                     <input type="text" id="prazoPagamento" name="prazoPagamento" placeholder="Ex: 30/60/90 dias">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group half">
-                    <label>TIPO DE FRETE</label>
+                    <label class="req">TIPO DE FRETE</label>
                     <select id="tipoFrete" name="tipoFrete">
                         <option value="">Selecione...</option>
                         <option value="CIF">CIF (Frete por conta do vendedor)</option>
@@ -402,7 +399,7 @@
                     </select>
                 </div>
                 <div class="form-group half">
-                    <label>FATURAMENTO</label>
+                    <label class="req">FATURAMENTO</label>
                     <select id="faturamento" name="faturamento">
                         <option value="">Selecione...</option>
                         <option value="Faturamento e entrega por SP">Faturamento e entrega por SP</option>
@@ -412,9 +409,9 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>ENDERECO DE ENTREGA</label>
-                    <input type="text" id="enderecoEntrega" name="enderecoEntrega" placeholder="Preencha se diferente do cadastro">
-                    <div class="hint">*Informe apenas se for diferente do endereco cadastrado</div>
+                    <label class="req">ENDERECO DE ENTREGA</label>
+                    <input type="text" id="enderecoEntrega" name="enderecoEntrega" placeholder="Rua, numero, bairro, cidade/UF">
+                    <div class="hint">Se for o mesmo do cadastro, repita o endereco aqui</div>
                 </div>
             </div>
         </div>
@@ -429,7 +426,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto1_cod" onchange="buscarDescricaoProduto(1)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -439,19 +436,19 @@
                             <input type="text" name="produto1_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto1_qtd" min="0" step="any" oninput="calcularTotalItem(1)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto1_preco" oninput="calcularTotalItem(1)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto1_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem1Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -471,7 +468,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto2_cod" onchange="buscarDescricaoProduto(2)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -481,19 +478,19 @@
                             <input type="text" name="produto2_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto2_qtd" min="0" step="any" oninput="calcularTotalItem(2)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto2_preco" oninput="calcularTotalItem(2)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto2_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem2Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -513,7 +510,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto3_cod" onchange="buscarDescricaoProduto(3)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -523,19 +520,19 @@
                             <input type="text" name="produto3_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto3_qtd" min="0" step="any" oninput="calcularTotalItem(3)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto3_preco" oninput="calcularTotalItem(3)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto3_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem3Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -555,7 +552,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto4_cod" onchange="buscarDescricaoProduto(4)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -565,19 +562,19 @@
                             <input type="text" name="produto4_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto4_qtd" min="0" step="any" oninput="calcularTotalItem(4)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto4_preco" oninput="calcularTotalItem(4)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto4_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem4Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -597,7 +594,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto5_cod" onchange="buscarDescricaoProduto(5)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -607,19 +604,19 @@
                             <input type="text" name="produto5_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto5_qtd" min="0" step="any" oninput="calcularTotalItem(5)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto5_preco" oninput="calcularTotalItem(5)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto5_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem5Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -639,7 +636,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto6_cod" onchange="buscarDescricaoProduto(6)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -649,19 +646,19 @@
                             <input type="text" name="produto6_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto6_qtd" min="0" step="any" oninput="calcularTotalItem(6)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto6_preco" oninput="calcularTotalItem(6)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto6_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem6Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -681,7 +678,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto7_cod" onchange="buscarDescricaoProduto(7)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -691,19 +688,19 @@
                             <input type="text" name="produto7_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto7_qtd" min="0" step="any" oninput="calcularTotalItem(7)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto7_preco" oninput="calcularTotalItem(7)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto7_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem7Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -723,7 +720,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto8_cod" onchange="buscarDescricaoProduto(8)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -733,19 +730,19 @@
                             <input type="text" name="produto8_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto8_qtd" min="0" step="any" oninput="calcularTotalItem(8)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto8_preco" oninput="calcularTotalItem(8)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto8_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem8Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -765,7 +762,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto9_cod" onchange="buscarDescricaoProduto(9)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -775,19 +772,19 @@
                             <input type="text" name="produto9_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto9_qtd" min="0" step="any" oninput="calcularTotalItem(9)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto9_preco" oninput="calcularTotalItem(9)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto9_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem9Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -807,7 +804,7 @@
                     </div>
                     <div class="item-fields">
                         <div class="item-field">
-                            <label>C&oacute;digo</label>
+                            <label class="req">C&oacute;digo</label>
                             <select name="produto10_cod" onchange="buscarDescricaoProduto(10)">
                                 <option value="">Selecione...</option>
                             </select>
@@ -817,19 +814,19 @@
                             <input type="text" name="produto10_desc" readonly>
                         </div>
                         <div class="item-field">
-                            <label>Qtd (M/L)</label>
+                            <label class="req">Qtd (M/L)</label>
                             <input type="number" name="produto10_qtd" min="0" step="any" oninput="calcularTotalItem(10)">
                         </div>
                         <div class="item-field">
-                            <label>Pre&ccedil;o (R$)</label>
+                            <label class="req">Pre&ccedil;o (R$)</label>
                             <input type="text" name="produto10_preco" oninput="calcularTotalItem(10)">
                         </div>
                         <div class="item-field">
-                            <label>Comiss&atilde;o (%)</label>
+                            <label class="req">Comiss&atilde;o (%)</label>
                             <input type="text" name="produto10_comissao">
                         </div>
                         <div class="item-field">
-                            <label>Data Entrega</label>
+                            <label class="req">Data Entrega</label>
                             <div class="date-picker-wrap">
                             <input type="text" id="dataItem10Text" placeholder="dd/mm/aaaa" maxlength="10" oninput="mascaraDataValidar(this)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit">
                             <span class="cal-icon" style="font-size:13px">📅</span>
@@ -1400,26 +1397,17 @@ function definirDatasMinimas() {
         el.min = minStr;
         if (!el.value) el.value = minStr;
     });
-    // Preencher campos de texto com formato BR
-    var deText = document.getElementById('dataEntregaText');
-    if (deText && !deText.value) deText.value = brStr;
+    // Preencher campos de texto com formato BR (so os itens: o pedido
+    // nao tem mais data de entrega propria)
     for (var i = 1; i <= 10; i++) {
         var el = document.getElementById('dataItem' + i + 'Text');
         if (el && !el.value) el.value = brStr;
     }
 }
 
-function sincronizarDatasItens() {
-    var valText = document.getElementById('dataEntregaText').value;
-    var valDate = document.getElementById('dataEntrega').value;
-    if (!valText) return;
-    for (var i = 1; i <= 10; i++) {
-        var elText = document.getElementById('dataItem' + i + 'Text');
-        var elDate = document.getElementById('dataItem' + i);
-        if (elText && !elText.value) { elText.value = valText; }
-        if (elDate && !elDate.value) { elDate.value = valDate; }
-    }
-}
+// A data de entrega do pedido saiu do formulario: cada item tem a sua.
+// Funcao mantida vazia para nao quebrar chamadas antigas.
+function sincronizarDatasItens() {}
 
 function carregarSelectsProdutos() {
     var selects = document.querySelectorAll('[name^="produto"][name$="_cod"]');
@@ -1439,6 +1427,30 @@ function mascaraData(input) {
     if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2);
     if (v.length > 5) v = v.substring(0,5) + '/' + v.substring(5);
     input.value = v.substring(0, 10);
+}
+
+// Mascara + validacao dos campos de data dos itens.
+// ESTA FUNCAO FALTAVA: os 10 campos "Data Entrega" a chamavam no oninput
+// e ela nunca existiu, entao cada tecla digitada dava ReferenceError, a
+// mascara nunca era aplicada e o input date ao lado ficava dessincronizado.
+function mascaraDataValidar(input) {
+    mascaraData(input);
+    validarData(input);
+    // Mantem o input type=date correspondente em dia com o texto
+    var id = input.id || '';
+    if (/Text$/.test(id)) {
+        var alvo = document.getElementById(id.replace(/Text$/, ''));
+        if (alvo) {
+            var v = input.value;
+            var p = v.split('/');
+            alvo.value = (v.length === 10 && p.length === 3 &&
+                          parseInt(p[0]) >= 1 && parseInt(p[0]) <= 31 &&
+                          parseInt(p[1]) >= 1 && parseInt(p[1]) <= 12 &&
+                          parseInt(p[2]) >= 2020)
+                ? p[2] + '-' + p[1] + '-' + p[0]
+                : '';
+        }
+    }
 }
 
 function validarData(input) {
@@ -1597,7 +1609,6 @@ function dateSelecionada(hiddenId, textId) {
     if (hidden && texto && hidden.value) {
         texto.value = formatarDataBR(hidden.value);
     }
-    if (textId === 'dataEntregaText') sincronizarDatasItens();
 }
 
 function coletarDados() {
@@ -1626,7 +1637,7 @@ function coletarDados() {
             cnpj: document.getElementById('cnpjCliente').value || '-'
         },
         pedido: {
-            dataEntrega: document.getElementById('dataEntregaText').value || '-',
+            dataEntrega: '-',
             prazoPagamento: document.getElementById('prazoPagamento').value || '-',
             tipoFrete: document.getElementById('tipoFrete').value || '-',
             faturamento: document.getElementById('faturamento').value || '-',
@@ -1647,7 +1658,9 @@ function coletarDados() {
                     quantidade: document.querySelector('[name="produto' + i + '_qtd"]').value || '0',
                     preco: document.querySelector('[name="produto' + i + '_preco"]').value || '0',
                     comissao: document.querySelector('[name="produto' + i + '_comissao"]').value || '0',
-                    dataEntrega: document.querySelector('[name="produto' + i + '_data"]').value || '-',
+                    // Mostra a data como o vendedor digitou (dd/mm/aaaa), nao em ISO
+                    dataEntrega: (document.getElementById('dataItem' + i + 'Text') || {}).value ||
+                                 formatarDataBR(document.querySelector('[name="produto' + i + '_data"]').value) || '-',
                     total: document.getElementById('totalItem' + i).textContent
                 });
             }
@@ -1775,34 +1788,33 @@ function gerarPDFDados(dados, filename, opcoes) {
     doc.setFont('helvetica', 'bold');
     doc.text('DADOS DO PEDIDO', margin + 3, y + 5);
 
-    var cw4 = (pageW - margin * 2 - 9) / 4;
-    var cols4 = [margin + 3, margin + 3 + cw4 + 3, margin + 3 + (cw4 + 3) * 2, margin + 3 + (cw4 + 3) * 3];
+    // 3 colunas: a data de entrega saiu daqui e vive na coluna de cada item
+    var cw4 = (pageW - margin * 2 - 6) / 3;
+    var cols4 = [margin + 3, margin + 3 + cw4 + 3, margin + 3 + (cw4 + 3) * 2];
 
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
-    doc.text('DATA ENTREGA', cols4[0], y + 14);
-    doc.text('PRAZO PAGAMENTO', cols4[1], y + 14);
-    doc.text('TIPO FRETE', cols4[2], y + 14);
-    doc.text('FATURAMENTO', cols4[3], y + 14);
+    doc.text('PRAZO PAGAMENTO', cols4[0], y + 14);
+    doc.text('TIPO FRETE', cols4[1], y + 14);
+    doc.text('FATURAMENTO', cols4[2], y + 14);
 
     doc.setTextColor(30, 30, 30);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text(dados.pedido.dataEntrega, cols4[0], y + 21);
-    doc.text(dados.pedido.prazoPagamento, cols4[1], y + 21);
-    doc.text(dados.pedido.tipoFrete, cols4[2], y + 21);
+    doc.text(dados.pedido.prazoPagamento, cols4[0], y + 21);
+    doc.text(dados.pedido.tipoFrete, cols4[1], y + 21);
     var fat = dados.pedido.faturamento;
     if (doc.getTextWidth(fat) > cw4 - 2) fat = fat.replace('Faturamento e entrega por ', '');
-    doc.text(fat, cols4[3], y + 21);
+    doc.text(fat, cols4[2], y + 21);
 
-    // Endereço de entrega — só aparece se diferente do cadastro
+    // Endereço de entrega — campo obrigatório do pedido
     var endVal = dados.pedido.enderecoEntrega;
     if (endVal && endVal !== '-' && endVal.trim() !== '') {
         doc.setTextColor(100, 100, 100);
         doc.setFontSize(7);
         doc.setFont('helvetica', 'bold');
-        doc.text('ENDEREÇO DE ENTREGA DIFERENTE DO CADASTRO', cols4[0], y + 27);
+        doc.text('ENDEREÇO DE ENTREGA', cols4[0], y + 27);
         doc.setTextColor(160, 18, 40);
         doc.setFontSize(8.5);
         doc.setFont('helvetica', 'bold');
@@ -2024,6 +2036,164 @@ async function bxCall(method, params) {
     return json.result;
 }
 
+// ──────────────────────────────────────────────
+// VALIDACAO DOS CAMPOS OBRIGATORIOS
+// Marca em vermelho tudo que falta, leva a tela ate o primeiro
+// e so deixa enviar quando o pedido esta completo.
+// Regra dos itens: pelo menos um item preenchido, e toda linha
+// que tiver QUALQUER campo preenchido precisa ter TODOS.
+// ──────────────────────────────────────────────
+var CAMPOS_OBRIG_PEDIDO = [
+    { id:'codigoVendedor',  rotulo:'Código do vendedor' },
+    { id:'nomeVendedor',    rotulo:'Nome do vendedor' },
+    { id:'nomeCliente',     rotulo:'Nome do cliente' },
+    { id:'cnpjCliente',     rotulo:'CNPJ do cliente' },
+    { id:'tipoFrete',       rotulo:'Tipo de frete' },
+    { id:'faturamento',     rotulo:'Faturamento' },
+    { id:'enderecoEntrega', rotulo:'Endereço de entrega' }
+];
+
+// Campos de cada linha de item. 'Cor' fica de fora: e preenchida
+// sozinha a partir do codigo.
+var CAMPOS_OBRIG_ITEM = [
+    { suf:'_cod',      rotulo:'Código' },
+    { suf:'_qtd',      rotulo:'Quantidade' },
+    { suf:'_preco',    rotulo:'Preço' },
+    { suf:'_comissao', rotulo:'Comissão' },
+    { suf:'_data',     rotulo:'Data de entrega' }
+];
+
+function _valCampo(el) {
+    return el ? String(el.value == null ? '' : el.value).trim() : '';
+}
+
+function _marcarErro(el, erro) {
+    if (!el) return;
+    el.classList.toggle('campo-erro', !!erro);
+    // o campo de data visivel e o de texto ao lado do input date
+    if (el.type === 'date') {
+        var txt = document.getElementById(el.id + 'Text');
+        if (txt) txt.classList.toggle('campo-erro', !!erro);
+    }
+}
+
+function _campoItem(i, suf) {
+    return document.querySelector('[name="produto' + i + suf + '"]');
+}
+
+// A data do item aparece no campo de texto; o input date pode estar vazio
+function _valDataItem(i) {
+    var txt = document.getElementById('dataItem' + i + 'Text');
+    var dt  = _campoItem(i, '_data');
+    return _valCampo(txt) || _valCampo(dt);
+}
+
+function limparMarcasErro() {
+    document.querySelectorAll('.campo-erro').forEach(function(el){ el.classList.remove('campo-erro'); });
+    document.querySelectorAll('.item-erro').forEach(function(el){ el.classList.remove('item-erro'); });
+}
+
+// Tira o vermelho assim que a pessoa comeca a corrigir o campo
+document.addEventListener('input', function(ev) {
+    var el = ev.target;
+    if (el && el.classList && el.classList.contains('campo-erro')) {
+        el.classList.remove('campo-erro');
+        var linha = el.closest ? el.closest('.item-pedido') : null;
+        if (linha && !linha.querySelector('.campo-erro')) linha.classList.remove('item-erro');
+    }
+}, true);
+document.addEventListener('change', function(ev) {
+    var el = ev.target;
+    if (el && el.classList) el.classList.remove('campo-erro');
+}, true);
+
+function validarPedido() {
+    limparMarcasErro();
+    var faltando = [], primeiro = null;
+
+    function registrar(el, texto) {
+        faltando.push(texto);
+        _marcarErro(el, true);
+        if (!primeiro) primeiro = (el && el.type === 'date')
+            ? (document.getElementById(el.id + 'Text') || el) : el;
+    }
+
+    CAMPOS_OBRIG_PEDIDO.forEach(function(c) {
+        var el = document.getElementById(c.id);
+        if (!_valCampo(el)) registrar(el, c.rotulo);
+    });
+
+    // CNPJ precisa estar completo, nao so preenchido
+    var elCnpj = document.getElementById('cnpjCliente');
+    var cnpj   = _valCampo(elCnpj).replace(/\D/g, '');
+    if (cnpj && cnpj.length !== 14) registrar(elCnpj, 'CNPJ incompleto');
+
+    // ── Itens ──
+    // So entram na conta as linhas VISIVEIS (as escondidas nem foram abertas).
+    // E a data NAO conta para dizer que a linha foi iniciada: ela ja vem
+    // preenchida por padrao em todas as linhas.
+    var completos = 0;
+    for (var i = 1; i <= 10; i++) {
+        var linhaEl = document.getElementById('item' + i);
+        if (!linhaEl || linhaEl.classList.contains('hidden')) continue;
+
+        var valores = CAMPOS_OBRIG_ITEM.map(function(c) {
+            return c.suf === '_data' ? _valDataItem(i) : _valCampo(_campoItem(i, c.suf));
+        });
+        var algum = CAMPOS_OBRIG_ITEM.some(function(c, k) {
+            return c.suf !== '_data' && valores[k] !== '';
+        });
+        if (!algum && i > 1) continue;             // linha aberta mas intocada
+
+        var falhasDaLinha = 0;
+        CAMPOS_OBRIG_ITEM.forEach(function(c, k) {
+            if (valores[k] !== '') return;
+            var el = (c.suf === '_data')
+                ? (document.getElementById('dataItem' + i + 'Text') || _campoItem(i, c.suf))
+                : _campoItem(i, c.suf);
+            registrar(el, 'Item ' + i + ' — ' + c.rotulo);
+            falhasDaLinha++;
+        });
+        // quantidade e preco precisam ser numeros maiores que zero
+        var qtd = parseFloat(String(valores[1]).replace(',', '.'));
+        if (valores[1] !== '' && !(qtd > 0)) {
+            registrar(_campoItem(i, '_qtd'), 'Item ' + i + ' — quantidade deve ser maior que zero');
+            falhasDaLinha++;
+        }
+        var prc = parseFloat(String(valores[2]).replace(/\./g, '').replace(',', '.'));
+        if (valores[2] !== '' && !(prc > 0)) {
+            registrar(_campoItem(i, '_preco'), 'Item ' + i + ' — preço deve ser maior que zero');
+            falhasDaLinha++;
+        }
+        if (falhasDaLinha) {
+            var linha = document.getElementById('item' + i);
+            if (linha) linha.classList.add('item-erro');
+        } else {
+            completos++;
+        }
+    }
+
+    // Nenhum item completo e nenhuma falha apontada: reforca a exigencia
+    if (completos === 0 && !faltando.some(function(f){ return f.indexOf('Item ') === 0; })) {
+        registrar(_campoItem(1, '_cod'), 'Pelo menos um item do pedido');
+        var l1 = document.getElementById('item1');
+        if (l1) l1.classList.add('item-erro');
+    }
+
+    if (!faltando.length) return true;
+
+    if (primeiro && primeiro.scrollIntoView) {
+        primeiro.scrollIntoView({ behavior:'smooth', block:'center' });
+        setTimeout(function(){ try { primeiro.focus({ preventScroll:true }); } catch(e) {} }, 300);
+    }
+
+    var lista = faltando.slice(0, 12).map(function(f){ return '• ' + f; }).join('\n');
+    if (faltando.length > 12) lista += '\n• ... e mais ' + (faltando.length - 12);
+    alert('Faltam campos obrigatórios:\n\n' + lista +
+          '\n\nOs campos em falta estão marcados em vermelho no formulário.');
+    return false;
+}
+
 async function enviarPedido() {
     // ============================================================
     // BITRIX24 - CONFIGURACOES
@@ -2034,8 +2204,8 @@ async function enviarPedido() {
     // ============================================================
     // VALIDACAO
     // ============================================================
+    if (!validarPedido()) return;
     var nomeCliente = document.getElementById('nomeCliente').value.trim();
-    if (!nomeCliente) { alert('Preencha o nome do cliente antes de enviar.'); return; }
 
     var numeroPedido = gerarIdPedido();
     var dataPedido   = new Date().toLocaleString('pt-BR');
@@ -2087,7 +2257,6 @@ async function enviarPedido() {
                        ' (cod: ' + (document.getElementById('codigoVendedor').value || '-') + ')');
         descLines.push('');
         descLines.push('DADOS DO PEDIDO:');
-        descLines.push('  Entrega: '  + (document.getElementById('dataEntregaText').value || '-'));
         descLines.push('  Pagamento: '+ (document.getElementById('prazoPagamento').value  || '-'));
         descLines.push('  Frete: '    + (document.getElementById('tipoFrete').value       || '-'));
         descLines.push('  Faturamento: '+ (document.getElementById('faturamento').value  || '-'));
@@ -2998,7 +3167,7 @@ var aprovEtapaAtual   = 0;   // assinaturas ja concluidas: 0, 1 ou 2 (vai assina
 // ──────────────────────────────────────────────
 // Carimbo da versao publicada. Aparece no rodape do modal e no console.
 // Serve para saber, olhando a tela, se o arquivo no ar e o mais novo.
-var APROV_BUILD = '2026-09-29 · suplentes';
+var APROV_BUILD = '2026-11-10 · campos obrigatórios';
 
 var APROV_LANG = 'pt';
 var APROV_TXT = {
