@@ -24,6 +24,11 @@
         .form-row { display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; }
         .form-group { flex: 1; min-width: 100%; }
         .form-group.half { min-width: calc(50% - 10px); }
+        .check-linha { display:flex !important; align-items:center; gap:7px; margin-top:7px;
+                       font-size:12px !important; color:#444 !important; text-transform:none !important;
+                       font-weight:500 !important; cursor:pointer }
+        .check-linha input[type=checkbox] { width:16px !important; height:16px; margin:0; padding:0;
+                                            accent-color:#a01228; cursor:pointer; flex:0 0 auto }
         .form-group label.req::after { content:' *'; color:#a01228; font-weight:700 }
         .campo-erro, .campo-erro:focus { border-color:#a01228 !important;
             box-shadow:0 0 0 2px rgba(160,18,40,.18) !important; background:#fffafb }
@@ -385,7 +390,7 @@
             <!-- DATA DE ENTREGA do pedido foi removida: cada item tem a sua propria -->
             <div class="form-row">
                 <div class="form-group">
-                    <label>PRAZO DE PAGAMENTO</label>
+                    <label class="req">PRAZO DE PAGAMENTO</label>
                     <input type="text" id="prazoPagamento" name="prazoPagamento" placeholder="Ex: 30/60/90 dias">
                 </div>
             </div>
@@ -411,7 +416,11 @@
                 <div class="form-group">
                     <label class="req">ENDERECO DE ENTREGA</label>
                     <input type="text" id="enderecoEntrega" name="enderecoEntrega" placeholder="Rua, numero, bairro, cidade/UF">
-                    <div class="hint">Se for o mesmo do cadastro, repita o endereco aqui</div>
+                    <label class="check-linha" for="enderecoDoCadastro">
+                        <input type="checkbox" id="enderecoDoCadastro" onchange="alternarEnderecoCadastro()">
+                        <span>Repetir endereço do cadastro</span>
+                    </label>
+                    <div class="hint">Escreva o endereço ou marque a caixa acima</div>
                 </div>
             </div>
         </div>
@@ -1585,6 +1594,9 @@ function limparFormulario() {
         if (i > 1) document.getElementById('item' + i).classList.add('hidden');
     }
     document.getElementById('totalGeral').textContent = '0,00';
+    // o reset desmarca a caixa, mas o campo de texto fica desabilitado
+    alternarEnderecoCadastro();
+    if (typeof limparMarcasErro === 'function') limparMarcasErro();
     documentosCarregados = [];
     atualizarListaDocumentos();
     itemAtual = 1;
@@ -1641,7 +1653,7 @@ function coletarDados() {
             prazoPagamento: document.getElementById('prazoPagamento').value || '-',
             tipoFrete: document.getElementById('tipoFrete').value || '-',
             faturamento: document.getElementById('faturamento').value || '-',
-            enderecoEntrega: document.getElementById('enderecoEntrega').value || '-'
+            enderecoEntrega: valorEnderecoEntrega() || '-'
         },
         itens: [],
         totalGeral: document.getElementById('totalGeral').textContent,
@@ -2036,6 +2048,35 @@ async function bxCall(method, params) {
     return json.result;
 }
 
+// Marcar "repetir endereço do cadastro" desliga o campo de texto.
+// Um dos dois precisa estar preenchido — nunca os dois, nunca nenhum.
+var ENDERECO_DO_CADASTRO = 'Mesmo do cadastro';
+
+function alternarEnderecoCadastro() {
+    var chk = document.getElementById('enderecoDoCadastro');
+    var txt = document.getElementById('enderecoEntrega');
+    if (!chk || !txt) return;
+    if (chk.checked) {
+        txt.dataset.guardado = txt.value;
+        txt.value = '';
+        txt.disabled = true;
+        txt.placeholder = ENDERECO_DO_CADASTRO;
+        txt.classList.remove('campo-erro');
+    } else {
+        txt.disabled = false;
+        txt.placeholder = 'Rua, numero, bairro, cidade/UF';
+        if (txt.dataset.guardado) { txt.value = txt.dataset.guardado; delete txt.dataset.guardado; }
+    }
+}
+
+// O que vai para o PDF, o Bitrix e o Supabase
+function valorEnderecoEntrega() {
+    var chk = document.getElementById('enderecoDoCadastro');
+    if (chk && chk.checked) return ENDERECO_DO_CADASTRO;
+    var txt = document.getElementById('enderecoEntrega');
+    return txt ? txt.value.trim() : '';
+}
+
 // ──────────────────────────────────────────────
 // VALIDACAO DOS CAMPOS OBRIGATORIOS
 // Marca em vermelho tudo que falta, leva a tela ate o primeiro
@@ -2050,7 +2091,7 @@ var CAMPOS_OBRIG_PEDIDO = [
     { id:'cnpjCliente',     rotulo:'CNPJ do cliente' },
     { id:'tipoFrete',       rotulo:'Tipo de frete' },
     { id:'faturamento',     rotulo:'Faturamento' },
-    { id:'enderecoEntrega', rotulo:'Endereço de entrega' }
+    { id:'prazoPagamento',  rotulo:'Prazo de pagamento' }
 ];
 
 // Campos de cada linha de item. 'Cor' fica de fora: e preenchida
@@ -2122,6 +2163,13 @@ function validarPedido() {
         var el = document.getElementById(c.id);
         if (!_valCampo(el)) registrar(el, c.rotulo);
     });
+
+    // Endereço: ou o texto, ou a caixa "repetir do cadastro"
+    var elEnd = document.getElementById('enderecoEntrega');
+    var chkEnd = document.getElementById('enderecoDoCadastro');
+    if (!_valCampo(elEnd) && !(chkEnd && chkEnd.checked)) {
+        registrar(elEnd, 'Endereço de entrega (ou marque "repetir endereço do cadastro")');
+    }
 
     // CNPJ precisa estar completo, nao so preenchido
     var elCnpj = document.getElementById('cnpjCliente');
@@ -2260,7 +2308,7 @@ async function enviarPedido() {
         descLines.push('  Pagamento: '+ (document.getElementById('prazoPagamento').value  || '-'));
         descLines.push('  Frete: '    + (document.getElementById('tipoFrete').value       || '-'));
         descLines.push('  Faturamento: '+ (document.getElementById('faturamento').value  || '-'));
-        var end = document.getElementById('enderecoEntrega').value;
+        var end = valorEnderecoEntrega();
         if (end) descLines.push('  Endereco entrega: ' + end);
         descLines.push('');
         descLines.push('ITENS:');
@@ -2347,7 +2395,7 @@ async function enviarPedido() {
         formDados.nomeCliente    = (document.getElementById('nomeCliente')    || {value:''}).value;
         formDados.cnpjCliente    = (document.getElementById('cnpjCliente')    || {value:''}).value;
         formDados.faturamento    = (document.getElementById('faturamento')    || {value:''}).value;
-        formDados.enderecoEntrega= (document.getElementById('enderecoEntrega')|| {value:''}).value;
+        formDados.enderecoEntrega= valorEnderecoEntrega();
         formDados.observacoes    = (document.getElementById('observacoes')    || {value:''}).value;
         formDados.numeroPedido   = numeroPedido;
         // Capturar datas dos itens (campos text dd/mm/aaaa)
