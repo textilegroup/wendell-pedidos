@@ -1319,6 +1319,20 @@ var produtos = {
 var HUB_FERRAMENTA = 'pedidos';
 var AUTH = { token:null, user:null, expiraEm:0 };
 
+// Admin da ferramenta Pedidos: so quem tem permissao 'admin'.
+// Nivel 'externo' (e 'editar' em geral) preenche o pedido mas nao
+// abre a area de administracao nem assina aprovacao.
+function ehAdminPedidos() {
+    if (!hubLogado()) return false;
+    return String(AUTH.user.permissao || '').toLowerCase() === 'admin';
+}
+
+// Mostra ou esconde o botao ADMIN conforme a permissao de quem entrou
+function aplicarPermissaoNaTela() {
+    var bt = document.querySelector('.btn-admin');
+    if (bt) bt.style.display = ehAdminPedidos() ? '' : 'none';
+}
+
 function hubLogado() {
     return !!(AUTH.token && AUTH.user && Date.now() < AUTH.expiraEm);
 }
@@ -1374,15 +1388,32 @@ async function hubLogin(email, senha) {
     if (!u)        { hubLogout(); throw new Error('Seu usuário não está cadastrado no Hub Wendell.'); }
     if (!u.ativo)  { hubLogout(); throw new Error('Seu usuário está inativo no Hub Wendell.'); }
 
-    // Acesso à ferramenta 'pedidos'
-    var temAcesso = false, permissao = '';
+    // Acesso à ferramenta 'pedidos' — pela MESMA regra do banco:
+    // app_permissao() resolve admin global, acesso por usuário e
+    // acesso por nível (é assim que o nível 'externo' é enxergado).
+    var permissao = '';
     try {
-        var ac = await sbFetchAuth('app_acessos?user_id=eq.' + d.user.id +
-                                   '&ferramenta=eq.' + HUB_FERRAMENTA + '&select=permissao&limit=1');
-        temAcesso = !!(ac && ac.length);
-        permissao = (ac && ac[0] && ac[0].permissao) || '';
-    } catch(e) { temAcesso = false; }
-    if (!temAcesso) {
+        var r2 = await fetch(SB_URL + '/rest/v1/rpc/app_permissao', {
+            method: 'POST',
+            headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + AUTH.token,
+                       'Content-Type': 'application/json' },
+            body: JSON.stringify({ p_slug: HUB_FERRAMENTA })
+        });
+        if (r2.ok) {
+            var txt2 = (await r2.text()).trim();
+            permissao = txt2 ? String(JSON.parse(txt2) || '') : '';
+        }
+    } catch(e) { permissao = ''; }
+
+    // Reserva: se a RPC falhar, tenta a linha por usuário
+    if (!permissao) {
+        try {
+            var ac = await sbFetchAuth('app_acessos?user_id=eq.' + d.user.id +
+                                       '&ferramenta=eq.' + HUB_FERRAMENTA + '&select=permissao&limit=1');
+            permissao = (ac && ac[0] && ac[0].permissao) || '';
+        } catch(e) {}
+    }
+    if (!permissao) {
         hubLogout();
         throw new Error('Seu usuário não tem acesso à ferramenta Pedidos. Peça liberação no Hub Wendell.');
     }
@@ -1668,6 +1699,7 @@ async function iniciarFormulario() {
     if (!ok) {
         console.warn('[GRADE] seguindo com a lista interna de produtos, sem preços de referência');
     }
+    aplicarPermissaoNaTela();
     try {
         var nv = document.getElementById('nomeVendedor');
         if (nv && !nv.value && AUTH.user && AUTH.user.nome) nv.value = AUTH.user.nome;
@@ -3535,7 +3567,7 @@ var aprovEtapaAtual   = 0;   // assinaturas ja concluidas: 0, 1 ou 2 (vai assina
 // ──────────────────────────────────────────────
 // Carimbo da versao publicada. Aparece no rodape do modal e no console.
 // Serve para saber, olhando a tela, se o arquivo no ar e o mais novo.
-var APROV_BUILD = '2026-11-11 · grade de produtos';
+var APROV_BUILD = '2026-11-11 · acesso externo';
 
 var APROV_LANG = 'pt';
 var APROV_TXT = {
@@ -3609,6 +3641,7 @@ pt: {
   refTitulo:'Preços de referência · comissão sugerida',
   loginTit2:'Formulário de Pedido', loginSub2:'Entre com seu e-mail e senha do Hub Wendell.',
   loginSemAcesso:'Seu login não tem acesso à ferramenta Pedidos. Procure a gestão.',
+  semAdmin:'Seu acesso permite preencher e enviar pedidos, mas não abrir a área de administração.',
   refAbaixo:'Preço abaixo da menor referência ({v}). O pedido segue normalmente — a comissão não muda.', pgTotalGeral:'TOTAL GERAL:',
   pgObsPh:'Digite observações adicionais...',
   pgDocsHint:'*Máximo de 10 arquivos. Formatos: PDF, imagens, documentos.',
@@ -3705,6 +3738,7 @@ en: {
   refTitulo:'Reference prices · suggested commission',
   loginTit2:'Order Form', loginSub2:'Sign in with your Wendell Hub e-mail and password.',
   loginSemAcesso:'Your account has no access to the Pedidos tool. Ask management.',
+  semAdmin:'Your access lets you fill in and submit orders, but not open the admin area.',
   refAbaixo:'Price below the lowest reference ({v}). The order goes through — the commission does not change.', pgTotalGeral:'GRAND TOTAL:',
   pgObsPh:'Type any additional notes...',
   pgDocsHint:'*Up to 10 files. Formats: PDF, images, documents.',
@@ -4998,6 +5032,8 @@ async function importarProdutosXlsx(input) {
 }
 
 function abrirModalAdmin() {
+    // Trava de permissao: so admin da ferramenta entra aqui
+    if (hubLogado() && !ehAdminPedidos()) { alert(T('semAdmin')); return; }
     document.getElementById('senhaAdmin').value = '';
     document.getElementById('erroSenha').style.display = 'none';
     document.getElementById('modalAdmin').classList.add('active');
@@ -5027,6 +5063,7 @@ async function verificarSenha() {
         var u = await hubLogin(document.getElementById('emailAdmin').value,
                                document.getElementById('senhaAdmin').value);
         document.getElementById('senhaAdmin').value = '';
+        if (!ehAdminPedidos()) { throw new Error(T('semAdmin')); }
         abrirPainelAdmin(u);
     } catch(e) {
         erro.textContent = e.message;
