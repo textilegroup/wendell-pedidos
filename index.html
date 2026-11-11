@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" id="faviconWGI">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; padding: 10px; }
@@ -35,6 +36,63 @@
             .header-dir { gap:5px }
             .bandeira svg { width:24px; height:17px }
         }
+        #telaLogin { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px }
+        .login-caixa { background:#fff; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,.1);
+                       padding:30px 26px; width:100%; max-width:380px; text-align:center }
+        .login-logo img { height:64px; margin-bottom:14px }
+        .login-tit { font-size:17px; font-weight:700; color:#a01228; margin-bottom:5px }
+        .login-sub { font-size:12.5px; color:#6b7280; line-height:1.5; margin-bottom:18px }
+        .login-caixa label { display:block; text-align:left; font-size:11px; font-weight:700;
+                             color:#666; text-transform:uppercase; margin:0 0 4px }
+        .login-caixa input { width:100%; padding:11px; border:1px solid #ddd; border-radius:6px;
+                             font-size:14px; font-family:inherit; margin-bottom:12px }
+        .login-caixa input:focus { outline:none; border-color:#a01228;
+                                   box-shadow:0 0 0 2px rgba(160,18,40,.1) }
+        .login-btn { width:100%; padding:12px; background:#a01228; color:#fff; border:none;
+                     border-radius:6px; font-size:14px; font-weight:700; letter-spacing:.5px;
+                     cursor:pointer; font-family:inherit }
+        .login-btn:disabled { background:#c9ccd0; cursor:default }
+        .login-erro { font-size:12.5px; color:#a01228; margin-top:10px; line-height:1.45 }
+        .login-bandeiras { display:flex; gap:6px; justify-content:center; margin-top:18px }
+        .login-bandeiras .bandeira { border-color:#d7dbe0 }
+        .login-bandeiras .bandeira.on { border-color:#a01228; box-shadow:0 0 0 2px rgba(160,18,40,.15) }
+        .ref-preco { border-top:1px dashed #e4e7ea; margin-top:9px; padding-top:8px }
+        .ref-tit { font-size:9.5px; font-weight:700; color:#98a0a8; text-transform:uppercase;
+                   letter-spacing:.8px; margin-bottom:5px }
+        .ref-linha { display:flex; flex-wrap:wrap; align-items:center; gap:4px 7px; margin-bottom:4px }
+        .ref-rot { font-size:9.5px; font-weight:700; color:#8a9199; min-width:62px;
+                   text-transform:uppercase; letter-spacing:.4px }
+        .ref-faixa { font-size:11.5px; color:#4b5563; background:#f4f6f8; border:1px solid #e7eaed;
+                     border-radius:4px; padding:2px 7px; white-space:nowrap;
+                     font-variant-numeric:tabular-nums }
+        .ref-faixa b { color:#a01228; margin-right:3px }
+        .ref-faixa i { color:#98a0a8; font-style:normal; font-size:10.5px }
+        .ref-aviso { font-size:11px; color:#8a5200; background:#fffcf3; border:1px solid #f0e2bd;
+                     border-radius:4px; padding:5px 8px; margin-top:5px; line-height:1.45 }
+        @media (max-width:560px) {
+            .ref-rot { min-width:100%; margin-bottom:2px }
+            .ref-faixa { font-size:11px; padding:2px 6px }
+        }
+        .adm-abas { display:flex; gap:4px; border-bottom:2px solid #e3e5e8; margin-bottom:12px; flex-shrink:0 }
+        .adm-aba { background:none; border:none; border-bottom:3px solid transparent; margin-bottom:-2px;
+                   padding:8px 14px; font-size:13px; font-weight:700; color:#8a9199; cursor:pointer;
+                   font-family:inherit }
+        .adm-aba.on { color:#a01228; border-bottom-color:#a01228 }
+        .prod-box { border:1px solid #e0e0e0; border-radius:8px; padding:14px; margin-bottom:12px; background:#fafbfc }
+        .prod-box-tit { font-size:13px; font-weight:700; color:#a01228; text-transform:uppercase;
+                        letter-spacing:.6px; margin-bottom:8px }
+        .prod-box-txt { font-size:12px; color:#5a6169; line-height:1.55; margin-bottom:12px }
+        .prod-acoes { display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+        .prod-msg { margin-top:11px; padding:10px 12px; border-radius:6px; font-size:12.5px; line-height:1.5 }
+        .prod-msg.ok  { background:#f4fbf6; border:1px solid #bfe3cb; color:#1b5e20 }
+        .prod-msg.erro{ background:#fdf5f6; border:1px solid #e8c0c7; color:#a01228 }
+        .prod-tab { width:100%; border-collapse:collapse; font-size:12px }
+        .prod-tab th { background:#f4f4f4; padding:7px 9px; text-align:left; font-size:10.5px;
+                       text-transform:uppercase; letter-spacing:.5px; color:#6b7280; border-bottom:1px solid #e0e0e0 }
+        .prod-tab td { padding:6px 9px; border-bottom:1px solid #f1f2f4 }
+        .prod-tab tr.oculto td { color:#a8adb3 }
+        .prod-selo { font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:3px; border:1px solid currentColor }
+        .prod-selo.sim { color:#1b7a3e } .prod-selo.nao { color:#8a9199 }
         .check-linha { display:flex !important; align-items:center; gap:7px; margin-top:7px;
                        font-size:12px !important; color:#444 !important; text-transform:none !important;
                        font-weight:500 !important; cursor:pointer }
@@ -353,6 +411,33 @@
     </div>
 </div>
 
+<!-- TRAVA DE LOGIN DO FORMULARIO -->
+<!-- Os precos de referencia vem da base da Tabela de Precos, que so
+     responde a quem esta logado. Por isso o formulario pede o login
+     do hub antes de abrir. O modo ?dealId= nao passa por aqui. -->
+<div id="telaLogin" style="display:none">
+    <div class="login-caixa">
+        <div class="login-logo"><img id="logoLoginWGI" alt="WGI"></div>
+        <div class="login-tit" data-ti="loginTit2">Formulário de Pedido</div>
+        <div class="login-sub" data-ti="loginSub2">Entre com seu e-mail e senha do Hub Wendell.</div>
+        <label data-ti="email">E-mail</label>
+        <input type="email" id="loginFormEmail" placeholder="nome@wendellservices.com" autocomplete="username">
+        <label data-ti="senha">Senha</label>
+        <input type="password" id="loginFormSenha" data-ti-ph="senhaPh" placeholder="Sua senha do hub"
+               autocomplete="current-password" onkeypress="if(event.key==='Enter')entrarNoFormulario()">
+        <button class="login-btn" id="btnEntrarForm" onclick="entrarNoFormulario()" data-ti="entrar">ENTRAR</button>
+        <p class="login-erro" id="loginFormErro" style="display:none"></p>
+        <div class="login-bandeiras">
+            <button type="button" class="bandeira on" id="bandLoginPT" onclick="aprovIdioma('pt')" title="Português">
+                <svg viewBox="0 0 28 20" width="28" height="20"><rect width="28" height="20" fill="#009b3a"/><path d="M14 2.2 26.2 10 14 17.8 1.8 10Z" fill="#fedf00"/><circle cx="14" cy="10" r="4.4" fill="#002776"/><path d="M9.9 8.3a9.5 9.5 0 0 1 8.3 2.4" stroke="#fff" stroke-width="1.1" fill="none"/></svg>
+            </button>
+            <button type="button" class="bandeira" id="bandLoginEN" onclick="aprovIdioma('en')" title="English">
+                <svg viewBox="0 0 28 20" width="28" height="20"><rect width="28" height="20" fill="#b22234"/><g fill="#fff"><rect y="1.54" width="28" height="1.54"/><rect y="4.62" width="28" height="1.54"/><rect y="7.69" width="28" height="1.54"/><rect y="10.77" width="28" height="1.54"/><rect y="13.85" width="28" height="1.54"/><rect y="16.92" width="28" height="1.54"/></g><rect width="12" height="10.77" fill="#3c3b6e"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div class="header">
         <div class="header-left">
@@ -507,6 +592,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco1" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem1">0,00</span></div>
                     <div class="item-ipi" id="ipiItem1" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct1">0%</span>
@@ -549,6 +635,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco2" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem2">0,00</span></div>
                     <div class="item-ipi" id="ipiItem2" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct2">0%</span>
@@ -591,6 +678,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco3" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem3">0,00</span></div>
                     <div class="item-ipi" id="ipiItem3" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct3">0%</span>
@@ -633,6 +721,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco4" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem4">0,00</span></div>
                     <div class="item-ipi" id="ipiItem4" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct4">0%</span>
@@ -675,6 +764,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco5" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem5">0,00</span></div>
                     <div class="item-ipi" id="ipiItem5" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct5">0%</span>
@@ -717,6 +807,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco6" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem6">0,00</span></div>
                     <div class="item-ipi" id="ipiItem6" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct6">0%</span>
@@ -759,6 +850,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco7" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem7">0,00</span></div>
                     <div class="item-ipi" id="ipiItem7" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct7">0%</span>
@@ -801,6 +893,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco8" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem8">0,00</span></div>
                     <div class="item-ipi" id="ipiItem8" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct8">0%</span>
@@ -843,6 +936,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco9" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem9">0,00</span></div>
                     <div class="item-ipi" id="ipiItem9" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct9">0%</span>
@@ -885,6 +979,7 @@
                         </div>
                         </div>
                     </div>
+                    <div class="ref-preco" id="refPreco10" style="display:none"></div>
                     <div class="item-total"><span data-ti="pgTotalItem">Total Item:</span> R$ <span id="totalItem10">0,00</span></div>
                     <div class="item-ipi" id="ipiItem10" style="text-align:right;font-size:11px;font-weight:600;margin-top:3px;color:#666">
                         IPI: <span id="ipiPct10">0%</span>
@@ -1094,6 +1189,39 @@
             <button class="btn btn-limpar" onclick="fecharModal('modalAdmin')" style="margin:5px">Cancelar</button>
         </div>
         <div id="adminPanel" style="display:none;flex:1;overflow:hidden;display:none;flex-direction:column">
+            <div class="adm-abas">
+                <button type="button" class="adm-aba on" id="admAbaPedidos"
+                        onclick="admTrocarAba('pedidos')">Pedidos</button>
+                <button type="button" class="adm-aba" id="admAbaProdutos"
+                        onclick="admTrocarAba('produtos')">Grade de produtos</button>
+            </div>
+            <!-- GRADE DE PRODUTOS -->
+            <div id="tabProdutos" style="flex:1;overflow-y:auto;display:none">
+                <div class="prod-box">
+                    <div class="prod-box-tit">Exportar e importar a grade</div>
+                    <p class="prod-box-txt">
+                        A grade é a mesma da <strong>Tabela de Preços</strong> — produto, cor, IPI,
+                        visibilidade e ordem. O que estiver marcado como visível aparece na lista de
+                        códigos do pedido.<br>
+                        O <strong>custo não sai e não entra por aqui</strong>: ele continua só na Tabela
+                        de Preços. Produto novo importado nasce sem custo e sai com preço zerado até
+                        você lançar o custo lá.
+                    </p>
+                    <div class="prod-acoes">
+                        <button class="btn btn-enviar" style="padding:9px 16px;font-size:13px"
+                                onclick="exportarProdutosXlsx()">⬇ Exportar Excel</button>
+                        <label class="btn btn-admin" style="padding:9px 16px;font-size:13px;cursor:pointer;margin:0">
+                            ⬆ Importar Excel
+                            <input type="file" id="inputImportProd" accept=".xlsx,.xls"
+                                   onchange="importarProdutosXlsx(this)" style="display:none">
+                        </label>
+                        <button class="btn btn-limpar" style="padding:9px 16px;font-size:13px"
+                                onclick="carregarProdutosAdm()">↻ Recarregar</button>
+                    </div>
+                    <div class="prod-msg" id="prodMsg" style="display:none"></div>
+                </div>
+                <div id="prodLista"><p style="color:#999;text-align:center;padding:14px">Carregando...</p></div>
+            </div>
             <!-- PEDIDOS SUPABASE -->
             <div id="tabSupabase" style="flex:1;overflow-y:auto">
                 <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
@@ -1379,8 +1507,10 @@ document.addEventListener('DOMContentLoaded', function() {
         iniciarModoAprovacaoLink(qsDeal);
         return;
     }
-    // localStorage não utilizado
+    // ── Trava de login: os precos de referencia exigem sessao do hub ──
+    mostrarTelaLogin(!hubLogado());
     carregarSelectsProdutos();
+    if (hubLogado()) iniciarFormulario();
     // Definir data mínima (amanhã) nos campos de data
     definirDatasMinimas();
     // Relógio dinâmico com segundos em movimento
@@ -1459,17 +1589,156 @@ function definirDatasMinimas() {
 // Funcao mantida vazia para nao quebrar chamadas antigas.
 function sincronizarDatasItens() {}
 
+// ══════════════════════════════
+// GRADE DE PRODUTOS E PRECOS DE REFERENCIA
+// Vem da mesma base da Tabela de Precos, pela RPC
+// pedidos_grade_precos(): so codigo, cor, IPI, os 4 precos de
+// representante e a comissao de cada faixa. Custo e margem
+// nunca saem do banco.
+// ══════════════════════════════
+var GRADE_PRECOS = null;
+var GRADE_INDICE = {};
+var GRADE_ORDEM  = [];
+
+async function carregarGradeProdutos() {
+    if (!hubLogado()) return false;
+    try {
+        var d = await sbRpc('pedidos_grade_precos');
+        if (!d || !d.icms18) throw new Error('resposta vazia');
+        GRADE_PRECOS = d;
+        GRADE_INDICE = {};
+        GRADE_ORDEM  = [];
+        var c18 = (d.icms18.commissions || []), c4 = (d.icms4.commissions || []);
+        var por4 = {};
+        (d.icms4.rows || []).forEach(function(r){ por4[r.code] = r.prices || []; });
+        (d.icms18.rows || []).forEach(function(r) {
+            GRADE_ORDEM.push(r.code);
+            GRADE_INDICE[r.code] = {
+                cor: r.color || '', ipi: r.ipi,
+                p18: r.prices || [], p4: por4[r.code] || [],
+                c18: c18, c4: c4
+            };
+        });
+        produtos = {};
+        GRADE_ORDEM.forEach(function(cod){ produtos[cod] = GRADE_INDICE[cod].cor; });
+        carregarSelectsProdutos();
+        console.log('[GRADE] ' + GRADE_ORDEM.length + ' produtos carregados da Tabela de Pre\u00e7os');
+        return true;
+    } catch(e) {
+        console.warn('[GRADE] n\u00e3o carregou, usando a lista interna:', e.message);
+        return false;
+    }
+}
+
+// ── Trava de login do formulario ──
+function mostrarTelaLogin(mostrar) {
+    var tl = document.getElementById('telaLogin');
+    var ct = document.querySelector('.container');
+    if (tl) tl.style.display = mostrar ? 'flex' : 'none';
+    if (ct) ct.style.display = mostrar ? 'none' : '';
+    if (mostrar) {
+        var lg = document.getElementById('logoLoginWGI'), lh = document.getElementById('logoHeaderWGI');
+        if (lg && lh && lh.src) lg.src = lh.src;
+        try { aprovAplicarIdioma(); } catch(e) {}
+    }
+}
+
+async function entrarNoFormulario() {
+    var btn  = document.getElementById('btnEntrarForm');
+    var erro = document.getElementById('loginFormErro');
+    erro.style.display = 'none';
+    btn.disabled = true; btn.textContent = '...';
+    try {
+        await hubLogin(document.getElementById('loginFormEmail').value,
+                       document.getElementById('loginFormSenha').value);
+        document.getElementById('loginFormSenha').value = '';
+        mostrarTelaLogin(false);
+        await iniciarFormulario();
+    } catch(e) {
+        erro.textContent = e.message;
+        erro.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = T('entrar');
+}
+
+// Depois do login: carrega a grade da Tabela de Precos e preenche
+// o nome do vendedor com quem entrou.
+async function iniciarFormulario() {
+    var ok = await carregarGradeProdutos();
+    if (!ok) {
+        console.warn('[GRADE] seguindo com a lista interna de produtos, sem preços de referência');
+    }
+    try {
+        var nv = document.getElementById('nomeVendedor');
+        if (nv && !nv.value && AUTH.user && AUTH.user.nome) nv.value = AUTH.user.nome;
+    } catch(e) {}
+    desenharTodasReferencias();
+}
+
 function carregarSelectsProdutos() {
+    var lista = GRADE_ORDEM.length ? GRADE_ORDEM : Object.keys(produtos);
     var selects = document.querySelectorAll('[name^="produto"][name$="_cod"]');
     selects.forEach(function(select) {
-        select.innerHTML = '<option value="" data-ti="pgSelecione">Selecione...</option>';
-        Object.keys(produtos).forEach(function(cod) {
+        var atual = select.value;
+        select.innerHTML = '<option value="" data-ti="pgSelecione">' + T('pgSelecione') + '</option>';
+        lista.forEach(function(cod) {
             var opt = document.createElement('option');
             opt.value = cod;
             opt.textContent = cod;
             select.appendChild(opt);
         });
+        if (atual) select.value = atual;
     });
+}
+
+function moedaBR(v) {
+    return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR',
+        { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+function precoDigitado(i) {
+    var el = document.querySelector('[name="produto' + i + '_preco"]');
+    if (!el) return null;
+    var t = String(el.value || '').trim();
+    if (!t) return null;
+    var n = parseFloat(t.replace(/\./g, '').replace(',', '.'));
+    return isFinite(n) ? n : null;
+}
+
+// Linha de refer\u00eancia do item: os 4 pre\u00e7os de cada ICMS com a
+// comiss\u00e3o de cada faixa. \u00c9 s\u00f3 refer\u00eancia \u2014 o vendedor digita o que
+// quiser, e a comiss\u00e3o n\u00e3o muda com o valor digitado.
+function desenharReferencia(i) {
+    var el = document.getElementById('refPreco' + i);
+    if (!el) return;
+    var cod = (document.querySelector('[name="produto' + i + '_cod"]') || {}).value;
+    var g   = cod ? GRADE_INDICE[cod] : null;
+    if (!g || !(g.p18 || []).length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+    function faixa(precos, comis, rotulo) {
+        var cels = precos.map(function(v, k) {
+            var pc = comis[k] != null ? Math.round(comis[k] * 100) : null;
+            return '<span class="ref-faixa"><b>' + (k+1) + '</b> ' + moedaBR(v) +
+                   (pc != null ? ' <i>' + pc + '%</i>' : '') + '</span>';
+        }).join('');
+        return '<div class="ref-linha"><span class="ref-rot">' + rotulo + '</span>' + cels + '</div>';
+    }
+
+    var todos = (g.p18 || []).concat(g.p4 || []).filter(function(v){ return Number(v) > 0; });
+    var piso  = todos.length ? Math.min.apply(null, todos) : 0;
+    var dig   = precoDigitado(i);
+    var abaixo = (dig != null && piso > 0 && dig < piso - 0.0001);
+
+    el.innerHTML =
+        '<div class="ref-tit">' + T('refTitulo') + '</div>' +
+        faixa(g.p18, g.c18 || [], 'ICMS 18%') +
+        ((g.p4 || []).length ? faixa(g.p4, g.c4 || [], 'ICMS 4%') : '') +
+        (abaixo ? '<div class="ref-aviso">' + T('refAbaixo').replace('{v}', moedaBR(piso)) + '</div>' : '');
+    el.style.display = 'block';
+}
+
+function desenharTodasReferencias() {
+    for (var i = 1; i <= 10; i++) desenharReferencia(i);
 }
 
 function mascaraData(input) {
@@ -1519,6 +1788,7 @@ function buscarNomeVendedor() {
 function buscarDescricaoProduto(num) {
     var cod = document.querySelector('[name="produto' + num + '_cod"]').value;
     document.querySelector('[name="produto' + num + '_desc"]').value = produtos[cod] || '';
+    desenharReferencia(num);
 }
 
 function mascaraCNPJ(input) {
@@ -1549,6 +1819,7 @@ function calcularTotalItem(num) {
             ipiPctEl.style.color = '#999';
         }
     }
+    desenharReferencia(num);
     calcularTotalGeral();
 }
 
@@ -3264,7 +3535,7 @@ var aprovEtapaAtual   = 0;   // assinaturas ja concluidas: 0, 1 ou 2 (vai assina
 // ──────────────────────────────────────────────
 // Carimbo da versao publicada. Aparece no rodape do modal e no console.
 // Serve para saber, olhando a tela, se o arquivo no ar e o mais novo.
-var APROV_BUILD = '2026-11-10 · PT/EN na página';
+var APROV_BUILD = '2026-11-11 · grade de produtos';
 
 var APROV_LANG = 'pt';
 var APROV_TXT = {
@@ -3334,7 +3605,11 @@ pt: {
   pgEndCad:'Repetir endereço do cadastro', pgEndPh:'Rua, número, bairro, cidade/UF', pgEndHint:'Escreva o endereço ou marque a caixa acima',
   pgItCod:'Código', pgItCor:'Cor', pgItQtd:'Qtd (m/l)', pgItPreco:'Preço (R$)',
   pgItCom:'Comissão (%)', pgItData:'Data de entrega', pgTotalItem:'Total do item:',
-  pgAddItem:'+ Adicionar produto', pgProduto:'PRODUTO', pgSelecione:'Selecione...', pgTotalGeral:'TOTAL GERAL:',
+  pgAddItem:'+ Adicionar produto', pgProduto:'PRODUTO', pgSelecione:'Selecione...',
+  refTitulo:'Preços de referência · comissão sugerida',
+  loginTit2:'Formulário de Pedido', loginSub2:'Entre com seu e-mail e senha do Hub Wendell.',
+  loginSemAcesso:'Seu login não tem acesso à ferramenta Pedidos. Procure a gestão.',
+  refAbaixo:'Preço abaixo da menor referência ({v}). O pedido segue normalmente — a comissão não muda.', pgTotalGeral:'TOTAL GERAL:',
   pgObsPh:'Digite observações adicionais...',
   pgDocsHint:'*Máximo de 10 arquivos. Formatos: PDF, imagens, documentos.',
   pgAviso:'<strong>IMPORTANTE:</strong>&nbsp; Ao clicar em ENVIAR, o pedido será enviado ao Bitrix com todos os documentos anexados. O PDF será gerado após o lançamento — use o botão GERAR PDF.',
@@ -3426,7 +3701,11 @@ en: {
   pgEndCad:'Use the registered address', pgEndPh:'Street, number, district, city/state', pgEndHint:'Type the address or tick the box above',
   pgItCod:'Code', pgItCor:'Color', pgItQtd:'Qty (m/l)', pgItPreco:'Price (R$)',
   pgItCom:'Commission (%)', pgItData:'Delivery date', pgTotalItem:'Item total:',
-  pgAddItem:'+ Add product', pgProduto:'PRODUCT', pgSelecione:'Select...', pgTotalGeral:'GRAND TOTAL:',
+  pgAddItem:'+ Add product', pgProduto:'PRODUCT', pgSelecione:'Select...',
+  refTitulo:'Reference prices · suggested commission',
+  loginTit2:'Order Form', loginSub2:'Sign in with your Wendell Hub e-mail and password.',
+  loginSemAcesso:'Your account has no access to the Pedidos tool. Ask management.',
+  refAbaixo:'Price below the lowest reference ({v}). The order goes through — the commission does not change.', pgTotalGeral:'GRAND TOTAL:',
   pgObsPh:'Type any additional notes...',
   pgDocsHint:'*Up to 10 files. Formats: PDF, images, documents.',
   pgAviso:'<strong>IMPORTANT:</strong>&nbsp; Clicking SUBMIT sends the order to Bitrix with every attached document. The PDF is generated after submission — use the GENERATE PDF button.',
@@ -3786,6 +4065,8 @@ async function aprovFazerLogin() {
                        document.getElementById('aprovLoginSenha').value);
         document.getElementById('aprovLoginSenha').value = '';
         aprovAtualizarPainelLogin();
+        // a lista de codigos do painel de edicao tambem vem da grade
+        carregarGradeProdutos();
     } catch(e) {
         erro.textContent = e.message;
         erro.classList.add('visible');
@@ -4563,12 +4844,178 @@ function fecharAdminPanel() {
     fecharModal('modalAdmin');
 }
 
+// ══════════════════════════════════════════════════════════
+// GRADE DE PRODUTOS — exportar / importar (Excel)
+// A base e a MESMA da Tabela de Precos (wgi_products). O custo
+// nunca sai nem entra por aqui: as funcoes do banco nao o
+// devolvem e a importacao nao o altera.
+// ══════════════════════════════════════════════════════════
+var PRODUTOS_ADM = [];
+
+function admTrocarAba(qual) {
+    var ehProd = (qual === 'produtos');
+    document.getElementById('tabProdutos').style.display = ehProd ? 'block' : 'none';
+    document.getElementById('tabSupabase').style.display = ehProd ? 'none'  : 'block';
+    document.getElementById('admAbaProdutos').className = 'adm-aba' + (ehProd ? ' on' : '');
+    document.getElementById('admAbaPedidos').className  = 'adm-aba' + (ehProd ? '' : ' on');
+    if (ehProd && !PRODUTOS_ADM.length) carregarProdutosAdm();
+}
+
+function prodMsg(texto, tipo) {
+    var el = document.getElementById('prodMsg');
+    if (!el) return;
+    if (!texto) { el.style.display = 'none'; return; }
+    el.className = 'prod-msg ' + (tipo || 'ok');
+    el.innerHTML = texto;
+    el.style.display = 'block';
+}
+
+// Chama uma funcao RPC do Supabase com a sessao do hub
+async function sbRpc(fn, corpo) {
+    var tok = (AUTH && AUTH.token) ? AUTH.token : SB_KEY;
+    var r = await fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + tok,
+                   'Content-Type': 'application/json' },
+        body: JSON.stringify(corpo || {})
+    });
+    var txt = await r.text();
+    if (!r.ok) {
+        var det = txt;
+        try { var j = JSON.parse(txt); det = j.message || j.hint || j.details || txt; } catch(e) {}
+        if (/sem_acesso/.test(det)) throw new Error('Seu login não tem permissão para isso.');
+        throw new Error(det);
+    }
+    return txt ? JSON.parse(txt) : null;
+}
+
+async function carregarProdutosAdm() {
+    var alvo = document.getElementById('prodLista');
+    alvo.innerHTML = '<p style="color:#999;text-align:center;padding:14px">Carregando...</p>';
+    prodMsg('');
+    try {
+        PRODUTOS_ADM = await sbRpc('pedidos_produtos_listar') || [];
+        desenharProdutosAdm();
+    } catch(e) {
+        PRODUTOS_ADM = [];
+        alvo.innerHTML = '';
+        prodMsg('Não consegui carregar a grade.<br>' + esc(e.message), 'erro');
+    }
+}
+
+function desenharProdutosAdm() {
+    var vis = PRODUTOS_ADM.filter(function(p){ return p.visivel; }).length;
+    var html = '<p style="font-size:12px;color:#6b7280;margin:0 0 8px">' +
+               PRODUTOS_ADM.length + ' produtos na base · <strong>' + vis +
+               '</strong> visíveis na lista do pedido</p>' +
+        '<table class="prod-tab"><thead><tr>' +
+        '<th>Código</th><th>Categoria</th><th>Cor</th><th style="text-align:right">IPI</th>' +
+        '<th style="text-align:right">Ordem</th><th>Visível</th>' +
+        '</tr></thead><tbody>' +
+        PRODUTOS_ADM.map(function(p) {
+            return '<tr' + (p.visivel ? '' : ' class="oculto"') + '>' +
+                '<td><strong>' + esc(p.codigo) + '</strong></td>' +
+                '<td>' + esc(p.categoria || '—') + '</td>' +
+                '<td>' + esc(p.cor || '—') + '</td>' +
+                '<td style="text-align:right">' + (Number(p.ipi) || 0) + '%</td>' +
+                '<td style="text-align:right">' + (p.ordem != null ? p.ordem : '—') + '</td>' +
+                '<td><span class="prod-selo ' + (p.visivel ? 'sim">SIM' : 'nao">NÃO') + '</span></td>' +
+            '</tr>';
+        }).join('') + '</tbody></table>';
+    document.getElementById('prodLista').innerHTML = html;
+}
+
+function exportarProdutosXlsx() {
+    if (typeof XLSX === 'undefined') { prodMsg('A biblioteca de Excel não carregou. Recarregue a página.', 'erro'); return; }
+    if (!PRODUTOS_ADM.length) { prodMsg('Nada para exportar — carregue a grade primeiro.', 'erro'); return; }
+    var linhas = PRODUTOS_ADM.map(function(p) {
+        return { codigo:p.codigo, categoria:p.categoria || '', cor:p.cor || '',
+                 ipi:Number(p.ipi) || 0, visivel:p.visivel ? 'SIM' : 'NAO',
+                 ordem:(p.ordem != null ? p.ordem : 999999) };
+    });
+    var ws = XLSX.utils.json_to_sheet(linhas,
+        { header:['codigo','categoria','cor','ipi','visivel','ordem'] });
+    ws['!cols'] = [{wch:20},{wch:22},{wch:16},{wch:7},{wch:9},{wch:8}];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
+    var hoje = new Date();
+    var nome = 'grade_produtos_' + hoje.getFullYear() +
+               String(hoje.getMonth()+1).padStart(2,'0') +
+               String(hoje.getDate()).padStart(2,'0') + '.xlsx';
+    XLSX.writeFile(wb, nome);
+    prodMsg('Arquivo <strong>' + nome + '</strong> gerado com ' + linhas.length + ' produtos.', 'ok');
+}
+
+async function importarProdutosXlsx(input) {
+    var arq = input && input.files && input.files[0];
+    input.value = '';
+    if (!arq) return;
+    if (typeof XLSX === 'undefined') { prodMsg('A biblioteca de Excel não carregou. Recarregue a página.', 'erro'); return; }
+    prodMsg('Lendo <strong>' + esc(arq.name) + '</strong>...', 'ok');
+    try {
+        var buf  = await arq.arrayBuffer();
+        var wb   = XLSX.read(buf, { type:'array' });
+        var ws   = wb.Sheets[wb.SheetNames[0]];
+        var cru  = XLSX.utils.sheet_to_json(ws, { defval:'' });
+        if (!cru.length) throw new Error('A primeira aba do arquivo está vazia.');
+
+        // aceita cabecalho em qualquer caixa e com acento
+        var linhas = cru.map(function(r) {
+            var o = {};
+            Object.keys(r).forEach(function(k) {
+                var ch = String(k).trim().toLowerCase()
+                            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                o[ch] = String(r[k] == null ? '' : r[k]).trim();
+            });
+            return { codigo:o.codigo || o.code || '', categoria:o.categoria || o.category || '',
+                     cor:o.cor || o.color || '', ipi:o.ipi || '',
+                     visivel:o.visivel || o.visible || '', ordem:o.ordem || o.order || '' };
+        }).filter(function(x){ return x.codigo; });
+
+        if (!linhas.length) throw new Error('Não achei a coluna "codigo" no arquivo.');
+        if (!confirm('Importar ' + linhas.length + ' linhas para a grade?\n\n' +
+                     'Produtos que não estiverem no arquivo ficam como estão.\n' +
+                     'Custos não são alterados.')) { prodMsg(''); return; }
+
+        var res = await sbRpc('pedidos_produtos_importar', { p_linhas: linhas });
+        var aviso = '';
+        if (res && res.sem_custo && res.sem_custo.length) {
+            aviso = '<br><br><strong>Atenção:</strong> ' + res.sem_custo.length +
+                    ' produto(s) entraram sem custo e vão sair com preço zerado até você lançar ' +
+                    'o custo na Tabela de Preços:<br>' +
+                    res.sem_custo.map(esc).join(', ');
+        }
+        prodMsg('Importação concluída — <strong>' + (res.novos||0) + '</strong> novos, <strong>' +
+                (res.atualizados||0) + '</strong> atualizados' +
+                (res.ignorados ? ', ' + res.ignorados + ' linhas ignoradas sem código' : '') +
+                '.' + aviso, 'ok');
+        await carregarProdutosAdm();
+        GRADE_PRECOS = null;           // a lista do formulario precisa recarregar
+        await carregarGradeProdutos();
+    } catch(e) {
+        prodMsg('Não consegui importar.<br>' + esc(e.message), 'erro');
+    }
+}
+
 function abrirModalAdmin() {
     document.getElementById('senhaAdmin').value = '';
     document.getElementById('erroSenha').style.display = 'none';
+    document.getElementById('modalAdmin').classList.add('active');
+    // Quem ja entrou no formulario nao precisa logar de novo aqui
+    if (hubLogado()) { abrirPainelAdmin(AUTH.user); return; }
     document.getElementById('adminLogin').style.display = 'block';
     document.getElementById('adminPanel').style.display = 'none';
-    document.getElementById('modalAdmin').classList.add('active');
+}
+
+function abrirPainelAdmin(u) {
+    document.getElementById('adminLogin').style.display = 'none';
+    var pan = document.getElementById('adminPanel');
+    pan.style.display = 'flex';
+    pan.style.flexDirection = 'column';
+    var cab = document.getElementById('adminUsuarioAtivo');
+    if (cab && u) cab.textContent = (u.nome || '') + ' — ' + (u.email || '');
+    admTrocarAba('pedidos');
+    buscarPedidosSb();
 }
 
 async function verificarSenha() {
@@ -4580,12 +5027,7 @@ async function verificarSenha() {
         var u = await hubLogin(document.getElementById('emailAdmin').value,
                                document.getElementById('senhaAdmin').value);
         document.getElementById('senhaAdmin').value = '';
-        document.getElementById('adminLogin').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'flex';
-        document.getElementById('adminPanel').style.flexDirection = 'column';
-        var cab = document.getElementById('adminUsuarioAtivo');
-        if (cab) cab.textContent = u.nome + ' — ' + u.email;
-        buscarPedidosSb();
+        abrirPainelAdmin(u);
     } catch(e) {
         erro.textContent = e.message;
         erro.style.display = 'block';
